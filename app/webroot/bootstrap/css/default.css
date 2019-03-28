@@ -1,0 +1,17 @@
+
+body {
+  font-family:"Open Sans",
+	Arial,
+	Helvetica,
+	Sans-Serif;
+	font-size:13px;
+	line-height:1.42857143;
+	color:#333;
+	background-color: #ddd;
+}
+body {
+  min-height: 1000px;
+}
+.alignright{
+	text-align:right
+}
