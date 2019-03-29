@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 namespace lithium\g11n;
 
@@ -39,7 +38,7 @@ class Multibyte extends \lithium\core\Adaptable {
 	 *
 	 * @var array
 	 */
-	protected static $_configurations = [];
+	protected static $_configurations = array();
 
 	/**
 	 * `Libraries::locate()`-compatible path to adapters for this class.
@@ -57,7 +56,6 @@ class Multibyte extends \lithium\core\Adaptable {
 	 * validation of UTF-8 encoded strings.
 	 *
 	 * Meaning of RegExp:
-	 * ```
 	 * '[\x09\x0A\x0D\x20-\x7E]';            // ASCII
 	 * '|[\xC2-\xDF][\x80-\xBF]';            // non-overlong 2-byte
 	 * '|\xE0[\xA0-\xBF][\x80-\xBF]';        // excluding overlongs
@@ -66,15 +64,14 @@ class Multibyte extends \lithium\core\Adaptable {
 	 * '|\xF0[\x90-\xBF][\x80-\xBF]{2}';     // planes 1-3
 	 * '|[\xF1-\xF3][\x80-\xBF]{3}';         // planes 4-15
 	 * '|\xF4[\x80-\x8F][\x80-\xBF]{2}';     // plane 16
-	 * ```
 	 *
 	 * @link http://www.w3.org/International/questions/qa-forms-utf-8.en
 	 * @param string $string The string to analyze.
 	 * @param array $options Allows to toggle mode via the `'quick'` option, defaults to `false`.
 	 * @return boolean Returns `true` if the string is UTF-8.
 	 */
-	public static function is($string, array $options = []) {
-		$defaults = ['quick' => false];
+	public static function is($string, array $options = array()) {
+		$defaults = array('quick' => false);
 		$options += $defaults;
 
 		if ($options['quick']) {
@@ -97,14 +94,14 @@ class Multibyte extends \lithium\core\Adaptable {
 	/**
 	 * Gets the string length. Multibyte enabled version of `strlen()`.
 	 *
-	 * @link http://php.net/function.strlen.php
+	 * @link http://php.net/manual/en/function.strlen.php
 	 * @param string $string The string being measured for length.
 	 * @param array $options Allows for selecting the adapter to use via the
 	 *               `name` options. Will use the `'default'` adapter by default.
 	 * @return integer The length of the string on success.
 	 */
-	public static function strlen($string, array $options = []) {
-		$defaults = ['name' => 'default'];
+	public static function strlen($string, array $options = array()) {
+		$defaults = array('name' => 'default');
 		$options += $defaults;
 		return static::adapter($options['name'])->strlen($string);
 	}
@@ -116,7 +113,7 @@ class Multibyte extends \lithium\core\Adaptable {
 	 * Not all adapters must support interpreting - thus applying - passed
 	 * numeric values as ordinal values of a character.
 	 *
-	 * @link http://php.net/function.strpos.php
+	 * @link http://php.net/manual/en/function.strpos.php
 	 * @param string $haystack The string being checked.
 	 * @param string $needle The string to find in the haystack.
 	 * @param integer $offset If specified, search will start this number of
@@ -128,8 +125,8 @@ class Multibyte extends \lithium\core\Adaptable {
 	 *                 the needle in the haystack string. If needle is not found,
 	 *                 it returns `false`.
 	 */
-	public static function strpos($haystack, $needle, $offset = 0, array $options = []) {
-		$defaults = ['name' => 'default'];
+	public static function strpos($haystack, $needle, $offset = 0, array $options = array()) {
+		$defaults = array('name' => 'default');
 		$options += $defaults;
 		return static::adapter($options['name'])->strpos($haystack, $needle, $offset);
 	}
@@ -143,7 +140,7 @@ class Multibyte extends \lithium\core\Adaptable {
 	 * doesn't support an offset as `strpos()` does - this constitutes the
 	 * lowest common denominator here.
 	 *
-	 * @link http://php.net/function.strrpos.php
+	 * @link http://php.net/manual/en/function.strrpos.php
 	 * @param string $haystack The string being checked.
 	 * @param string $needle The string to find in the haystack.
 	 * @param array $options Allows for selecting the adapter to use via the
@@ -152,8 +149,8 @@ class Multibyte extends \lithium\core\Adaptable {
 	 *                 the needle in the haystack string. If needle is not found,
 	 *                 it returns `false`.
 	 */
-	public static function strrpos($haystack, $needle, array $options = []) {
-		$defaults = ['name' => 'default'];
+	public static function strrpos($haystack, $needle, array $options = array()) {
+		$defaults = array('name' => 'default');
 		$options += $defaults;
 		return static::adapter($options['name'])->strrpos($haystack, $needle);
 	}
@@ -162,7 +159,7 @@ class Multibyte extends \lithium\core\Adaptable {
 	 * Returns the portion of string specified by the start and length parameters.
 	 * Multibyte enabled version of `substr()`.
 	 *
-	 * @link http://php.net/function.substr.php
+	 * @link http://php.net/manual/en/function.substr.php
 	 * @param string $string The string to extract the substring from.
 	 * @param integer $start Position of first character in string (offset).
 	 * @param integer $length Maximum numbers of characters to use from string.
@@ -170,8 +167,8 @@ class Multibyte extends \lithium\core\Adaptable {
 	 *               `name` options. Will use the `'default'` adapter by default.
 	 * @return string The substring extracted from given string.
 	 */
-	public static function substr($string, $start, $length = null, array $options = []) {
-		$defaults = ['name' => 'default'];
+	public static function substr($string, $start, $length = null, array $options = array()) {
+		$defaults = array('name' => 'default');
 		$options += $defaults;
 		return static::adapter($options['name'])->substr($string, $start, $length);
 	}

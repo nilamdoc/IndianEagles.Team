@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\integration\data\source\database\adapter\pdo;
@@ -15,20 +14,20 @@ use lithium\data\source\database\adapter\pdo\Result;
 
 class ResultTest extends \lithium\tests\integration\data\Base {
 
-	protected $_schema = [
-		'fields' => [
-			'id' => ['type' => 'id'],
-			'name' => ['type' => 'string', 'length' => 255],
-			'active' => ['type' => 'boolean'],
-			'created' => ['type' => 'datetime', 'null' => true],
-			'modified' => ['type' => 'datetime', 'null' => true]
-		]
-	];
+	protected $_schema = array(
+		'fields' => array(
+			'id' => array('type' => 'id'),
+			'name' => array('type' => 'string', 'length' => 255),
+			'active' => array('type' => 'boolean'),
+			'created' => array('type' => 'datetime', 'null' => true),
+			'modified' => array('type' => 'datetime', 'null' => true)
+		)
+	);
 
-	protected $_mockData = [
-		1 => [1, 'Foo Gallery'],
-		2 => [2, 'Bar Gallery']
-	];
+	protected $_mockData = array(
+		1 => array(1, 'Foo Gallery'),
+		2 => array(2, 'Bar Gallery')
+	);
 
 	/**
 	 * Skip the test if a MySQL adapter configuration is unavailable.
@@ -37,7 +36,7 @@ class ResultTest extends \lithium\tests\integration\data\Base {
 	 */
 	public function skip() {
 		parent::connect($this->_connection);
-		$this->skipIf(!$this->with(['MySql', 'PostgreSql', 'Sqlite3']));
+		$this->skipIf(!$this->with(array('MySql', 'PostgreSql', 'Sqlite3')));
 	}
 
 	/**
@@ -49,7 +48,7 @@ class ResultTest extends \lithium\tests\integration\data\Base {
 		$this->_db->createSchema('galleries', $schema);
 		foreach ($this->_mockData as $entry) {
 			$sql = "INSERT INTO galleries (name) VALUES ('" . $entry[1] . "')";
-			$this->_db->read($sql, ['return' => 'resource']);
+			$this->_db->read($sql, array('return' => 'resource'));
 		}
 	}
 
@@ -73,9 +72,22 @@ class ResultTest extends \lithium\tests\integration\data\Base {
 		$resource = $this->_db->connection->query("SELECT id, name FROM galleries;");
 		$result = new Result(compact('resource'));
 
-		$this->assertEqual($this->_mockData[1], $result->current());
+		$this->assertEqual($this->_mockData[1], $result->next());
 		$this->assertEqual($this->_mockData[2], $result->next());
-		$this->assertNull($result->next());
+		$this->assertFalse($result->next());
+	}
+
+	public function testPrev() {
+		$resource = $this->_db->connection->query("SELECT id, name FROM galleries;");
+		$result = new Result(compact('resource'));
+
+		$this->assertNull($result->prev());
+		$this->assertEqual($this->_mockData[1], $result->next());
+		$this->assertEqual($this->_mockData[2], $result->next());
+		$this->assertEqual($this->_mockData[1], $result->prev());
+		$this->assertEqual($this->_mockData[2], $result->next());
+		$this->assertEqual($this->_mockData[1], $result->prev());
+		$this->assertFalse($result->prev());
 	}
 
 	public function testValid() {
@@ -87,24 +99,26 @@ class ResultTest extends \lithium\tests\integration\data\Base {
 		$this->assertTrue($result->valid());
 	}
 
-	public function testRewindIsNoop() {
+	public function testRewind() {
 		$resource = $this->_db->connection->query("SELECT id, name FROM galleries;");
 		$result = new Result(compact('resource'));
 
-		$this->assertEqual($this->_mockData[1], $result->current());
+		$this->assertEqual($this->_mockData[1], $result->next());
 		$this->assertEqual($this->_mockData[2], $result->next());
 		$result->rewind();
-		$this->assertEqual($this->_mockData[2], $result->current());
+		$this->assertEqual($this->_mockData[1], $result->current());
 	}
 
 	public function testCurrent() {
 		$resource = $this->_db->connection->query("SELECT id, name FROM galleries;");
 		$result = new Result(compact('resource'));
 
-		$this->assertEqual($this->_mockData[1], $result->current());
+		$this->assertEqual($this->_mockData[1], $result->next());
 		$this->assertEqual($this->_mockData[1], $result->current());
 		$this->assertEqual($this->_mockData[2], $result->next());
 		$this->assertEqual($this->_mockData[2], $result->current());
+		$this->assertEqual($this->_mockData[1], $result->prev());
+		$this->assertEqual($this->_mockData[1], $result->current());
 	}
 
 	public function testKey() {
@@ -114,8 +128,14 @@ class ResultTest extends \lithium\tests\integration\data\Base {
 		$this->assertIdentical(0, $result->key());
 		$result->next();
 		$this->assertIdentical(1, $result->key());
+		$result->prev();
+		$this->assertIdentical(0, $result->key());
+		$result->next();
+		$this->assertIdentical(1, $result->key());
 		$result->next();
 		$this->assertIdentical(null, $result->key());
+		$result->rewind();
+		$this->assertIdentical(0, $result->key());
 	}
 
 	/**
@@ -123,19 +143,19 @@ class ResultTest extends \lithium\tests\integration\data\Base {
 	 */
 	public function testResultForeach() {
 
-		$result = $this->_db->read('SELECT name, active FROM galleries', [
+		$result = $this->_db->read('SELECT name, active FROM galleries', array(
 			'return' => 'resource'
-		]);
+		));
 
-		$rows = [];
+		$rows = array();
 		foreach ($result as $row) {
 			$rows[] = $row;
 		}
 
-		$expected = [
-			['Foo Gallery', null],
-			['Bar Gallery', null]
-		];
+		$expected = array(
+			array('Foo Gallery', null),
+			array('Bar Gallery', null)
+		);
 
 		$this->assertEqual($expected, $rows);
 	}
@@ -147,16 +167,16 @@ class ResultTest extends \lithium\tests\integration\data\Base {
 
 		$this->_db->delete('DELETE FROM galleries');
 
-		$result = $this->_db->read('SELECT name, active FROM galleries', [
+		$result = $this->_db->read('SELECT name, active FROM galleries', array(
 			'return' => 'resource'
-		]);
+		));
 
-		$rows = [];
+		$rows = array();
 		foreach ($result as $row) {
 			$rows[] = $row;
 		}
 
-		$expected = [];
+		$expected = array();
 
 		$this->assertEqual($expected, $rows);
 	}

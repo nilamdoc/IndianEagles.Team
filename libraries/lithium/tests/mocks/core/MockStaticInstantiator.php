@@ -1,19 +1,18 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\mocks\core;
 
 class MockStaticInstantiator extends \lithium\core\StaticObject {
 
-	protected static $_classes = ['request' => 'lithium\tests\mocks\core\MockRequest'];
+	protected static $_classes = array('request' => 'lithium\tests\mocks\core\MockRequest');
 
-	public static function instance($name, array $config = []) {
+	public static function instance($name, array $config = array()) {
 		return static::_instance($name, $config);
 	}
 

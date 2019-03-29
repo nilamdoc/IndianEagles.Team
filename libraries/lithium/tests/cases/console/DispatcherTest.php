@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\cases\console;
@@ -14,11 +13,11 @@ use lithium\console\Request;
 
 class DispatcherTest extends \lithium\test\Unit {
 
-	protected $_backup = [];
+	protected $_backup = array();
 
 	public function setUp() {
 		$this->_backup['_SERVER'] = $_SERVER;
-		$_SERVER['argv'] = [];
+		$_SERVER['argv'] = array();
 	}
 
 	public function tearDown() {
@@ -27,35 +26,35 @@ class DispatcherTest extends \lithium\test\Unit {
 
 	public function testEmptyConfigReturnRules() {
 		$result = Dispatcher::config();
-		$expected = ['rules' => [
-			'command' => [['lithium\util\Inflector', 'camelize']],
-			'action' => [['lithium\util\Inflector', 'camelize', [false]]]
-		]];
+		$expected = array('rules' => array(
+			'command' => array(array('lithium\util\Inflector', 'camelize')),
+			'action' => array(array('lithium\util\Inflector', 'camelize', array(false)))
+		));
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testConfigWithClasses() {
-		Dispatcher::config([
-			'classes' => ['request' => 'lithium\tests\mocks\console\MockDispatcherRequest']
-		]);
+		Dispatcher::config(array(
+			'classes' => array('request' => 'lithium\tests\mocks\console\MockDispatcherRequest')
+		));
 		$expected = 'run';
 		$result = Dispatcher::run()->testAction;
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testRunWithCommand() {
-		$response = Dispatcher::run(new Request([
-			'args' => ['lithium\tests\mocks\console\MockDispatcherCommand']
-		]));
+		$response = Dispatcher::run(new Request(array(
+			'args' => array('lithium\tests\mocks\console\MockDispatcherCommand')
+		)));
 		$expected = 'run';
 		$result = $response->testAction;
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testRunWithPassed() {
-		$response = Dispatcher::run(new Request([
-			'args' => ['lithium\tests\mocks\console\MockDispatcherCommand', 'with param']
-		]));
+		$response = Dispatcher::run(new Request(array(
+			'args' => array('lithium\tests\mocks\console\MockDispatcherCommand', 'with param')
+		)));
 
 		$expected = 'run';
 		$result = $response->testAction;
@@ -67,68 +66,68 @@ class DispatcherTest extends \lithium\test\Unit {
 	}
 
 	public function testRunWithAction() {
-		$response = Dispatcher::run(new Request([
-			'args' => ['lithium\tests\mocks\console\MockDispatcherCommand', 'testAction']
-		]));
+		$response = Dispatcher::run(new Request(array(
+			'args' => array('lithium\tests\mocks\console\MockDispatcherCommand', 'testAction')
+		)));
 		$expected = 'testAction';
 		$result = $response->testAction;
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testInvalidCommand() {
-		$expected = (object) ['status' => "Command `\\this\\command\\is\\fake` not found.\n"];
-		$result = Dispatcher::run(new Request([
-			'args' => [
+		$expected = (object) array('status' => "Command `\\this\\command\\is\\fake` not found.\n");
+		$result = Dispatcher::run(new Request(array(
+			'args' => array(
 				'\this\command\is\fake',
 				'testAction'
-			]
-		]));
+			)
+		)));
 
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testRunWithCamelizingCommand() {
-		$expected = (object) ['status' => "Command `FooBar` not found.\n"];
-		$result = Dispatcher::run(new Request([
-			'args' => [
+		$expected = (object) array('status' => "Command `FooBar` not found.\n");
+		$result = Dispatcher::run(new Request(array(
+			'args' => array(
 				'foo-bar'
-			]
-		]));
+			)
+		)));
 		$this->assertEqual($expected, $result);
 
-		$expected = (object) ['status' => "Command `FooBar` not found.\n"];
-		$result = Dispatcher::run(new Request([
-			'args' => ['foo_bar']
-		]));
+		$expected = (object) array('status' => "Command `FooBar` not found.\n");
+		$result = Dispatcher::run(new Request(array(
+			'args' => array('foo_bar')
+		)));
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testRunWithCamelizingAction() {
-		$result = Dispatcher::run(new Request([
-			'args' => [
+		$result = Dispatcher::run(new Request(array(
+			'args' => array(
 				'lithium\tests\mocks\console\command\MockCommandHelp',
 				'sample-task-with-optional-args'
-			]
-		]));
+			)
+		)));
 		$this->assertNotEmpty($result);
 
-		$result = Dispatcher::run(new Request([
-			'args' => [
+		$result = Dispatcher::run(new Request(array(
+			'args' => array(
 				'lithium\tests\mocks\console\command\MockCommandHelp',
 				'sample_task_with_optional_args'
-			]
-		]));
+			)
+		)));
 		$this->assertNotEmpty($result);
 	}
 
 	public function testEnvironmentIsSet() {
 		$expected = 'production';
-		$response = Dispatcher::run(new Request([
-			'args' => [
+		$response = Dispatcher::run(new Request(array(
+			'args' => array(
 				'lithium\tests\mocks\console\MockDispatcherCommand',
 				'testEnv', '--env=production'
-			]
-		]));
+			)
+		)));
 		$result = $response->environment;
 		$this->assertEqual($expected, $result);
 	}

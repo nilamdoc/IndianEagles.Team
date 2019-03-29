@@ -1,30 +1,24 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\util\collection;
 
-$message  = 'The `lithium\util\collection\Filters` class has been deprecated in favor of ';
-$message .= '`lithium\aop\Filters`. All old methods keep on working and are forwared to ';
-$message .= 'the new ones.';
-trigger_error($message, E_USER_DEPRECATED);
-
-use lithium\aop\Filters as NewFilters;
+use Closure;
 
 /**
  * The `Filters` class is the basis of Lithium's method filtering system: an efficient way to enable
  * event-driven communication between classes without tight coupling and without depending on a
  * centralized publish/subscribe system.
  *
- * In Lithium itself, when creating a method that can be filtered, a method is implemented as
- * a closure and is passed to either `Object::_filter()` or `StaticObject::_filter()`. Each
- * object internally maintains its own list of filters, which are applied in these methods and
- * passed to `Filters::run()`.
+ * In Lithium itself, when creating a method that can be filtered, a method is implemented as a
+ * [ closure](http://us2.php.net/manual/en/functions.anonymous.php) and is passed to either
+ * `Object::_filter()` or `StaticObject::_filter()`. Each object internally maintains its own list
+ * of filters, which are applied in these methods and passed to `Filters::run()`.
  *
  * When implementing a custom filter system outside of Lithium, you can create your own list of
  * filters, and pass it to `$options['data']` in the `run()` method.
@@ -44,9 +38,7 @@ use lithium\aop\Filters as NewFilters;
  * instance of the `Filters` class).  At the bottom of `$chain` is the method itself.  This is why
  * most filters contain a line that looks like this:
  *
- * ```
- * return $chain->next($self, $params, $chain);
- * ```
+ * {{{return $chain->next($self, $params, $chain);}}}
  *
  * This passes control to the next filter in the chain, and finally, to the method itself.  This
  * allows you to interact with the return value as well as the parameters.
@@ -54,8 +46,7 @@ use lithium\aop\Filters as NewFilters;
  * Within the framework, you can call `applyFilter()` on any object (static or instantiated) and
  * pass the name of the method you would like to filter, along with the filter itself. For example:
  *
- * ```
- * use lithium\action\Dispatcher;
+ * {{{use lithium\action\Dispatcher;
  *
  * Dispatcher::applyFilter('run', function($self, $params, $chain) {
  * 	// Custom pre-dispatch logic goes here
@@ -65,15 +56,12 @@ use lithium\aop\Filters as NewFilters;
  * 	// and can be modified as appropriate
  * 	// ...
  * 	return $response;
- * });
- * ```
+ * });}}}
  *
  * The logic in the closure will now be executed on every call to `Dispatcher::run()`, and
  * `$response` will always be modified by any custom logic present before being returned from
  * `run()`.
  *
- * @deprecated Replaced by `\lithium\aop\Filters` and `\lithium\aop\Chain`.
- * @link http://php.net/functions.anonymous.php
  * @see lithium\util\collection\Filters::run()
  * @see lithium\core\Object::_filter()
  * @see lithium\core\StaticObject::_filter()
@@ -86,24 +74,21 @@ class Filters extends \lithium\util\Collection {
 	 * An array of filters indexed by class and method name, stored so that they can be lazily
 	 * applied to classes which are not loaded yet.
 	 *
-	 * @deprecated
 	 * @var array
 	 */
-	protected static $_lazyFilters = [];
+	protected static $_lazyFilters = array();
 
 	/**
 	 * This is the list of configuration settings that will be automatically applied to the
 	 * properties of each `Filters` instance.
 	 *
-	 * @deprecated
 	 * @var array
 	 */
-	protected $_autoConfig = ['data', 'class', 'method'];
+	protected $_autoConfig = array('data', 'class', 'method');
 
 	/**
 	 * The fully-namespaced class name of the class containing the method being filtered.
 	 *
-	 * @deprecated
 	 * @see lithium\util\collection\Filters::method()
 	 * @var string
 	 */
@@ -112,7 +97,6 @@ class Filters extends \lithium\util\Collection {
 	/**
 	 * The name of the method being filtered by the current instance of `Filters`.
 	 *
-	 * @deprecated
 	 * @see lithium\util\collection\Filters::method()
 	 * @var string
 	 */
@@ -130,21 +114,19 @@ class Filters extends \lithium\util\Collection {
 	 * the first time the method specified in `$method` is called. This works for any class which
 	 * extends `StaticObject`.
 	 *
-	 * @deprecated Forwards to new implementation.
 	 * @see lithium\core\StaticObject
 	 * @param string $class The fully namespaced name of a **static** class to which the filter will
 	 *               be applied. The class name specified in `$class` **must** extend
 	 *               `StaticObject`, or else statically implement the `applyFilter()` method.
 	 * @param string $method The method to which the filter will be applied.
-	 * @param \Closure $filter The filter to apply to the class method.
+	 * @param Closure $filter The filter to apply to the class method.
 	 * @return void
 	 */
 	public static function apply($class, $method, $filter) {
-		$message  = '`\lithium\util\collection\Filters::apply()` has been deprecated ';
-		$message .= 'in favor of `\lithium\aop\Filters::apply()`';
-		trigger_error($message, E_USER_DEPRECATED);
-
-		NewFilters::apply($class, $method, $filter);
+		if (class_exists($class, false)) {
+			return $class::applyFilter($method, $filter);
+		}
+		static::$_lazyFilters[$class][$method][] = $filter;
 	}
 
 	/**
@@ -155,24 +137,19 @@ class Filters extends \lithium\util\Collection {
 	 * yet loaded, checks to see if the filter is still being held, or has been applied. The filter
 	 * will not be applied until the method being filtered has been called.
 	 *
-	 * @deprecated Now always returns `false`.
 	 * @see lithium\util\collection\Filters::apply()
 	 * @param string $class Fully-namespaced class name.
 	 * @param string $method Method name.
 	 * @return boolean
 	 */
 	public static function hasApplied($class, $method) {
-		$message = '`\lithium\util\collection\Filters::hasApplied()` has been deprecated.';
-		trigger_error($message, E_USER_DEPRECATED);
-
-		return false;
+		return isset(static::$_lazyFilters[$class][$method]);
 	}
 
 	/**
 	 * Collects a set of filters to iterate. Creates a filter chain for the given class/method,
 	 * executes it, and returns the value.
 	 *
-	 * @deprecated Forwards to new implementation.
 	 * @param mixed $class The class for which this filter chain is being created. If this is the
 	 *        result of a static method call, `$class` should be a string. Otherwise, it should
 	 *        be the instance of the object making the call.
@@ -187,26 +164,29 @@ class Filters extends \lithium\util\Collection {
 	 *          executed first, and will be the last to return.
 	 * @return Returns the value returned by the first closure in `$options['data`]`.
 	 */
-	public static function run($class, $params, array $options = []) {
-		$message  = '`\lithium\util\collection\Filters::run()` has been deprecated ';
-		$message .= 'in favor of `\lithium\aop\Filters::run()`';
-		trigger_error($message, E_USER_DEPRECATED);
-
-		$defaults = ['class' => null, 'method' => null, 'data' => []];
+	public static function run($class, $params, array $options = array()) {
+		$defaults = array('class' => null, 'method' => null, 'data' => array());
 		$options += $defaults;
+		$lazyFilterCheck = (is_string($class) && $options['method']);
 
-		$callback = array_pop($options['data']);
+		if (($lazyFilterCheck) && isset(static::$_lazyFilters[$class][$options['method']])) {
+			$filters = static::$_lazyFilters[$class][$options['method']];
+			unset(static::$_lazyFilters[$class][$options['method']]);
+			$options['data'] = array_merge($filters, $options['data']);
 
-		foreach ($options['data'] as $filter) {
-			NewFilters::apply($class, $options['method'], $filter);
+			foreach ($filters as $filter) {
+				$class::applyFilter($options['method'], $filter);
+			}
 		}
-		return NewFilters::run($class, $options['method'], $params, $callback);
+
+		$chain = new Filters($options);
+		$next = $chain->rewind();
+		return $next($class, $params, $chain);
 	}
 
 	/**
 	 * Provides short-hand convenience syntax for filter chaining.
 	 *
-	 * @deprecated Not used here anymore.
 	 * @see lithium\core\Object::applyFilter()
 	 * @see lithium\core\Object::_filter()
 	 * @param object $self The object instance that owns the filtered method.
@@ -215,17 +195,7 @@ class Filters extends \lithium\util\Collection {
 	 * @param array $chain The Filters object instance containing this chain of filters.
 	 * @return mixed Returns the return value of the next filter in the chain.
 	 */
-	public function next(/* $self, $params, $chain */) {
-		if (func_num_args() !== 3) {
-			trigger_error('Missing argument/s.', E_USER_WARNING);
-			return;
-		}
-		list($self, $params, $chain) = func_get_args();
-
-		$message  = '`\lithium\util\collection\Filters::next()` has been deprecated ';
-		$message .= 'in favor of `\lithium\aop\Chain::next()`';
-		trigger_error($message, E_USER_DEPRECATED);
-
+	public function next($self, $params, $chain) {
 		if (empty($self) || empty($chain)) {
 			return parent::next();
 		}
@@ -236,15 +206,10 @@ class Filters extends \lithium\util\Collection {
 	/**
 	 * Gets the method name associated with this filter chain.  This is the method being filtered.
 	 *
-	 * @deprecated Not used here anymore.
 	 * @param boolean $full Whether to return the method name including the class name or not.
 	 * @return string
 	 */
 	public function method($full = false) {
-		$message  = '`\lithium\util\collection\Filters::method()` has been deprecated ';
-		$message .= 'in favor of `\lithium\aop\Chain::method()`';
-		trigger_error($message, E_USER_DEPRECATED);
-
 		return $full ? $this->_class . '::' . $this->_method : $this->_method;
 	}
 }

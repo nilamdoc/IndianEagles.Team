@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\mocks\data;
@@ -13,104 +12,104 @@ use lithium\util\Inflector;
 
 class MockSource extends \lithium\data\Source {
 
-	protected $_classes = [
+	protected $_classes = array(
 		'entity' => 'lithium\data\entity\Record',
 		'set' => 'lithium\data\collection\RecordSet',
 		'relationship' => 'lithium\data\model\Relationship',
 		'schema' => 'lithium\data\Schema'
-	];
+	);
 
-	protected $_mockPosts = [
-		'id' => ['type' => 'int', 'length' => '10', 'null' => false, 'default' => null],
-		'user_id' => [
+	protected $_mockPosts = array(
+		'id' => array('type' => 'int', 'length' => '10', 'null' => false, 'default' => null),
+		'user_id' => array(
 			'type' => 'int', 'length' => '10', 'null' => true, 'default' => null
-		],
-		'title' => [
+		),
+		'title' => array(
 			'type' => 'varchar', 'length' => '255', 'null' => true, 'default' => null
-		],
-		'body' => [
+		),
+		'body' => array(
 			'type' => 'text', 'length' => null, 'null' => true, 'default' => null
-		],
-		'created' => [
+		),
+		'created' => array(
 			'type' => 'datetime', 'length' => null, 'null' => true, 'default' => null
-		],
-		'modified' => [
+		),
+		'modified' => array(
 			'type' => 'datetime', 'length' => null, 'null' => true, 'default' => null
-		],
-		'status' => [
+		),
+		'status' => array(
 			'type' => 'tinyint', 'length' => '1', 'null' => false, 'default' => '0'
-		]
-	];
+		)
+	);
 
-	protected $_mockComments = [
-		'id' => [
+	protected $_mockComments = array(
+		'id' => array(
 			'type' => 'int', 'length' => '10', 'null' => false, 'default' => null
-		],
-		'comment_type_id' => [
+		),
+		'comment_type_id' => array(
 			'type' => 'int', 'length' => '10', 'null' => false, 'default' => null
-		],
-		'article_id' => [
+		),
+		'article_id' => array(
 			'type' => 'int', 'length' => '10', 'null' => false, 'default' => null
-		],
-		'comment_id' => [
+		),
+		'comment_id' => array(
 			'type' => 'int', 'length' => '10', 'null' => false, 'default' => null
-		],
-		'user_id' => [
+		),
+		'user_id' => array(
 			'type' => 'int', 'length' => '10', 'null' => false, 'default' => null
-		],
-		'created' => [
+		),
+		'created' => array(
 			'type' => 'datetime', 'length' => null, 'null' => false, 'default' => null
-		],
-		'body' => [
+		),
+		'body' => array(
 			'type' => 'text', 'length' => null, 'null' => false, 'default' => null
-		],
-		'subscribed' => [
+		),
+		'subscribed' => array(
 			'type' => 'tinyint', 'length' => '1', 'null' => false, 'default' => null
-		],
-		'published' => [
+		),
+		'published' => array(
 			'type' => 'tinyint', 'length' => '1', 'null' => false, 'default' => null
-		]
-	];
+		)
+	);
 
-	protected $_mockTags = [
-		'id' => [
+	protected $_mockTags = array(
+		'id' => array(
 			'type' => 'int', 'length' => '10', 'null' => false, 'default' => null
-		],
-		'linked' => [
+		),
+		'linked' => array(
 			'type' => 'int', 'length' => '10', 'null' => true, 'default' => null
-		],
-		'name' => [
+		),
+		'name' => array(
 			'type' => 'varchar', 'length' => '20', 'null' => true, 'default' => null
-		],
-		'keyname' => [
+		),
+		'keyname' => array(
 			'type' => 'varchar', 'length' => '20', 'null' => true, 'default' => null
-		]
-	];
+		)
+	);
 
-	protected $_postsTags = [
-		'id' => ['type' => 'int'],
-		'post_id' => ['type' => 'int'],
-		'tag_id' => ['type' => 'int'],
-	];
+	protected $_postsTags = array(
+		'id' => array('type' => 'int'),
+		'post_id' => array('type' => 'int'),
+		'tag_id' => array('type' => 'int'),
+	);
 
-	protected $_mockCreators = [
-		'id' => ['type' => 'int'],
-		'name' => [
+	protected $_mockCreators = array(
+		'id' => array('type' => 'int'),
+		'name' => array(
 			'default' => 'Moe',
 			'type' => 'string',
 			'null' => false
-		],
-		'sign' => [
+		),
+		'sign' => array(
 			'default' => 'bar',
 			'type' => 'string',
 			'null' => false
-		],
-		'age' => [
+		),
+		'age' => array(
 			'default' => 0,
 			'type' => 'number',
 			'null' => false
-		]
-	];
+		)
+	);
 
 	public function connect() {
 		return ($this->_isConnected = true);
@@ -121,28 +120,28 @@ class MockSource extends \lithium\data\Source {
 	}
 
 	public function sources($class = null) {
-		return ['mock_posts', 'mock_comments', 'mock_tags', 'posts_tags'];
+		return array('mock_posts', 'mock_comments', 'mock_tags', 'posts_tags');
 	}
 
-	public function describe($entity, $schema = [], array $meta = []) {
+	public function describe($entity, $schema = array(), array $meta = array()) {
 		$source = '_' . Inflector::camelize($entity, false);
-		$fields = isset($this->$source) ? $this->$source : [];
+		$fields = isset($this->$source) ? $this->$source : array();
 		return $this->_instance('schema', compact('fields'));
 	}
 
-	public function create($query, array $options = []) {
+	public function create($query, array $options = array()) {
 		return compact('query', 'options');
 	}
 
-	public function read($query, array $options = []) {
+	public function read($query, array $options = array()) {
 		return compact('query', 'options');
 	}
 
-	public function update($query, array $options = []) {
+	public function update($query, array $options = array()) {
 		return compact('query', 'options');
 	}
 
-	public function delete($query, array $options = []) {
+	public function delete($query, array $options = array()) {
 		return compact('query', 'options');
 	}
 
@@ -154,7 +153,7 @@ class MockSource extends \lithium\data\Source {
 
 	}
 
-	public function relationship($class, $type, $name, array $config = []) {
+	public function relationship($class, $type, $name, array $config = array()) {
 		$field = Inflector::underscore(Inflector::singularize($name));
 		$key = "{$field}_id";
 		$primary = $class::meta('key');
@@ -166,7 +165,7 @@ class MockSource extends \lithium\data\Source {
 				$field = Inflector::pluralize($field);
 			}
 			$secondary = Inflector::underscore(Inflector::singularize($class::meta('name')));
-			$key = [$primary => "{$secondary}_id"];
+			$key = array($primary => "{$secondary}_id");
 		}
 
 		$from = $class;
@@ -175,7 +174,7 @@ class MockSource extends \lithium\data\Source {
 		return $this->_instance('relationship', $config);
 	}
 
-	public function calculation($type, $query, array $options = []) {
+	public function calculation($type, $query, array $options = array()) {
 		$query->calculate($type);
 		return compact('query', 'options');
 	}
@@ -184,14 +183,14 @@ class MockSource extends \lithium\data\Source {
 		if (!$feature) {
 			return true;
 		}
-		$features = [
+		$features = array(
 			'arrays' => false,
 			'transactions' => true,
 			'booleans' => true,
 			'schema' => true,
 			'relationships' => true,
 			'sources' => true
-		];
+		);
 		return isset($features[$feature]) ? $features[$feature] : null;
 	}
 }

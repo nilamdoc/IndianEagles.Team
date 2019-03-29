@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\data;
@@ -22,14 +21,9 @@ use lithium\analysis\Inspector;
  * The `Entity` class can also be used as a base class for your own custom data objects, and is the
  * basis for generating forms with the `Form` helper.
  *
- * Instances of `lithium\data\Entity` or any subclass of it may be serialized. This
- * operation however isn't lossless. The documentation of the `serialize()` method has
- * more information on the limitations.
- *
  * @see lithium\template\helper\Form
- * @see lithium\data\Entity::serialize()
  */
-class Entity extends \lithium\core\Object implements \Serializable {
+class Entity extends \lithium\core\Object {
 
 	/**
 	 * Fully-namespaced class name of model that this record is bound to. Instance methods declared
@@ -47,7 +41,7 @@ class Entity extends \lithium\core\Object implements \Serializable {
 	 *
 	 * @var array
 	 */
-	protected $_data = [];
+	protected $_data = array();
 
 	/**
 	 * An array containing all related records and recordsets, keyed by relationship name, as
@@ -55,7 +49,7 @@ class Entity extends \lithium\core\Object implements \Serializable {
 	 *
 	 * @var array
 	 */
-	protected $_relationships = [];
+	protected $_relationships = array();
 
 	/**
 	 * If this record is chained off of another, contains the origin object.
@@ -71,7 +65,7 @@ class Entity extends \lithium\core\Object implements \Serializable {
 	 * @see lithium\data\Entity::errors()
 	 * @var array
 	 */
-	protected $_errors = [];
+	protected $_errors = array();
 
 	/**
 	 * Contains the values of updated fields. These values will be persisted to the backend data
@@ -79,7 +73,7 @@ class Entity extends \lithium\core\Object implements \Serializable {
 	 *
 	 * @var array
 	 */
-	protected $_updated = [];
+	protected $_updated = array();
 
 	/**
 	 * An array of key/value pairs corresponding to fields that should be updated using atomic
@@ -90,7 +84,7 @@ class Entity extends \lithium\core\Object implements \Serializable {
 	 * @see lithium\data\Entity::decrement()
 	 * @var array
 	 */
-	protected $_increment = [];
+	protected $_increment = array();
 
 	/**
 	 * A flag indicating whether or not this entity exists. Set to `false` if this is a
@@ -109,33 +103,33 @@ class Entity extends \lithium\core\Object implements \Serializable {
 	 *
 	 * @var array
 	 */
-	protected $_schema = [];
-
-	/**
-	 * Hold the "data export" handlers where the keys are fully-namespaced class
-	 * names, and the values are closures that take an instance of the class as a
-	 * parameter, and return an array or scalar value that the instance represents.
-	 *
-	 * @see lithium\data\Entity::to()
-	 * @var array
-	 */
-	protected $_handlers = [];
+	protected $_schema = array();
 
 	/**
 	 * Auto configuration.
 	 *
 	 * @var array
 	 */
-	protected $_autoConfig = [
-		'parent',
-		'schema',
-		'data',
-		'model',
-		'exists',
-		'pathKey',
-		'relationships',
-		'handlers'
-	];
+	protected $_autoConfig = array(
+		'classes' => 'merge', 'parent', 'schema', 'data',
+		'model', 'exists', 'pathKey', 'relationships'
+	);
+
+	/**
+	 * Creates a new record object with default values.
+	 *
+	 * Options defined:
+	 * - 'data' _array_: Data to enter into the record. Defaults to an empty array.
+	 * - 'model' _string_: Class name that provides the data-source for this record.
+	 *   Defaults to `null`.
+	 *
+	 * @param array $config
+	 * @return object Record object.
+	 */
+	public function __construct(array $config = array()) {
+		$defaults = array('model' => null, 'data' => array(), 'relationships' => array());
+		parent::__construct($config + $defaults);
+	}
 
 	protected function _init() {
 		parent::_init();
@@ -160,15 +154,16 @@ class Entity extends \lithium\core\Object implements \Serializable {
 	}
 
 	/**
-	 * PHP magic method used when setting properties on the `Entity` instance, i.e.
-	 * `$entity->title = 'Lorem Ipsum'`.
+	 * Overloading for writing to inaccessible properties.
 	 *
-	 * @param string $name The name of the field/property to write to, i.e. `title` in the above example.
-	 * @param mixed $value The value to write, i.e. `'Lorem Ipsum'`.
-	 * @return void
+	 * @param string $name Property name.
+	 * @param string $value Property value.
+	 * @return mixed Result.
 	 */
-	public function __set($name, $value) {
-		unset($this->_increment[$name]);
+	public function __set($name, $value = null) {
+		if (is_array($name) && !$value) {
+			return array_map(array(&$this, '__set'), array_keys($name), array_values($name));
+		}
 		$this->_updated[$name] = $value;
 	}
 
@@ -184,9 +179,9 @@ class Entity extends \lithium\core\Object implements \Serializable {
 
 	/**
 	 * Magic method that allows calling of model methods on this record instance, i.e.:
-	 * ```
+	 * {{{
 	 * $record->validates();
-	 * ```
+	 * }}}
 	 *
 	 * @param string $method Method name caught by `__call()`.
 	 * @param array $params Arguments given to the above `$method` call.
@@ -196,38 +191,38 @@ class Entity extends \lithium\core\Object implements \Serializable {
 		if (($model = $this->_model) && method_exists($model, '_object')) {
 			array_unshift($params, $this);
 			$class = $model::invokeMethod('_object');
-			return call_user_func_array([&$class, $method], $params);
+			return call_user_func_array(array(&$class, $method), $params);
 		}
 		$message = "No model bound to call `{$method}`.";
 		throw new BadMethodCallException($message);
 	}
 
 	/**
-	 * Determines if a given method can be called.
+	 * Custom check to determine if our given magic methods can be responded to.
 	 *
-	 * @param string $method Name of the method.
-	 * @param boolean $internal Provide `true` to perform check from inside the
-	 *                class/object. When `false` checks also for public visibility;
-	 *                defaults to `false`.
-	 * @return boolean Returns `true` if the method can be called, `false` otherwise.
+	 * @param  string  $method     Method name.
+	 * @param  bool    $internal   Interal call or not.
+	 * @return bool
 	 */
 	public function respondsTo($method, $internal = false) {
-		if (method_exists($class = $this->_model, '_object')) {
-			$result = $class::invokeMethod('_object')->respondsTo($method);
+		$class = $this->_model;
+		$modelRespondsTo = false;
+		$parentRespondsTo = parent::respondsTo($method, $internal);
+		$staticRespondsTo = $class::respondsTo($method, $internal);
+		if (method_exists($class, '_object')) {
+			$model = $class::invokeMethod('_object');
+			$modelRespondsTo = $model->respondsTo($method);
 		} else {
-			$result = Inspector::isCallable($class, $method, $internal);
+			$modelRespondsTo = Inspector::isCallable($class, $method, $internal);
 		}
-		$result = $result || parent::respondsTo($method, $internal);
-		$result = $result || $class::respondsTo($method, $internal);
-
-		return $result;
+		return $parentRespondsTo || $staticRespondsTo || $modelRespondsTo;
 	}
 
 	/**
 	 * Allows several properties to be assigned at once, i.e.:
-	 * ```
-	 * $record->set(['title' => 'Lorem Ipsum', 'value' => 42]);
-	 * ```
+	 * {{{
+	 * $record->set(array('title' => 'Lorem Ipsum', 'value' => 42));
+	 * }}}
 	 *
 	 * @param array $data An associative array of fields and values to assign to this `Entity`
 	 *        instance.
@@ -261,15 +256,6 @@ class Entity extends \lithium\core\Object implements \Serializable {
 		return $this->_model;
 	}
 
-	/**
-	 * Returns the parent object of this object, if any.
-	 *
-	 * @return object Returns the object that contains this object, or `null`.
-	 */
-	public function parent() {
-		return $this->_parent;
-	}
-
 	public function schema($field = null) {
 		$schema = null;
 
@@ -284,7 +270,7 @@ class Entity extends \lithium\core\Object implements \Serializable {
 		if ($schema) {
 			return $field ? $schema->fields($field) : $schema;
 		}
-		return [];
+		return array();
 	}
 
 	/**
@@ -300,7 +286,7 @@ class Entity extends \lithium\core\Object implements \Serializable {
 	 */
 	public function errors($field = null, $value = null) {
 		if ($field === false) {
-			return ($this->_errors = []);
+			return ($this->_errors = array());
 		}
 		if ($field === null) {
 			return $this->_errors;
@@ -346,11 +332,11 @@ class Entity extends \lithium\core\Object implements \Serializable {
 	 *        - `'dematerialize'` _boolean_: If set to `true`, indicates that this entity has
 	 *          been deleted from the data store and no longer exists. Defaults to `false`.
 	 */
-	public function sync($id = null, array $data = [], array $options = []) {
-		$defaults = ['materialize' => true, 'dematerialize' => false];
+	public function sync($id = null, array $data = array(), array $options = array()) {
+		$defaults = array('materialize' => true, 'dematerialize' => false);
 		$options += $defaults;
 		$model = $this->_model;
-		$key = [];
+		$key = array();
 
 		if ($options['materialize']) {
 			$this->_exists = true;
@@ -360,9 +346,8 @@ class Entity extends \lithium\core\Object implements \Serializable {
 		}
 		if ($id && $model) {
 			$key = $model::meta('key');
-			$key = is_array($key) ? array_combine($key, $id) : [$key => $id];
+			$key = is_array($key) ? array_combine($key, $id) : array($key => $id);
 		}
-		$this->_increment = [];
 		$this->_data = $this->_updated = ($key + $data + $this->_updated);
 	}
 
@@ -372,8 +357,8 @@ class Entity extends \lithium\core\Object implements \Serializable {
 	 * non-numeric.
 	 *
 	 * @param string $field The name of the field to be incremented.
-	 * @param integer|string $value The value to increment the field by. Defaults to `1` if
-	 *        this parameter is not specified.
+	 * @param string $value The value to increment the field by. Defaults to `1` if this parameter
+	 *        is not specified.
 	 * @return integer Returns the current value of `$field`, based on the value retrieved from the
 	 *         data source when the entity was loaded, plus any increments applied. Note that it may
 	 *         not reflect the most current value in the persistent backend data source.
@@ -382,16 +367,11 @@ class Entity extends \lithium\core\Object implements \Serializable {
 	 */
 	public function increment($field, $value = 1) {
 		if (!isset($this->_updated[$field])) {
-			$this->_updated[$field] = 0;
-		} elseif (!is_numeric($this->_updated[$field])) {
-			throw new UnexpectedValueException("Field `'{$field}'` cannot be incremented.");
+			return $this->_updated[$field] = $value;
 		}
-
-		if (!isset($this->_increment[$field])) {
-			$this->_increment[$field] = 0;
+		if (!is_numeric($this->_updated[$field])) {
+			throw new UnexpectedValueException("Field '{$field}' cannot be incremented.");
 		}
-		$this->_increment[$field] += $value;
-
 		return $this->_updated[$field] += $value;
 	}
 
@@ -460,13 +440,13 @@ class Entity extends \lithium\core\Object implements \Serializable {
 		return $fields;
 	}
 
-	public function export(array $options = []) {
-		return [
+	public function export(array $options = array()) {
+		return array(
 			'exists'    => $this->_exists,
 			'data'      => $this->_data,
 			'update'    => $this->_updated,
 			'increment' => $this->_increment
-		];
+		);
 	}
 
 	/**
@@ -475,7 +455,7 @@ class Entity extends \lithium\core\Object implements \Serializable {
 	 * @param object $parent
 	 * @param array $config
 	 */
-	public function assignTo($parent, array $config = []) {
+	public function assignTo($parent, array $config = array()) {
 		foreach ($config as $key => $val) {
 			$this->{'_' . $key} = $val;
 		}
@@ -485,24 +465,16 @@ class Entity extends \lithium\core\Object implements \Serializable {
 	/**
 	 * Converts the data in the record set to a different format, i.e. an array.
 	 *
-	 * @param string $format Currently only `array`.
-	 * @param array $options Options for converting:
-	 *        - `'indexed'` _boolean_: Allows to control how converted data of nested collections
-	 *          is keyed. When set to `true` will force indexed conversion of nested collection
-	 *          data. By default `false` which will only index the root level.
+	 * @param string $format currently only `array`
+	 * @param array $options
 	 * @return mixed
 	 */
-	public function to($format, array $options = []) {
-		$defaults = ['handlers' => []];
-		$options += $defaults;
-
-		$options['handlers'] += $this->_handlers;
+	public function to($format, array $options = array()) {
 		switch ($format) {
 			case 'array':
 				$data = $this->_updated;
 				$rel = array_map(function($obj) { return $obj->data(); }, $this->_relationships);
 				$data = $rel + $data;
-				$options['indexed'] = isset($options['indexed']) ? $options['indexed'] : false;
 				$result = Collection::toArray($data, $options);
 			break;
 			case 'string':
@@ -522,45 +494,7 @@ class Entity extends \lithium\core\Object implements \Serializable {
 	 * @return string Returns the generated title of the object.
 	 */
 	public function __toString() {
-		return (string) $this->__call('title', []);
-	}
-
-	/**
-	 * Prepares, enables and executes serialization of the object.
-	 *
-	 * Note: because of the limitations outlined below custom handlers
-	 * and schema are ignored with serialized objects.
-	 *
-	 * Properties that hold anonymous functions are also skipped. Some of these
-	 * can almost be reconstructed (`_handlers`) others cannot (`schema`).
-	 *
-	 * @return string Serialized properties of the object.
-	 */
-	public function serialize() {
-		$vars = get_object_vars($this);
-		unset($vars['_schema']);
-		unset($vars['_config']['schema']);
-		unset($vars['_handlers']);
-
-		return serialize($vars);
-	}
-
-	/**
-	 * Prepares, enables and executes unserialization of the object.
-	 *
-	 * Restores state of the object including pulled results. Tries
-	 * to restore `_handlers` by calling into `_init()`.
-	 *
-	 * @param string $data Serialized properties of the object.
-	 * @return void
-	 */
-	public function unserialize($data) {
-		$data = unserialize($data);
-		static::_init();
-
-		foreach ($data as $key => $value) {
-			$this->{$key} = $value;
-		}
+		return (string) $this->__call('title', array());
 	}
 }
 

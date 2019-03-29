@@ -1,16 +1,13 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\data\model;
 
-use Countable;
-use lithium\util\Set;
 use lithium\core\Libraries;
 use lithium\core\ConfigException;
 use lithium\core\ClassNotFoundException;
@@ -26,9 +23,9 @@ class Relationship extends \lithium\core\Object {
 	 *
 	 * @var array
 	 */
-	protected $_classes = [
-		'entity' => 'lithium\data\Entity'
-	];
+	protected $_classes = array(
+		'entity'      => 'lithium\data\Entity'
+	);
 
 	/**
 	 * A relationship linking type defined by one document or record (or multiple) being embedded
@@ -61,14 +58,14 @@ class Relationship extends \lithium\core\Object {
 	const LINK_REF = 'ref';
 
 	/**
-	 * Constructor. Constructs an object that represents a relationship between two model classes.
+	 * Constructs an object that represents a relationship between two model classes.
 	 *
 	 * @param array $config The relationship's configuration, which defines how the two models in
 	 *        question are bound. The available options are:
 	 *        - `'name'` _string_: The name of the relationship in the context of the
 	 *          originating model. For example, a `Posts` model might define a relationship to
 	 *          a `Users` model like so:
-	 *          `public $hasMany = ['Author' => ['to' => 'Users']];`
+	 *          {{{ public $hasMany = array('Author' => array('to' => 'Users')); }}}
 	 *          In this case, the relationship is bound to the `Users` model, but `'Author'` would
 	 *          be the relationship name. This is the name with which the relationship is
 	 *          referenced in the originating model.
@@ -101,26 +98,20 @@ class Relationship extends \lithium\core\Object {
 	 *          other database-native value. If an array, maps fields from the related object
 	 *          either to fields elsewhere, or to arbitrary expressions. In either case, _the
 	 *          values specified here will be literally interpreted by the database_.
-	 *        - `'strategy'` _\Closure_: An anonymous function used by an instantiating class,
-	 *          such as a database object, to provide additional, dynamic configuration, after
-	 *          the `Relationship` instance has finished configuring itself.
-	 * @return void
 	 */
-	public function __construct(array $config = []) {
-		$defaults = [
-			'name'        => null,
-			'key'         => [],
-			'type'        => null,
-			'to'          => null,
-			'from'        => null,
-			'link'        => static::LINK_KEY,
-			'fields'      => true,
-			'fieldName'   => null,
-			'constraints' => [],
-			'strategy'    => null
-		];
+	public function __construct(array $config = array()) {
+		$defaults = array(
+			'name' => null,
+			'key' => array(),
+			'type' => null,
+			'to'   => null,
+			'from' => null,
+			'link' => static::LINK_KEY,
+			'fields' => true,
+			'fieldName' => null,
+			'constraints' => array()
+		);
 		$config += $defaults;
-
 		if (!$config['type'] || !$config['fieldName']) {
 			throw new ConfigException("`'type'`, `'fieldName'` and `'from'` options can't be empty.");
 		}
@@ -130,37 +121,18 @@ class Relationship extends \lithium\core\Object {
 		parent::__construct($config);
 	}
 
-	/**
-	 * Initializes the `Relationship` object by attempting to automatically generate any values
-	 * that were not provided in the constructor configuration.
-	 */
 	protected function _init() {
 		parent::_init();
 		$config =& $this->_config;
-
 		if (!$config['to']) {
 			$assoc = preg_replace("/\\w+$/", "", $config['from']) . $config['name'];
 			$config['to'] = Libraries::locate('models', $assoc);
-		} elseif (!strpos($config['to'], '\\')) {
-			$config['to'] = preg_replace("/\\w+$/", "", $config['from']) . $config['to'];
 		}
-
 		if (!$config['key'] || !is_array($config['key'])) {
 			$config['key'] = $this->_keys($config['key']);
 		}
-		if ($config['strategy']) {
-			$config = (array) $config['strategy']($this) + $config;
-			unset($this->_config['strategy']);
-		}
 	}
 
-	/**
-	 * Returns the named configuration item, or all configuration data, if no parameter is given.
-	 *
-	 * @param string $key The name of the configuration item to return, or `null` to return all
-	 *               items.
-	 * @return mixed Returns a single configuration item (mixed), or an array of all items.
-	 */
 	public function data($key = null) {
 		if (!$key) {
 			return $this->_config;
@@ -168,105 +140,33 @@ class Relationship extends \lithium\core\Object {
 		return isset($this->_config[$key]) ? $this->_config[$key] : null;
 	}
 
-	/**
-	 * Allows relationship configuration items to be queried by name as methods.
-	 *
-	 * @param string $name The name of the configuration item to query.
-	 * @param array $args Unused.
-	 * @return mixed Returns the value of the given configuration item.
-	 */
-	public function __call($name, $args = []) {
+	public function __call($name, $args = array()) {
 		return $this->data($name);
 	}
 
 	/**
-	 * Gets a related object (or objects) for the given object connected to it by this relationship.
+	 * Custom check to determine if our given magic methods can be responded to.
 	 *
-	 * @param object $object The object to get the related data for.
-	 * @param array $options Additional options to merge into the query to be performed, where
-	 *              applicable.
-	 * @return object Returns the object(s) for this relationship.
-	 */
-	public function get($object, array $options = []) {
-		$link = $this->link();
-		$strategies = $this->_strategies();
-
-		if (!isset($strategies[$link]) || !is_callable($strategies[$link])) {
-			$msg = "Attempted to get object for invalid relationship link type `{$link}`.";
-			throw new ConfigException($msg);
-		}
-		return $strategies[$link]($object, $this, $options);
-	}
-
-	/**
-	 * Generates query parameters for a related object (or objects) for the given object
-	 * connected to it by this relationship.
-	 *
-	 * @param object $object The object to get the related data for.
-	 * @return object Returns the object(s) for this relationship.
-	 */
-	public function query($object) {
-		$conditions = (array) $this->constraints();
-
-		foreach ($this->key() as $from => $to) {
-			if (!isset($object->{$from})) {
-				return null;
-			}
-			$conditions[$to] = $object->{$from};
-
-			if (is_object($conditions[$to]) && $conditions[$to] instanceof Countable) {
-				$conditions[$to] = iterator_to_array($conditions[$to]);
-			}
-		}
-		$fields = $this->fields();
-		$fields = $fields === true ? null : $fields;
-		return compact('conditions', 'fields');
-	}
-
-	/**
-	 * Build foreign keys from primary keys array.
-	 *
-	 * @param $primaryKey An array where keys are primary keys and values are
-	 *                    the associated values of primary keys.
-	 * @return array An array where keys are foreign keys and values are
-	 *               the associated values of foreign keys.
-	 */
-	public function foreignKey($primaryKey) {
-		$result = [];
-		$entity = $this->_classes['entity'];
-		$keys = ($this->type() === 'belongsTo') ? array_flip($this->key()) : $this->key();
-		$primaryKey = ($primaryKey instanceof $entity) ? $primaryKey->to('array') : $primaryKey;
-
-		foreach ($keys as $key => $foreignKey) {
-			$result[$foreignKey] = $primaryKey[$key];
-		}
-		return $result;
-	}
-
-	/**
-	 * Determines if a given method can be called.
-	 *
-	 * @param string $method Name of the method.
-	 * @param boolean $internal Provide `true` to perform check from inside the
-	 *                class/object. When `false` checks also for public visibility;
-	 *                defaults to `false`.
-	 * @return boolean Returns `true` if the method can be called, `false` otherwise.
+	 * @param  string  $method     Method name.
+	 * @param  bool    $internal   Interal call or not.
+	 * @return bool
 	 */
 	public function respondsTo($method, $internal = false) {
-		return is_callable([$this, $method], true);
+		return is_callable(array($this, $method), true);
 	}
 
-	/**
-	 * Generates an array of relationship key pairs, where the keys are fields on the origin model,
-	 * and values are fields on the lniked model.
-	 */
 	protected function _keys($keys) {
 		if (!$keys) {
-			return [];
+			return array();
 		}
 		$config = $this->_config;
+
 		$hasType = ($config['type'] === 'hasOne' || $config['type'] === 'hasMany');
-		$related = Libraries::locate('models', $config[$hasType ? 'from' : 'to']);
+		if ($hasType) {
+			$related = $config['from'];
+		} else {
+			$related = $config['to'];
+		}
 
 		if (!class_exists($related)) {
 			throw new ClassNotFoundException("Related model class '{$related}' not found.");
@@ -286,32 +186,28 @@ class Relationship extends \lithium\core\Object {
 	}
 
 	/**
-	 * Strategies used to query related objects, indexed by key.
+	 * Build foreign keys from primary keys array.
+	 *
+	 * @param $primaryKey An array where keys are primary keys and values are
+	 *                    the associated values of primary keys.
+	 * @return array An array where keys are foreign keys and values are
+	 *               the associated values of foreign keys.
 	 */
-	protected function _strategies() {
-		return [
-			static::LINK_EMBEDDED => function($object, $relationship) {
-				$fieldName = $relationship->fieldName();
-				return $object->{$fieldName};
-			},
-			static::LINK_CONTAINED => function($object, $relationship) {
-				$isArray = ($relationship->type() === "hasMany");
-				return $isArray ? $object->parent()->parent() : $object->parent();
-			},
-			static::LINK_KEY => function($object, $relationship, $options) {
-				$model = $relationship->to();
-				if (!$query = $relationship->query($object)) {
-					return;
-				}
-				$method = ($relationship->type() === "hasMany") ? 'all' : 'first';
-				return $model::$method(Set::merge((array) $query, (array) $options));
-			},
-			static::LINK_KEY_LIST  => function($object, $relationship, $options) {
-				$model = $relationship->to();
-				$query = $relationship->query($object);
-				return $model::all(Set::merge($query, $options));
-			}
-		];
+	public function foreignKey($primaryKey) {
+		$result = array();
+		$entity = $this->_classes['entity'];
+		if ($primaryKey instanceof $entity) {
+			$primaryKey = $primaryKey->to('array');
+		}
+		if ($this->_config['type'] === 'belongsTo') {
+			$keys = array_flip($this->_config['key']);
+		} else {
+			$keys = $this->_config['key'];
+		}
+		foreach ($keys as $key => $foreignKey) {
+			$result[$foreignKey] = $primaryKey[$key];
+		}
+		return $result;
 	}
 }
 

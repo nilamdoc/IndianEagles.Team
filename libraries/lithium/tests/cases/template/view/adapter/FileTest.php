@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\cases\template\view\adapter;
@@ -33,28 +32,21 @@ class FileTest extends \lithium\test\Unit {
 	public function testRenderingWithExtraction() {
 		$file = new File();
 
-		$content = $file->render("{$this->_path}/template1.html.php", ['foo' => 'bar']);
+		$content = $file->render("{$this->_path}/template1.html.php", array('foo' => 'bar'));
 		$this->assertEqual('bar', $content);
 
-		$content = $file->render("{$this->_path}/template2.html.php", ['foo' => 'bar']);
+		$content = $file->render("{$this->_path}/template2.html.php", array('foo' => 'bar'));
 		$this->assertEqual('bar', $content);
 	}
 
 	public function testRenderingWithNoExtraction() {
-		$backup = error_reporting();
-		error_reporting(E_ALL);
+		$file = new File(array('extract' => false));
+		$this->expectException('Undefined variable: foo');
+		$content = $file->render("{$this->_path}/template1.html.php", array('foo' => 'bar'));
+		$this->assertEmpty($content);
 
-		$file = new File(['extract' => false]);
-		$path = $this->_path;
-
-		$this->assertException('Undefined variable: foo', function()  use ($file, $path) {
-			$file->render("{$path}/template1.html.php", ['foo' => 'bar']);
-		});
-
-		$content = $file->render("{$this->_path}/template2.html.php", ['foo' => 'bar']);
+		$content = $file->render("{$this->_path}/template2.html.php", array('foo' => 'bar'));
 		$this->assertEqual('bar', $content);
-
-		error_reporting($backup);
 	}
 
 	public function testContextOffsetManipulation() {
@@ -77,39 +69,36 @@ class FileTest extends \lithium\test\Unit {
 		$path = Libraries::get(true, 'path') . '/views/pages/home.html.php';
 		$this->skipIf(!file_exists($path), 'No default app template.');
 
-		$file = new File(['paths' => [
+		$file = new File(array('paths' => array(
 			'template' => '{:library}/views/{:controller}/{:template}.{:type}.php'
-		]]);
+		)));
 
-		$template = $file->template('template', [
+		$template = $file->template('template', array(
 			'controller' => 'pages', 'template' => 'home', 'type' => 'html'
-		]);
-		$pattern = '/template_pages_home\.html_[0-9a-f]+/';
-		$this->assertPattern($pattern, $template);
+		));
+		$this->assertPattern('/template_views_pages_home\.html_[0-9]+/', $template);
 
-		$file = new File(['compile' => false, 'paths' => [
+		$file = new File(array('compile' => false, 'paths' => array(
 			'template' => '{:library}/views/{:controller}/{:template}.{:type}.php'
-		]]);
-		$template = $file->template('template', [
+		)));
+		$template = $file->template('template', array(
 			'controller' => 'pages', 'template' => 'home', 'type' => 'html'
-		]);
+		));
 		$this->assertPattern('/\/views\/pages\/home\.html\.php$/', $template);
 
-		$this->assertException('/Template not found/', function() use ($file) {
-			$file->template('template', [
-				'controller' => 'pages', 'template' => 'foo', 'type' => 'html'
-			]);
-		});
+		$this->expectException('/Template not found/');
+		$file->template('template', array(
+			'controller' => 'pages', 'template' => 'foo', 'type' => 'html'
+		));
 	}
 
 	public function testInvalidTemplateType() {
-		$file = new File(['compile' => false, 'paths' => [
+		$file = new File(array('compile' => false, 'paths' => array(
 			'template' => '{:library}/views/{:controller}/{:template}.{:type}.php'
-		]]);
+		)));
 
-		$this->assertException("Invalid template type 'invalid'.", function() use ($file) {
-			$file->template('invalid', ['template' => 'foo']);
-		});
+		$this->expectException("Invalid template type 'invalid'.");
+		$template = $file->template('invalid', array('template' => 'foo'));
 	}
 }
 

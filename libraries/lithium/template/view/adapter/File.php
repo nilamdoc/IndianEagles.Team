@@ -1,15 +1,14 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\template\view\adapter;
 
-use lithium\util\Text;
+use lithium\util\String;
 use lithium\core\Libraries;
 use lithium\template\TemplateException;
 
@@ -32,10 +31,10 @@ class File extends \lithium\template\view\Renderer implements \ArrayAccess {
 	 *
 	 * @var array
 	 */
-	protected $_autoConfig = [
+	protected $_autoConfig = array(
 		'classes' => 'merge', 'request', 'response', 'context',
 		'strings', 'handlers', 'view', 'compile', 'paths'
-	];
+	);
 
 	/**
 	 * Boolean flag indicating whether templates should be pre-compiled before inclusion. For more
@@ -53,7 +52,7 @@ class File extends \lithium\template\view\Renderer implements \ArrayAccess {
 	 *
 	 * @var array
 	 */
-	protected $_data = [];
+	protected $_data = array();
 
 	/**
 	 * Variables that have been set from a view/element/layout/etc. that should be available to the
@@ -61,9 +60,9 @@ class File extends \lithium\template\view\Renderer implements \ArrayAccess {
 	 *
 	 * @var array Key/value pairs of variables
 	 */
-	protected $_vars = [];
+	protected $_vars = array();
 
-	protected $_paths = [];
+	protected $_paths = array();
 
 	/**
 	 * `File`'s dependencies. These classes are used by the output handlers to generate URLs
@@ -72,26 +71,20 @@ class File extends \lithium\template\view\Renderer implements \ArrayAccess {
 	 * @see Renderer::$_handlers
 	 * @var array
 	 */
-	protected $_classes = [
+	protected $_classes = array(
 		'compiler' => 'lithium\template\view\Compiler',
 		'router' => 'lithium\net\http\Router',
 		'media'  => 'lithium\net\http\Media'
-	];
+	);
 
-	/**
-	 * Constructor.
-	 *
-	 * @param array $config Configuration options.
-	 * @return void
-	 */
-	public function __construct(array $config = []) {
-		$defaults = [
-			'classes' => [],
+	public function __construct(array $config = array()) {
+		$defaults = array(
+			'classes' => array(),
 			'compile' => true,
-			'compiler' => [],
+			'compiler' => array(),
 			'extract' => true,
-			'paths' => []
-		];
+			'paths' => array()
+		);
 		parent::__construct($config + $defaults);
 	}
 
@@ -103,8 +96,8 @@ class File extends \lithium\template\view\Renderer implements \ArrayAccess {
 	 * @param array $options
 	 * @return string
 	 */
-	public function render($template, $data = [], array $options = []) {
-		$defaults = ['context' => []];
+	public function render($template, $data = array(), array $options = array()) {
+		$defaults = array('context' => array());
 		$options += $defaults;
 
 		$this->_context = $options['context'] + $this->_context;
@@ -144,70 +137,23 @@ class File extends \lithium\template\view\Renderer implements \ArrayAccess {
 	}
 
 	/**
-	 * Allows checking to see if a value is set in template data.
+	 * Allows checking to see if a value is set in template data, i.e. `$this['foo']` in templates.
 	 *
-	 * Part of `ArrayAccess`.
-	 *
-	 * ```
-	 * isset($file['bar']);
-	 * $file->offsetExists('bar');
-	 * ```
-	 *
-	 * @param  string  $offset Key / variable name to check.
+	 * @param string $offset The key / variable name to check.
 	 * @return boolean Returns `true` if the value is set, otherwise `false`.
 	 */
 	public function offsetExists($offset) {
 		return array_key_exists($offset, $this->_data);
 	}
 
-	/**
-	 * Gets the offset, or null in the template data.
-	 *
-	 * Part of `ArrayAccess`.
-	 *
-	 * ```
-	 * $file['bar'];
-	 * $file->offsetGet('bar');
-	 * ```
-	 *
-	 * @param  string $offset Key / variable name to check.
-	 * @return mixed
-	 */
 	public function offsetGet($offset) {
 		return isset($this->_data[$offset]) ? $this->_data[$offset] : null;
 	}
 
-	/**
-	 * Sets the offset with the given value.
-	 *
-	 * Part of `ArrayAccess`.
-	 *
-	 * ```
-	 * $file['bar'] = 'baz';
-	 * $file->offsetSet('bar', 'baz');
-	 * ```
-	 *
-	 * @param  string $offset Key / variable name to check.
-	 * @param  mixed  $value  Value you wish to set to `$offset`.
-	 * @return void
-	 */
 	public function offsetSet($offset, $value) {
 		$this->_data[$offset] = $value;
 	}
 
-	/**
-	 * Unsets the given offset.
-	 *
-	 * Part of `ArrayAccess`.
-	 *
-	 * ```
-	 * unset($file['bar']);
-	 * $file->offsetUnset('bar');
-	 * ```
-	 *
-	 * @param  string $offset Key / variable name to check.
-	 * @return void
-	 */
 	public function offsetUnset($offset) {
 		unset($this->_data[$offset]);
 	}
@@ -227,7 +173,7 @@ class File extends \lithium\template\view\Renderer implements \ArrayAccess {
 		}
 
 		foreach ((array) $this->_paths[$type] as $path) {
-			if (!file_exists($path = Text::insert($path, $params))) {
+			if (!file_exists($path = String::insert($path, $params))) {
 				continue;
 			}
 			return $path;

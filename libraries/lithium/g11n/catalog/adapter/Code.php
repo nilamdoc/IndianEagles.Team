@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\g11n\catalog\adapter;
@@ -33,10 +32,9 @@ class Code extends \lithium\g11n\catalog\Adapter {
 	 * @param array $config Available configuration options are:
 	 *        - `'path'`: The path to the directory holding the data.
 	 *        - `'scope'`: Scope to use.
-	 * @return void
 	 */
-	public function __construct(array $config = []) {
-		$defaults = ['path' => null, 'scope' => null];
+	public function __construct(array $config = array()) {
+		$defaults = array('path' => null, 'scope' => null);
 		parent::__construct($config + $defaults);
 	}
 
@@ -85,7 +83,7 @@ class Code extends \lithium\g11n\catalog\Adapter {
 	protected function _readMessageTemplate($path) {
 		$base = new RecursiveDirectoryIterator($path);
 		$iterator = new RecursiveIteratorIterator($base);
-		$data = [];
+		$data = array();
 
 		foreach ($iterator as $item) {
 			$file = $item->getPathname();
@@ -113,15 +111,14 @@ class Code extends \lithium\g11n\catalog\Adapter {
 		$contents = file_get_contents($file);
 		$contents = Compiler::compile($contents);
 
-		$defaults = [
-			'ids' => [],
-			'context' => null,
+		$defaults = array(
+			'ids' => array(),
 			'open' => false,
 			'position' => 0,
-			'occurrence' => ['file' => $file, 'line' => null]
-		];
+			'occurrence' => array('file' => $file, 'line' => null)
+		);
 		extract($defaults);
-		$data = [];
+		$data = array();
 
 		if (strpos($contents, '$t(') === false && strpos($contents, '$tn(') === false) {
 			return $data;
@@ -130,64 +127,18 @@ class Code extends \lithium\g11n\catalog\Adapter {
 		$tokens = token_get_all($contents);
 		unset($contents);
 
-		$findContext = function ($position) use ($tokens) {
-			$ignore  = [T_WHITESPACE, '(', ')', T_ARRAY, ','];
-			$open    = 1;
-			$options = [];
-			$depth   = 0;
-
-			while (isset($tokens[$position]) && $token = $tokens[$position]) {
-				if (!is_array($token)) {
-					$token = [0 => null, 1 => $token, 2 => null];
-				}
-				if ($token[1] === '[' || $token[1] === '(') {
-					$open++;
-				} elseif (($token[1] === ']' || $token[1] === ')') && --$open === 0) {
-					break;
-				}
-				if ($token[1] === '[' || $token[0] === T_ARRAY) {
-					$depth++;
-				} elseif ($depth > 1 && ($token[1] === ']' || $token[1] === ')')) {
-					$depth--;
-				}
-				if ($depth === 1 && $open === 2) {
-					if (!in_array($token[0] ? : $token[1], $ignore)) {
-						$options[] = $token;
-					}
-				}
-				$position++;
-			}
-
-			foreach ($options as $i => $token) {
-				if (!(isset($options[$i + 1]) && isset($options[$i + 2]))) {
-					break;
-				}
-
-				$condition1 = substr($token[1], 1, -1) === 'context';
-				$condition2 = $options[$i + 1][0] === T_DOUBLE_ARROW;
-				$condition3 = $options[$i + 2][0] === T_CONSTANT_ENCAPSED_STRING;
-
-				if ($condition1 && $condition2 && $condition3) {
-					return $options[$i + 2][1];
-				}
-			}
-
-			return null;
-		};
-
 		foreach ($tokens as $key => $token) {
 			if (!is_array($token)) {
-				$token = [0 => null, 1 => $token, 2 => null];
+				$token = array(0 => null, 1 => $token, 2 => null);
 			}
 
 			if ($open) {
 				if ($position >= ($open === 'singular' ? 1 : 2)) {
-					$data = $this->_merge($data, [
+					$data = $this->_merge($data, array(
 						'id' => $ids['singular'],
 						'ids' => $ids,
-						'occurrences' => [$occurrence],
-						'context' => $context
-					]);
+						'occurrences' => array($occurrence)
+					));
 					extract($defaults, EXTR_OVERWRITE);
 				} elseif ($token[0] === T_CONSTANT_ENCAPSED_STRING) {
 					$ids[$ids ? 'plural' : 'singular'] = $token[1];
@@ -203,7 +154,6 @@ class Code extends \lithium\g11n\catalog\Adapter {
 						continue;
 					}
 					$occurrence['line'] = $token[2];
-					$context = $findContext($key + 2);
 				}
 			}
 		}
@@ -226,7 +176,7 @@ class Code extends \lithium\g11n\catalog\Adapter {
 			}
 			return substr($value, 1, -1);
 		};
-		$fields = ['id', 'ids', 'translated', 'context'];
+		$fields = array('id', 'ids', 'translated');
 
 		foreach ($fields as $field) {
 			if (isset($item[$field])) {

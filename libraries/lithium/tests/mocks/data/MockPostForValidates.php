@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\mocks\data;
@@ -13,30 +12,30 @@ use lithium\util\Validator;
 
 class MockPostForValidates extends \lithium\data\Model {
 
-	protected $_meta = ['source' => 'mock_posts', 'connection' => false];
+	protected $_meta = array('source' => 'mock_posts', 'connection' => false);
 
-	public $validates = [
+	public $validates = array(
 		'title' => 'please enter a title',
-		'email' => [
-			['notEmpty', 'message' => 'email is empty'],
-			['email', 'message' => 'email is not valid'],
-			['modelIsSet', 'required' => false, 'message' => 'model is not set'],
-			[
+		'email' => array(
+			array('notEmpty', 'message' => 'email is empty'),
+			array('email', 'message' => 'email is not valid'),
+			array('modelIsSet', 'required' => false, 'message' => 'model is not set'),
+			array(
 				'inList',
-				'list' => ['something@test.com','foo@bar.com'],
+				'list' => array('something@test.com','foo@bar.com'),
 				'on' => 'customEvent',
 				'message' => 'email is not in 1st list'
-			],
-			[
+			),
+			array(
 				'inList',
-				'list' => ['something@test.com'],
+				'list' => array('something@test.com'),
 				'on' => 'anotherCustomEvent',
 				'message' => 'email is not in 2nd list'
-			]
-		]
-	];
+			)
+		)
+	);
 
-	public static function init() {
+	public static function __init() {
 		$class = __CLASS__;
 		Validator::add('modelIsSet', function($value, $format, $options) use ($class) {
 			if (isset($options['model']) && $options['model'] = $class) {
@@ -46,7 +45,5 @@ class MockPostForValidates extends \lithium\data\Model {
 		});
 	}
 }
-
-MockPostForValidates::init();
 
 ?>

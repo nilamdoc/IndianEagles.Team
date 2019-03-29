@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\net\socket;
@@ -17,7 +16,7 @@ use lithium\core\NetworkException;
  * This stream adapter provides the required method implementations of the abstract `Socket` class
  * for the `open()`, `close()`, `read()`, `write()`, `timeout()` `eof()` and `encoding()` methods.
  *
- * @link http://php.net/book.stream.php
+ * @link http://www.php.net/manual/en/book.stream.php PHP Manual: Streams
  * @see lithium\net\socket\Stream
  */
 class Stream extends \lithium\net\Socket {
@@ -30,7 +29,7 @@ class Stream extends \lithium\net\Socket {
 	 *         `'scheme'` or `'host'` settings, or if configuration fails, otherwise returns a
 	 *         resource stream. Throws exception if there is a network error.
 	 */
-	public function open(array $options = []) {
+	public function open(array $options = array()) {
 		parent::open($options);
 		$config = $this->_config;
 
@@ -66,7 +65,15 @@ class Stream extends \lithium\net\Socket {
 	 * @return boolean True on closed connection
 	 */
 	public function close() {
-		return !is_resource($this->_resource) || fclose($this->_resource);
+		if (!is_resource($this->_resource)) {
+			return true;
+		}
+		fclose($this->_resource);
+
+		if (is_resource($this->_resource)) {
+			$this->close();
+		}
+		return true;
 	}
 
 	/**
@@ -115,10 +122,10 @@ class Stream extends \lithium\net\Socket {
 	/**
 	 * Set timeout period on a stream.
 	 *
-	 * @link http://php.net/function.stream-set-timeout.php
+	 * @link http://www.php.net/manual/en/function.stream-set-timeout.php
 	 *       PHP Manual: stream_set_timeout()
 	 * @param integer $time The timeout value in seconds.
-	 * @return boolean
+	 * @return void
 	 */
 	public function timeout($time) {
 		if (!is_resource($this->_resource)) {
@@ -128,13 +135,13 @@ class Stream extends \lithium\net\Socket {
 	}
 
 	/**
-	 * Sets the character set for stream encoding if possible. The `stream_encoding`
-	 * function is not guaranteed to be available as it is seems as if it's experimental
-	 * or just not officially documented. If the function is not available returns `false`.
+	 * Sets the character set for stream encoding
 	 *
-	 * @link http://php.net/function.stream-encoding.php stream_encoding()
+	 * Note: This function only exists in PHP 6. For PHP < 6, this method will return void.
+	 *
+	 * @link http://www.php.net/manual/en/function.stream-encoding.php stream_encoding()
 	 * @param string $charset
-	 * @return boolean Returns `false` if `stream_encoding()` function does not exist, boolean
+	 * @return mixed Returns `null` if `stream_encoding()` function does not exist, boolean
 	 *         result of `stream_encoding()` otherwise.
 	 */
 	public function encoding($charset) {

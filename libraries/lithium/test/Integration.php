@@ -1,15 +1,12 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\test;
-
-use lithium\aop\Filters;
 
 /**
  * This is the base class for integration tests.
@@ -31,12 +28,12 @@ class Integration extends \lithium\test\Unit {
 	protected function _init() {
 		parent::_init();
 
-		Filters::apply($this, 'run', function($params, $next) {
-			$before = $this->results();
+		$this->applyFilter('run', function($self, $params, $chain) {
+			$before = $self->results();
 
-			$next($params);
+			$chain->next($self, $params, $chain);
 
-			$after = $this->results();
+			$after = $self->results();
 
 			while (count($after) > count($before)) {
 				$result = array_pop($after);
@@ -56,11 +53,11 @@ class Integration extends \lithium\test\Unit {
 	 * @param array $config Override the default URL to check.
 	 * @return boolean True if a network connection is established, false otherwise.
 	 */
-	protected function _hasNetwork($config = []) {
-		$defaults = [
+	protected function _hasNetwork($config = array()) {
+		$defaults = array(
 			'scheme' => 'http',
 			'host' => 'google.com'
-		];
+		);
 		$config += $defaults;
 
 		$url = "{$config['scheme']}://{$config['host']}";
@@ -79,6 +76,7 @@ class Integration extends \lithium\test\Unit {
 		restore_error_handler();
 		return !$failed;
 	}
+
 }
 
 ?>

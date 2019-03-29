@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\cases\test;
@@ -15,10 +14,10 @@ use lithium\test\Group;
 class ReportTest extends \lithium\test\Unit {
 
 	public function testInit() {
-		$report = new Report([
+		$report = new Report(array(
 			'title' => 'lithium\tests\mocks\test\MockUnitTest',
-			'group' => new Group(['data' => ['lithium\tests\mocks\test\MockUnitTest']])
-		]);
+			'group' => new Group(array('data' => array('lithium\tests\mocks\test\MockUnitTest')))
+		));
 		$report->run();
 
 		$expected = 'lithium\tests\mocks\test\MockUnitTest';
@@ -35,27 +34,27 @@ class ReportTest extends \lithium\test\Unit {
 	}
 
 	public function testFilters() {
-		$report = new Report([
+		$report = new Report(array(
 			'title' => 'lithium\tests\mocks\test\MockFilterClassTest',
 			'group' => new Group(
-				['data' => ['lithium\tests\mocks\test\MockFilterClassTest']]
+				array('data' => array('lithium\tests\mocks\test\MockFilterClassTest'))
 			),
-			'filters' => ["Complexity" => []],
+			'filters' => array("Complexity" => ""),
 			'format' => 'html'
-		]);
+		));
 
-		$expected = ['lithium\test\filter\Complexity' => [
-			'name' => 'complexity', 'apply' => [], 'analyze' => []
-		]];
+		$expected = array('lithium\test\filter\Complexity' => array(
+			'name' => 'complexity', 'apply' => array(), 'analyze' => array()
+		));
 		$result = $report->filters();
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testStats() {
-		$report = new Report([
+		$report = new Report(array(
 			'title' => 'lithium\tests\mocks\test\MockUnitTest',
-			'group' => new Group(['data' => ['lithium\tests\mocks\test\MockUnitTest']])
-		]);
+			'group' => new Group(array('data' => array('lithium\tests\mocks\test\MockUnitTest')))
+		));
 		$report->run();
 
 		$expected = 2;
@@ -66,11 +65,11 @@ class ReportTest extends \lithium\test\Unit {
 	}
 
 	public function testRender() {
-		$report = new Report([
+		$report = new Report(array(
 			'title' => '\lithium\tests\mocks\test\MockUnitTest',
-			'group' => new Group(['data' => ['\lithium\tests\mocks\test\MockUnitTest']]),
+			'group' => new Group(array('data' => array('\lithium\tests\mocks\test\MockUnitTest'))),
 			'format' => 'txt'
-		]);
+		));
 		$report->run();
 
 		$result = $report->render('result', $report->stats());
@@ -78,13 +77,13 @@ class ReportTest extends \lithium\test\Unit {
 	}
 
 	public function testSingleFilter() {
-		$report = new Report([
+		$report = new Report(array(
 			'title' => 'lithium\tests\mocks\test\MockFilterClassTest',
-			'group' => new Group([
-				'data' => ['lithium\tests\mocks\test\MockFilterClassTest']
-			]),
-			'filters' => ["Complexity" => []]
-		]);
+			'group' => new Group(array(
+				'data' => array('lithium\tests\mocks\test\MockFilterClassTest')
+			)),
+			'filters' => array("Complexity" => "")
+		));
 		$report->run();
 
 		$class = 'lithium\test\filter\Complexity';

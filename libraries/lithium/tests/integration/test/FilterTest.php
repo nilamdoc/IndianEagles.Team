@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\integration\test;
@@ -23,16 +22,16 @@ class FilterTest extends \lithium\test\Integration {
 	}
 
 	public function setUp() {
-		$this->report = new Report([
+		$this->report = new Report(array(
 			'title' => 'lithium\tests\mocks\test\MockFilterTest',
 			'group' => new Group(
-				['data' => ['lithium\tests\mocks\test\MockFilterClassTest']]
+				array('data' => array('lithium\tests\mocks\test\MockFilterClassTest'))
 			)
-		]);
+		));
 	}
 
 	public function testSingleTest() {
-		$this->report->filters(['Coverage' => []]);
+		$this->report->filters(array('Coverage' => null));
 
 		$this->report->run();
 
@@ -44,26 +43,26 @@ class FilterTest extends \lithium\test\Integration {
 	}
 
 	public function testSingleTestWithMultipleFilters() {
-		$all = [
+		$all = array(
 			'Coverage',
 			'Complexity',
 			'Profiler',
 			'Affected'
-		];
+		);
 		$permutations = $this->_powerPerms($all);
 
 		foreach ($permutations as $filters) {
 			$filters = array_flip($filters);
 			$filters = array_map(function($v) {
-				return [];
+				return "";
 			}, $filters);
 
-			$report = new Report([
+			$report = new Report(array(
 				'title' => 'lithium\tests\mocks\test\MockFilterTest',
 				'group' => new Group(
-					['data' => ['lithium\tests\mocks\test\MockFilterClassTest']]
+					array('data' => array('lithium\tests\mocks\test\MockFilterClassTest'))
 				)
-			]);
+			));
 
 			$report->filters($filters);
 
@@ -94,7 +93,7 @@ class FilterTest extends \lithium\test\Integration {
 	 */
 	protected function _powerPerms($arr) {
 		$powerSet = $this->_powerSet($arr);
-		$result = [];
+		$result = array();
 
 		foreach ($powerSet as $set) {
 			$perms = $this->_perms($set);
@@ -106,11 +105,11 @@ class FilterTest extends \lithium\test\Integration {
 	protected function _powerSet($in, $minLength = 1) {
 		$count = count($in);
 		$members = pow(2, $count);
-		$return = [];
+		$return = array();
 
 		for ($i = 0; $i < $members; $i++) {
 			$b = sprintf("%0{$count}b", $i);
-			$out = [];
+			$out = array();
 
 			for ($j = 0; $j < $count; $j++) {
 				if ($b[$j] === '1') {
@@ -139,7 +138,7 @@ class FilterTest extends \lithium\test\Integration {
 		if ($nth === null) {
 			return $this->_perms($arr);
 		}
-		$result = [];
+		$result = array();
 		$length = count($arr);
 
 		while ($length--) {
@@ -154,7 +153,7 @@ class FilterTest extends \lithium\test\Integration {
 	}
 
 	protected function _perms($arr) {
-		$p = [];
+		$p = array();
 
 		for ($i = 0; $i < $this->_factorial(count($arr)); $i++) {
 			$p[] = $this->_perm($arr, $i);

@@ -1,40 +1,39 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\data;
 
 class DocumentSchema extends \lithium\data\Schema {
 
-	protected $_classes = [
+	protected $_classes = array(
 		'entity' => 'lithium\data\entity\Document',
 		'set'    => 'lithium\data\collection\DocumentSet'
-	];
+	);
 
-	protected $_handlers = [];
+	protected $_handlers = array();
 
 	protected function _init() {
 		$this->_autoConfig[] = 'handlers';
 		parent::_init();
 	}
 
-	public function cast($object, $key, $data, array $options = []) {
-		$defaults = [
+	public function cast($object, $key, $data, array $options = array()) {
+		$defaults = array(
 			'parent' => null,
 			'pathKey' => null,
 			'model' => null,
 			'wrap' => true,
-			'asContent' => false,
 			'first' => false
-		];
+		);
 		$options += $defaults;
 
 		$basePathKey = $options['pathKey'];
+		$model = (!$options['model'] && $object) ? $object->model() : $options['model'];
 		$classes = $this->_classes;
 
 		$fieldName = is_int($key) ? null : $key;
@@ -47,19 +46,14 @@ class DocumentSchema extends \lithium\data\Schema {
 		if ($data instanceof $classes['set'] || $data instanceof $classes['entity']) {
 			return $data;
 		}
-		if (is_object($data) && !$this->is('array', $pathKey) && !$options['asContent']) {
+		if (is_object($data) && !$this->is('array', $pathKey)) {
 			return $data;
 		}
 		return $this->_castArray($object, $data, $pathKey, $options, $defaults);
 	}
 
 	protected function _castArray($object, $val, $pathKey, $options, $defaults) {
-		$isArray = (
-			$this->is('array', $pathKey) &&
-			!$options['asContent'] &&
-			(!$object instanceof $this->_classes['set'])
-		);
-
+		$isArray = $this->is('array', $pathKey) && (!$object instanceof $this->_classes['set']);
 		$isObject = ($this->type($pathKey) === 'object');
 		$valIsArray = is_array($val);
 		$numericArray = false;
@@ -74,28 +68,29 @@ class DocumentSchema extends \lithium\data\Schema {
 		}
 
 		if ($isArray || ($numericArray && !$isObject)) {
-			$val = $valIsArray ? $val : [$val];
+			$val = $valIsArray ? $val : array($val);
 			$class = 'set';
 		}
 
 		if ($options['wrap']) {
-			$config = [
+			$config = array(
 				'parent' => $options['parent'],
-				'model' => (!$options['model'] && $object) ? $object->model() : $options['model'],
+				'model' => $options['model'],
 				'schema' => $this
-			];
+			);
 			$config += compact('pathKey') + array_diff_key($options, $defaults);
 
 			if (!$pathKey && $model = $options['model']) {
+				$connection = $model::connection();
 				$exists = is_object($object) ? $object->exists() : false;
-				$config += ['class' => $class, 'exists' => $exists, 'defaults' => false];
-				$val = $model::create($val, $config);
+				$config += array('class' => $class, 'exists' => $exists);
+				$val = $connection->item($model, $val, $config);
 			} else {
 				$config['data'] = $val;
 				$val = $this->_instance($class, $config);
 			}
 		} elseif ($class === 'set') {
-			$val = $val ?: [];
+			$val = $val ?: array();
 			foreach ($val as &$value) {
 				$value = $this->_castType($value, $pathKey);
 			}

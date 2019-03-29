@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\g11n;
@@ -34,7 +33,7 @@ use lithium\console\Request as ConsoleRequest;
  *  - `language` The spoken language, here represented by an ISO 639-1 code,
  *    where not available ISO 639-3 and ISO 639-5 codes are allowed too) tag.
  *    The tag should  be lower-cased and is required.
- *  - `Script` The tag should have its first character capitalized, all others
+ *  - `Script` The tag should have it's first character capitalized, all others
  *    lower-cased. The tag is optional.
  *  - `TERRITORY` A geographical area, here represented by an ISO 3166-1 code.
  *     Should be all upper-cased and is optional.
@@ -51,21 +50,21 @@ class Locale extends \lithium\core\StaticObject {
 	 *
 	 * @var array
 	 */
-	protected static $_tags = [
-		'language' => ['formatter' => 'strtolower'],
-		'script' => ['formatter' => ['strtolower', 'ucfirst']],
-		'territory' => ['formatter' => 'strtoupper'],
-		'variant' => ['formatter' => 'strtoupper']
-	];
+	protected static $_tags = array(
+		'language' => array('formatter' => 'strtolower'),
+		'script' => array('formatter' => array('strtolower', 'ucfirst')),
+		'territory' => array('formatter' => 'strtoupper'),
+		'variant' => array('formatter' => 'strtoupper')
+	);
 
 	/**
 	 * Magic method enabling `language`, `script`, `territory` and `variant`
 	 * methods to parse and retrieve individual tags from a locale.
 	 *
-	 * ```
-	 * Locale::language('en_US'); // returns 'en'
-	 * Locale::territory('en_US'); // returns 'US'
-	 * ```
+	 * {{{
+	 *     Locale::language('en_US'); // returns 'en'
+	 *     Locale::territory('en_US'); // returns 'US'
+	 * }}}
 	 *
 	 * @see lithium\g11n\Locale::$_tags
 	 * @see lithium\g11n\Locale::decompose()
@@ -73,7 +72,7 @@ class Locale extends \lithium\core\StaticObject {
 	 * @param array $params
 	 * @return mixed
 	 */
-	public static function __callStatic($method, $params = []) {
+	public static function __callStatic($method, $params = array()) {
 		$tags = static::invokeMethod('decompose', $params);
 
 		if (!isset(static::$_tags[$method])) {
@@ -83,13 +82,11 @@ class Locale extends \lithium\core\StaticObject {
 	}
 
 	/**
-	 * Determines if a given method can be called.
+	 * Custom check to determine if our given magic methods can be responded to.
 	 *
-	 * @param string $method Name of the method.
-	 * @param boolean $internal Provide `true` to perform check from inside the
-	 *                class/object. When `false` checks also for public visibility;
-	 *                defaults to `false`.
-	 * @return boolean Returns `true` if the method can be called, `false` otherwise.
+	 * @param  string  $method     Method name.
+	 * @param  bool    $internal   Interal call or not.
+	 * @return bool
 	 */
 	public static function respondsTo($method, $internal = false) {
 		return isset(static::$_tags[$method]) || parent::respondsTo($method, $internal);
@@ -103,7 +100,7 @@ class Locale extends \lithium\core\StaticObject {
 	 *         if none of the passed tags could be used to compose a locale.
 	 */
 	public static function compose($tags) {
-		$result = [];
+		$result = array();
 
 		foreach (static::$_tags as $name => $tag) {
 			if (isset($tags[$name])) {
@@ -138,7 +135,7 @@ class Locale extends \lithium\core\StaticObject {
 	 * Returns a locale in its canonical form with tags formatted properly.
 	 *
 	 * @param string $locale A locale in an arbitrary form (i.e. `'ZH-HANS-HK_REVISED'`).
-	 * @return string A locale in its canonical form (i.e. `'zh_Hans_HK_REVISED'`).
+	 * @return string A locale in it's canonical form (i.e. `'zh_Hans_HK_REVISED'`).
 	 */
 	public static function canonicalize($locale) {
 		$tags = static::decompose($locale);
@@ -155,13 +152,13 @@ class Locale extends \lithium\core\StaticObject {
 	 * Cascades a locale.
 	 *
 	 * Usage:
-	 * ```
+	 * {{{
 	 * Locale::cascade('en_US');
-	 * // returns ['en_US', 'en', 'root']
+	 * // returns array('en_US', 'en', 'root')
 	 *
 	 * Locale::cascade('zh_Hans_HK_REVISED');
-	 * // returns ['zh_Hans_HK_REVISED', 'zh_Hans_HK', 'zh_Hans', 'zh', 'root']
-	 * ```
+	 * // returns array('zh_Hans_HK_REVISED', 'zh_Hans_HK', 'zh_Hans', 'zh', 'root')
+	 * }}}
 	 *
 	 * @link http://www.unicode.org/reports/tr35/tr35-13.html#Locale_Inheritance
 	 * @param string $locale A locale in an arbitrary form (i.e. `'en_US'` or `'EN-US'`).
@@ -200,20 +197,19 @@ class Locale extends \lithium\core\StaticObject {
 	 *
 	 * @link http://www.ietf.org/rfc/rfc4647.txt
 	 * @param array $locales Locales to match against `$locale`.
-	 * @param string $locale A locale in its canonical form (i.e. `'zh_Hans_HK_REVISED'`).
+	 * @param string $locale A locale in it's canonical form (i.e. `'zh_Hans_HK_REVISED'`).
 	 * @return string The matched locale.
 	 */
 	public static function lookup($locales, $locale) {
 		$tags = static::decompose($locale);
-
-		while (($count = count($tags)) > 0) {
+		$count = count($tags);
+		while ($count > 0) {
 			if (($key = array_search(static::compose($tags), $locales)) !== false) {
 				return $locales[$key];
-			}
-			if ($count === 1) {
-				foreach ($locales as $current) {
-					if (strpos($current, current($tags) . '_') === 0) {
-						return $current;
+			} elseif ($count === 1) {
+				foreach ($locales as $currentLocale) {
+					if (strpos($currentLocale, current($tags) . '_') === 0) {
+						return $currentLocale;
 					}
 				}
 			}
@@ -221,6 +217,7 @@ class Locale extends \lithium\core\StaticObject {
 				return $locales[$key];
 			}
 			array_pop($tags);
+			$count = count($tags);
 		}
 	}
 
@@ -233,7 +230,7 @@ class Locale extends \lithium\core\StaticObject {
 	 * @see lithium\g11n\Locale::lookup()
 	 * @param object|array $request An action or console request object or an array of locales.
 	 * @param array $available A list of locales to negotiate the preferred locale with.
-	 * @return string The preferred locale in its canonical form (i.e. `'fr_CA'`).
+	 * @return string The preferred locale in it's canonical form (i.e. `'fr_CA'`).
 	 * @todo Rewrite this to remove hard-coded class names.
 	 */
 	public static function preferred($request, $available = null) {
@@ -261,11 +258,11 @@ class Locale extends \lithium\core\StaticObject {
 	 * `'Accept-Language'` header as described by RFC 2616, section 14.4.
 	 *
 	 * @link http://www.ietf.org/rfc/rfc2616.txt
-	 * @param \lithium\action\Request $request
+	 * @param object $request An instance of `lithium\action\Request`.
 	 * @return array Preferred locales in their canonical form (i.e. `'fr_CA'`).
 	 */
 	protected static function _preferredAction($request) {
-		$result = [];
+		$result = array();
 		$regex  = "/^\s*(?P<locale>\w\w(?:[-]\w\w)?)(?:;q=(?P<quality>(0|1|0\.\d+)))?\s*$/";
 
 		foreach (explode(',', $request->env('HTTP_ACCEPT_LANGUAGE')) as $part) {
@@ -275,11 +272,14 @@ class Locale extends \lithium\core\StaticObject {
 				$result[$quality][] = $locale;
 			}
 		}
-		krsort($result);
 
-		return array_reduce($result, function($carry, $item) {
-			return array_merge($carry, array_values($item));
-		}, []);
+		krsort($result);
+		$return = array();
+
+		foreach ($result as $locales) {
+			$return = array_merge($return, array_values($locales));
+		}
+		return $return;
 	}
 
 	/**
@@ -294,17 +294,17 @@ class Locale extends \lithium\core\StaticObject {
 	 * into the `Locale` class' format.
 	 *
 	 * @link http://www.linux.com/archive/feature/53781
-	 * @param \lithium\console\Request $request
+	 * @param object $request An instance of `lithium\console\Request`.
 	 * @return array Preferred locales in their canonical form (i.e. `'fr_CA'`).
 	 */
 	protected static function _preferredConsole($request) {
 		$regex = '(?P<locale>[\w\_]+)(\.|@|$)+';
-		$result = [];
+		$result = array();
 
 		if ($value = $request->env('LANGUAGE')) {
 			return explode(':', $value);
 		}
-		foreach (['LC_ALL', 'LANG'] as $variable) {
+		foreach (array('LC_ALL', 'LANG') as $variable) {
 			$value = $request->env($variable);
 
 			if (!$value || $value === 'C' || $value === 'POSIX') {

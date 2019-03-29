@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\cases\console\command\create;
@@ -17,7 +16,7 @@ class ModelTest extends \lithium\test\Unit {
 
 	public $request;
 
-	protected $_backup = [];
+	protected $_backup = array();
 
 	protected $_testPath = null;
 
@@ -27,14 +26,14 @@ class ModelTest extends \lithium\test\Unit {
 	}
 
 	public function setUp() {
-		$this->classes = ['response' => 'lithium\tests\mocks\console\MockResponse'];
+		$this->classes = array('response' => 'lithium\tests\mocks\console\MockResponse');
 		$this->_backup['cwd'] = getcwd();
 		$this->_backup['_SERVER'] = $_SERVER;
-		$_SERVER['argv'] = [];
+		$_SERVER['argv'] = array();
 
-		Libraries::add('create_test', ['path' => $this->_testPath . '/create_test']);
-		$this->request = new Request(['input' => fopen('php://temp', 'w+')]);
-		$this->request->params = ['library' => 'create_test'];
+		Libraries::add('create_test', array('path' => $this->_testPath . '/create_test'));
+		$this->request = new Request(array('input' => fopen('php://temp', 'w+')));
+		$this->request->params = array('library' => 'create_test');
 	}
 
 	public function tearDown() {
@@ -44,15 +43,15 @@ class ModelTest extends \lithium\test\Unit {
 	}
 
 	public function testClass() {
-		$this->request->params = [
+		$this->request->params = array(
 			'command' => 'model', 'action' => 'Posts'
-		];
-		$model = new Model([
+		);
+		$model = new Model(array(
 			'request' => $this->request, 'classes' => $this->classes
-		]);
+		));
 
 		$expected = 'Posts';
-		$result = $model->invokeMethod('_class', [$this->request]);
+		$result = $model->invokeMethod('_class', array($this->request));
 		$this->assertEqual($expected, $result);
 	}
 }

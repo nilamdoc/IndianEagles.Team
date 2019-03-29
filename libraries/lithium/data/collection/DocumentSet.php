@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\data\collection;
@@ -19,19 +18,15 @@ class DocumentSet extends \lithium\data\Collection {
 	 *
 	 * @var array
 	 */
-	protected $_original = [];
+	protected $_original = array();
 
 	protected function _init() {
 		parent::_init();
 		$this->_original = $this->_data;
-		$this->_handlers += [
-			'MongoId' => function($value) { return (string) $value; },
-			'MongoDate' => function($value) { return $value->sec; }
-		];
 	}
 
-	public function sync($id = null, array $data = [], array $options = []) {
-		$defaults = ['materialize' => true];
+	public function sync($id = null, array $data = array(), array $options = array()) {
+		$defaults = array('materialize' => true);
 		$options += $defaults;
 
 		if ($options['materialize']) {
@@ -78,19 +73,24 @@ class DocumentSet extends \lithium\data\Collection {
 	 * @param array $options
 	 * @return mixed
 	 */
-	public function to($format, array $options = []) {
+	public function to($format, array $options = array()) {
+		$options += array('handlers' => array(
+			'MongoId' => function($value) { return (string) $value; },
+			'MongoDate' => function($value) { return $value->sec; }
+		));
+
 		$this->offsetGet(null);
 		return parent::to($format, $options);
 	}
 
-	public function export(array $options = []) {
+	public function export(array $options = array()) {
 		$this->offsetGet(null);
-		return [
+		return array(
 			'exists' => $this->_exists,
 			'key'  => $this->_pathKey,
 			'data' => array_values($this->_original),
 			'update' => array_values($this->_data)
-		];
+		);
 	}
 
 	/**
@@ -103,21 +103,13 @@ class DocumentSet extends \lithium\data\Collection {
 			return;
 		}
 		$data = $this->_result->current();
-		$result = $this->_set($data, null, ['exists' => true, 'original' => true]);
+		$result = $this->_set($data, null, array('exists' => true, 'original' => true));
 		$this->_result->next();
 
 		return $result;
 	}
 
-	/**
-	 * Helper method to normalize and set data.
-	 *
-	 * @param mixed $data
-	 * @param null|integer|string $offset
-	 * @param array $options
-	 * @return mixed The (potentially) cast data.
-	 */
-	protected function _set($data = null, $offset = null, $options = []) {
+	protected function _set($data = null, $offset = null, $options = array()) {
 		if ($schema = $this->schema()) {
 			$model = $this->_model;
 			$pathKey = $this->_pathKey;
@@ -133,7 +125,7 @@ class DocumentSet extends \lithium\data\Collection {
 		if (is_object($key)) {
 			$key = (string) $key;
 		}
-		if (is_object($data) && method_exists($data, 'assignTo')) {
+		if (method_exists($data, 'assignTo')) {
 			$data->assignTo($this);
 		}
 		$key !== null ? $this->_data[$key] = $data : $this->_data[] = $data;

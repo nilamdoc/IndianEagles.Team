@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\cases\template;
@@ -26,23 +25,19 @@ class ViewTest extends \lithium\test\Unit {
 
 	public function testInitialization() {
 		$expected = new Simple();
-		$this->_view = new MockView(['renderer' => $expected]);
+		$this->_view = new MockView(array('renderer' => $expected));
 		$result = $this->_view->renderer();
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testInitializationWithBadLoader() {
-		$expected = "Class `Badness` of type `adapter.template.view` not found.";
-		$this->assertException($expected, function() {
-			new View(['loader' => 'Badness']);
-		});
+		$this->expectException("Class `Badness` of type `adapter.template.view` not found.");
+		new View(array('loader' => 'Badness'));
 	}
 
 	public function testInitializationWithBadRenderer() {
-		$expected = "Class `Badness` of type `adapter.template.view` not found.";
-		$this->assertException($expected, function() {
-			new View(['renderer' => 'Badness']);
-		});
+		$this->expectException("Class `Badness` of type `adapter.template.view` not found.");
+		new View(array('renderer' => 'Badness'));
 	}
 
 	public function testEscapeOutputFilter() {
@@ -55,6 +50,8 @@ class ViewTest extends \lithium\test\Unit {
 	/**
 	 * Tests that the output-escaping handler correctly inherits its encoding from the `Response`
 	 * object, if provided.
+	 *
+	 * @return void
 	 */
 	public function testEscapeOutputFilterWithInjectedEncoding() {
 		$message = "Multibyte string support must be enabled to test character encodings.";
@@ -76,101 +73,101 @@ class ViewTest extends \lithium\test\Unit {
 	}
 
 	public function testBasicRenderModes() {
-		$view = new View(['loader' => 'Simple', 'renderer' => 'Simple']);
+		$view = new View(array('loader' => 'Simple', 'renderer' => 'Simple'));
 
-		$result = $view->render('template', ['content' => 'world'], [
+		$result = $view->render('template', array('content' => 'world'), array(
 			'template' => 'Hello {:content}!'
-		]);
+		));
 		$expected = 'Hello world!';
 		$this->assertEqual($expected, $result);
 
-		$result = $view->render(['element' => 'Logged in as: {:name}.'], [
+		$result = $view->render(array('element' => 'Logged in as: {:name}.'), array(
 			'name' => "Cap'n Crunch"
-		]);
+		));
 		$expected = "Logged in as: Cap'n Crunch.";
 		$this->assertEqual($expected, $result);
 
-		$result = $view->render('element', ['name' => "Cap'n Crunch"], [
+		$result = $view->render('element', array('name' => "Cap'n Crunch"), array(
 			'element' => 'Logged in as: {:name}.'
-		]);
+		));
 		$expected = "Logged in as: Cap'n Crunch.";
 		$this->assertEqual($expected, $result);
 
 		$xmlHeader = '<' . '?xml version="1.0" ?' . '>' . "\n";
-		$result = $view->render('all', ['type' => 'auth', 'success' => 'true'], [
+		$result = $view->render('all', array('type' => 'auth', 'success' => 'true'), array(
 			'layout' => $xmlHeader . "\n{:content}\n",
 			'template' => '<{:type}>{:success}</{:type}>'
-		]);
+		));
 		$expected = "{$xmlHeader}\n<auth>true</auth>\n";
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testTwoStepRenderWithVariableCapture() {
-		$view = new View(['loader' => 'Simple', 'renderer' => 'Simple']);
+		$view = new View(array('loader' => 'Simple', 'renderer' => 'Simple'));
 
 		$result = $view->render(
-			[
-				['path' => 'element', 'capture' => ['data' => 'foo']],
-				['path' => 'template']
-			],
-			['name' => "Cap'n Crunch"],
-			['element' => 'Logged in as: {:name}.', 'template' => '--{:foo}--']
+			array(
+				array('path' => 'element', 'capture' => array('data' => 'foo')),
+				array('path' => 'template')
+			),
+			array('name' => "Cap'n Crunch"),
+			array('element' => 'Logged in as: {:name}.', 'template' => '--{:foo}--')
 		);
 		$this->assertEqual('--Logged in as: Cap\'n Crunch.--', $result);
 	}
 
 	public function testFullRenderNoLayout() {
-		$view = new View(['loader' => 'Simple', 'renderer' => 'Simple']);
-		$result = $view->render('all', ['type' => 'auth', 'success' => 'true'], [
+		$view = new View(array('loader' => 'Simple', 'renderer' => 'Simple'));
+		$result = $view->render('all', array('type' => 'auth', 'success' => 'true'), array(
 			'template' => '<{:type}>{:success}</{:type}>'
-		]);
+		));
 		$expected = '<auth>true</auth>';
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testNolayout() {
-		$view = new View([
+		$view = new View(array(
 			'loader' => 'lithium\tests\mocks\template\view\adapters\TestRenderer',
 			'renderer' => 'lithium\tests\mocks\template\view\adapters\TestRenderer',
-			'paths' => [
+			'paths' => array(
 				'template' => '{:library}/tests/mocks/template/view/adapters/{:template}.html.php',
 				'layout' => false
-			]
-		]);
-		$options = [
+			)
+		));
+		$options = array(
 			'template' => 'testFile',
 			'library' => Libraries::get('lithium', 'path')
-		];
-		$result = $view->render('all', [], $options);
+		);
+		$result = $view->render('all', array(), $options);
 		$expected = 'This is a test.';
 		$this->assertEqual($expected, $result);
 
 		$templateData = TestRenderer::$templateData;
 		$expectedPath = Libraries::get('lithium', 'path');
 		$expectedPath .= '/tests/mocks/template/view/adapters/testFile.html.php';
-		$expected = [[
+		$expected = array(array(
 			'type' => 'template',
-			'params' => [
+			'params' => array(
 				'template' => 'testFile',
 				'library' => Libraries::get('lithium', 'path'),
 				'type' => 'html'
-			],
+			),
 			'return' => $expectedPath
-		]];
+		));
 		$this->assertEqual($expected, $templateData);
 
 		$renderData = TestRenderer::$renderData;
-		$expected = [[
+		$expected = array(array(
 			'template' => $expectedPath,
-			'data' => [],
-			'options' => [
+			'data' => array(),
+			'options' => array(
 				'template' => 'testFile',
 				'library' => $options['library'],
 				'type' => 'html',
 				'layout' => null,
-				'context' => []
-			]
-		]];
+				'context' => array()
+			)
+		));
 		$this->assertInstanceOf('Closure', $renderData[0]['data']['h']);
 		unset($renderData[0]['data']['h']);
 		$this->assertEqual($expected, $renderData);
@@ -183,37 +180,37 @@ class ViewTest extends \lithium\test\Unit {
 		$testApp = $tmpDir . '/tests/test_app';
 		$viewDir = $testApp . '/views';
 		mkdir($viewDir, 0777, true);
-		Libraries::add('test_app', ['path' => $testApp]);
+		Libraries::add('test_app', array('path' => $testApp));
 
 		$body = '<?php echo isset($this->_options[$option]) ? $this->_options[$option] : ""; ?>';
 		$template = $viewDir . '/template.html.php';
 
 		file_put_contents($template, $body);
 
-		$view = new View([
-			'paths' => [
+		$view = new View(array(
+			'paths' => array(
 				'template' => '{:library}/views/{:template}.html.php',
 				'layout' => false
-			]
-		]);
+			)
+		));
 
-		$options = [
+		$options = array(
 			'template' => 'template',
 			'library' => 'test_app'
-		];
-		$result = $view->render('all', ['option' => 'custom'], $options);
+		);
+		$result = $view->render('all', array('option' => 'custom'), $options);
 		$this->assertIdentical('', $result);
-		$result = $view->render('all', ['option' => 'library'], $options);
+		$result = $view->render('all', array('option' => 'library'), $options);
 		$this->assertIdentical('test_app', $result);
 
-		$options = [
+		$options = array(
 			'template' => 'template',
 			'library' => 'test_app',
 			'custom' => 'custom option'
-		];
-		$result = $view->render('all', ['option' => 'custom'], $options);
+		);
+		$result = $view->render('all', array('option' => 'custom'), $options);
 		$this->assertIdentical('custom option', $result);
-		$result = $view->render('all', ['option' => 'library'], $options);
+		$result = $view->render('all', array('option' => 'library'), $options);
 		$this->assertIdentical('test_app', $result);
 
 		Libraries::remove('test_app');
@@ -227,15 +224,15 @@ class ViewTest extends \lithium\test\Unit {
 		$testApp = $tmpDir . '/tests/test_app';
 		$viewDir = $testApp . '/views';
 		mkdir($viewDir . '/elements', 0777, true);
-		Libraries::add('test_app', ['path' => $testApp]);
+		Libraries::add('test_app', array('path' => $testApp));
 
 		$testApp2 = $tmpDir . '/tests/test_app2';
 		$viewDir2 = $testApp2 . '/views';
 		mkdir($viewDir2 . '/elements', 0777, true);
-		Libraries::add('test_app2', ['path' => $testApp2]);
+		Libraries::add('test_app2', array('path' => $testApp2));
 
 		$body = "<?php ";
-		$body .= "echo \$this->_render('element', 'element2', [], ";
+		$body .= "echo \$this->_render('element', 'element2', array(), ";
 		$body .= "array('library' => 'test_app2'));";
 		$body .= "echo \$this->_render('element', 'element1');";
 		$body .= "?>";
@@ -244,32 +241,32 @@ class ViewTest extends \lithium\test\Unit {
 		file_put_contents($viewDir . '/elements/element1.html.php', 'element1');
 		file_put_contents($viewDir2 . '/elements/element2.html.php', 'element2');
 
-		$view = new View([
+		$view = new View(array(
 			'compile' => false,
-			'paths' => [
+			'paths' => array(
 				'template' => '{:library}/views/{:template}.html.php',
 				'element'  => '{:library}/views/elements/{:template}.html.php',
 				'layout'   => false
-			]
-		]);
+			)
+		));
 
-		$options = [
+		$options = array(
 			'template' => 'template',
 			'library' => 'test_app'
-		];
+		);
 
-		$result = $view->render('all', [], $options);
+		$result = $view->render('all', array(), $options);
 		$this->assertIdentical('element2element1', $result);
 
 		$body = "<?php ";
 		$body .= "echo \$this->_render('element', 'element1');";
-		$body .= "echo \$this->_render('element', 'element2', [], ";
+		$body .= "echo \$this->_render('element', 'element2', array(), ";
 		$body .= "array('library' => 'test_app2'));";
 		$body .= "?>";
 
 		file_put_contents($viewDir . '/template.html.php', $body);
 
-		$result = $view->render('all', [], $options);
+		$result = $view->render('all', array(), $options);
 		$this->assertIdentical('element1element2', $result);
 
 		Libraries::remove('test_app');

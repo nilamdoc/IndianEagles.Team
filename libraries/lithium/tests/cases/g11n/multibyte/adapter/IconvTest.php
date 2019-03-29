@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\cases\g11n\multibyte\adapter;
@@ -15,21 +14,12 @@ class IconvTest extends \lithium\test\Unit {
 
 	public $adapter;
 
-	protected $_backup = [];
-
 	public function skip() {
 		$this->skipIf(!Iconv::enabled(), 'The `Iconv` adapter is not enabled.');
 	}
 
 	public function setUp() {
 		$this->adapter = new Iconv();
-
-		$this->_backup['error_reporting'] = error_reporting();
-		error_reporting(E_ALL);
-	}
-
-	public function tearDown() {
-		error_reporting($this->_backup['error_reporting']);
 	}
 
 	public function testStrlen() {
@@ -79,12 +69,9 @@ class IconvTest extends \lithium\test\Unit {
 	}
 
 	public function testStrlenInvalidTriggersError() {
-		$adapter = $this->adapter;
-		$expected = '/Detected an incomplete multibyte character in input string/';
-		$this->assertException($expected, function() use ($adapter) {
-			$data = "ab\xe9";
-			$result = $adapter->strlen($data);
-		});
+		$this->expectException('/Detected an incomplete multibyte character in input string/');
+		$data = "ab\xe9";
+		$result = $this->adapter->strlen($data);
 	}
 
 	public function testStrpos() {
@@ -139,12 +126,18 @@ class IconvTest extends \lithium\test\Unit {
 		$haystack = "ab\xe9cab";
 		$needle = 'c';
 		$offset = 0;
-		$adapter = $this->adapter;
 
-		$expected = '/Detected an illegal character in input string/';
-		$this->assertException($expected, function() use ($adapter, $haystack, $needle, $offset) {
-			$adapter->strpos($haystack, $needle, $offset);
-		});
+		$this->expectException('/Detected an illegal character in input string/');
+		$this->adapter->strpos($haystack, $needle, $offset);
+	}
+
+	public function testStrposInvalidOffset() {
+		$haystack = 'abäab';
+		$needle = 'a';
+		$offset = -1;
+
+		$this->expectException('/Offset not contained in string/');
+		$this->adapter->strpos($haystack, $needle, $offset);
 	}
 
 	public function testStrrpos() {
@@ -185,12 +178,9 @@ class IconvTest extends \lithium\test\Unit {
 	public function testStrrposTriggersError() {
 		$haystack = "ab\xe9cab";
 		$needle = 'c';
-		$adapter = $this->adapter;
 
-		$expected = '/Detected an illegal character in input string/';
-		$this->assertException($expected, function() use ($adapter, $haystack, $needle) {
-			$adapter->strrpos($haystack, $needle);
-		});
+		$this->expectException('/Detected an illegal character in input string/');
+		$this->adapter->strrpos($haystack, $needle);
 	}
 
 	public function testSubstr() {
@@ -229,12 +219,9 @@ class IconvTest extends \lithium\test\Unit {
 		$string = "ab\xe9cab";
 		$start = 0;
 		$length = 3;
-		$adapter = $this->adapter;
 
-		$expected = '/Detected an illegal character in input string/';
-		$this->assertException($expected, function() use ($adapter, $string, $start, $length) {
-			$adapter->substr($string, $start, $length);
-		});
+		$this->expectException('/Detected an illegal character in input string/');
+		$this->adapter->substr($string, $start, $length);
 	}
 }
 

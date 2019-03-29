@@ -1,15 +1,14 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\console\command;
 
-use lithium\util\Text;
+use lithium\util\String;
 use lithium\core\Libraries;
 use lithium\util\Inflector;
 use lithium\core\ClassNotFoundException;
@@ -18,61 +17,33 @@ use lithium\core\ClassNotFoundException;
  * The `create` command allows you to rapidly develop your models, views, controllers, and tests
  * by generating the minimum code necessary to test and run your application.
  *
- * These commands create the `Posts`-controller and model.
- * ```sh
- * li3 create controller Posts
- * li3 create model Posts
- * ```
- *
- * To create the tests for each run:
- * ```sh
- * li3 create test controller Posts
- * li3 create test model Posts
- * ```
- *
- * To create everything in one go run:
- * ```sh
- * li3 create Posts
- * ```
- *
- * Have your own model template? Use the `--template` option:
- * ```sh
- * li3 create --template=MyModel model Posts
- * ```
+ * `li3 create --template=controller Posts`
+ * `li3 create --template=model Posts`
  */
 class Create extends \lithium\console\Command {
 
 	/**
-	 * The name of the template to use to generate the file. This allows you to add a custom
-	 * template to be used in place of the core template for each command. Place templates in
-	 * `<library>\extensions\command\create\template`.
-	 *
-	 * ```sh
-	 * li3 create --template=MyModel model Posts
-	 * ```
-	 *
-	 * @var string
-	 */
-	public $template = null;
-
-	/**
-	 * Name of the library to use, defaults to the current application.
-	 *
-	 * The following command creates a `Posts` model inside the `blog` library.
-	 * ```sh
-	 * li3 create --library=blog model Posts
-	 * ```
+	 * Name of library to use
 	 *
 	 * @var string
 	 */
 	public $library = null;
 
 	/**
+	 * The name of the template to use to generate the file. This allows you to add a custom
+	 * template to be used in place of the core template for each command. Place templates in
+	 * `<library>\extensions\command\create\template`.
+	 *
+	 * @var string
+	 */
+	public $template = null;
+
+	/**
 	 * Holds library data from `lithium\core\Libraries::get()`.
 	 *
 	 * @var array
 	 */
-	protected $_library = [];
+	protected $_library = array();
 
 	/**
 	 * Class initializer. Parses template and sets up params that need to be filled.
@@ -82,7 +53,7 @@ class Create extends \lithium\console\Command {
 	protected function _init() {
 		parent::_init();
 		$this->library = $this->library ?: true;
-		$defaults = ['prefix' => null, 'path' => null];
+		$defaults = array('prefix' => null, 'path' => null);
 		$this->_library = (array) Libraries::get($this->library) + $defaults;
 	}
 
@@ -123,14 +94,14 @@ class Create extends \lithium\console\Command {
 		} catch (ClassNotFoundException $e) {
 			return false;
 		}
-		$data = [];
+		$data = array();
 		$params = $class->invokeMethod('_params');
 
-		foreach ($params as $param) {
-			$data[$param] = $class->invokeMethod("_{$param}", [$this->request]);
+		foreach ($params as $i => $param) {
+			$data[$param] = $class->invokeMethod("_{$param}", array($this->request));
 		}
 
-		if ($message = $class->invokeMethod('_save', [$data])) {
+		if ($message = $class->invokeMethod('_save', array($data))) {
 			$this->out($message);
 			return true;
 		}
@@ -144,12 +115,12 @@ class Create extends \lithium\console\Command {
 	 * @return boolean
 	 */
 	protected function _default($name) {
-		$commands = [
-			['model', $name],
-			['controller', $name],
-			['test', 'model', $name],
-			['test', 'controller', $name]
-		];
+		$commands = array(
+			array('model', $name),
+			array('controller', $name),
+			array('test', 'model', $name),
+			array('test', 'controller', $name)
+		);
 		foreach ($commands as $args) {
 			$command = $this->template = $this->request->params['command'] = array_shift($args);
 			$this->request->params['action'] = array_shift($args);
@@ -169,17 +140,17 @@ class Create extends \lithium\console\Command {
 	 * @param array $options
 	 * @return string
 	 */
-	protected function _namespace($request, $options  = []) {
+	protected function _namespace($request, $options  = array()) {
 		$name = $request->command;
-		$defaults = [
+		$defaults = array(
 			'prefix' => $this->_library['prefix'],
 			'prepend' => null,
-			'spaces' => [
+			'spaces' => array(
 				'model' => 'models', 'view' => 'views', 'controller' => 'controllers',
 				'command' => 'extensions.command', 'adapter' => 'extensions.adapter',
 				'helper' => 'extensions.helper'
-			]
-		];
+			)
+		);
 		$options += $defaults;
 
 		if (isset($options['spaces'][$name])) {
@@ -199,14 +170,14 @@ class Create extends \lithium\console\Command {
 		$contents = $this->_template();
 
 		if (empty($contents)) {
-			return [];
+			return array();
 		}
 		preg_match_all('/(?:\{:(?P<params>[^}]+)\})/', $contents, $keys);
 
 		if (!empty($keys['params'])) {
 			return array_values(array_unique($keys['params']));
 		}
-		return [];
+		return array();
 	}
 
 	/**
@@ -215,9 +186,9 @@ class Create extends \lithium\console\Command {
 	 * @return string
 	 */
 	protected function _template() {
-		$file = Libraries::locate('command.create.template', $this->template, [
+		$file = Libraries::locate('command.create.template', $this->template, array(
 			'filter' => false, 'type' => 'file', 'suffix' => '.txt.php'
-		]);
+		));
 		if (!$file || is_array($file)) {
 			return false;
 		}
@@ -229,16 +200,16 @@ class Create extends \lithium\console\Command {
 	 *
 	 * @param string $name the name of the sub-command to instantiate
 	 * @param array $config
-	 * @return object
+	 * @return object;
 	 */
-	protected function _instance($name, array $config = []) {
+	protected function _instance($name, array $config = array()) {
 		if ($class = Libraries::locate('command.create', Inflector::camelize($name))) {
 			$this->request->params['template'] = $this->template;
 
-			return new $class([
+			return new $class(array(
 				'request' => $this->request,
 				'classes' => $this->_classes
-			]);
+			));
 		}
 		return parent::_instance($name, $config);
 	}
@@ -247,18 +218,18 @@ class Create extends \lithium\console\Command {
 	 * Save a template with the current params. Writes file to `Create::$path`.
 	 *
 	 * @param array $params
-	 * @return string|boolean A result string on success of writing the file. If any errors
-	 *         occur along the way such as missing information boolean false is returned.
+	 * @return string A result string on success of writing the file. If any errors occur along
+	 *         the way such as missing information boolean false is returned.
 	 */
-	protected function _save(array $params = []) {
-		$defaults = ['namespace' => null, 'class' => null];
+	protected function _save(array $params = array()) {
+		$defaults = array('namespace' => null, 'class' => null);
 		$params += $defaults;
 
 		if (empty($params['class']) || empty($this->_library['path'])) {
 			return false;
 		}
 		$contents = $this->_template();
-		$result = Text::insert($contents, $params);
+		$result = String::insert($contents, $params);
 		$namespace = str_replace($this->_library['prefix'], '\\', $params['namespace']);
 		$path = str_replace('\\', '/', "{$namespace}\\{$params['class']}");
 		$path = $this->_library['path'] . stristr($path, '/');
@@ -271,7 +242,7 @@ class Create extends \lithium\console\Command {
 		}
 		if (file_exists($file)) {
 			$prompt = "{$relative} already exists. Overwrite?";
-			$choices = ['y', 'n'];
+			$choices = array('y', 'n');
 			if ($this->in($prompt, compact('choices')) !== 'y') {
 				return "{$params['class']} skipped.";
 			}

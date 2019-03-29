@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2015, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\storage\cache;
@@ -122,7 +121,7 @@ abstract class Adapter extends \lithium\core\Object {
 	 * @return array Prefixed keys array.
 	 */
 	protected function _addScopePrefix($scope, array $keys, $separator = ':') {
-		$results = [];
+		$results = array();
 		$isMapped = !is_int(key($keys));
 
 		foreach ($keys as $key => $value) {
@@ -144,7 +143,7 @@ abstract class Adapter extends \lithium\core\Object {
 	 * @return array Keys array with prefix removed from each key.
 	 */
 	protected function _removeScopePrefix($scope, array $data, $separator = ':') {
-		$results = [];
+		$results = array();
 		$prefix = strlen("{$scope}{$separator}");
 
 		foreach ($data as $key => $value) {

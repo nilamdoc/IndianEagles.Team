@@ -1,16 +1,14 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\test\filter;
 
 use RuntimeException;
-use lithium\aop\Filters;
 use lithium\core\Libraries;
 use lithium\analysis\Inspector;
 
@@ -25,7 +23,7 @@ class Coverage extends \lithium\test\Filter {
 	 *
 	 * @see lithium\test\filter\Coverage::collect()
 	 * @param object $report Instance of Report which is calling apply.
-	 * @param \lithium\util\Collection $tests The tests to apply this filter on.
+	 * @param array $tests The test to apply this filter on
 	 * @param array $options Options for how code coverage should be applied. These options are
 	 *              also passed to `Coverage::collect()` to determine how to aggregate results. See
 	 *              the documentation for `collect()` for further options.  Options affecting this
@@ -34,8 +32,8 @@ class Coverage extends \lithium\test\Filter {
 	 * @return object Returns the instance of `$tests` with code coverage analysis
 	 *                     triggers applied.
 	 */
-	public static function apply($report, $tests, array $options = []) {
-		$defaults = ['method' => 'run'];
+	public static function apply($report, $tests, array $options = array()) {
+		$defaults = array('method' => 'run');
 		$options += $defaults;
 
 		if (!function_exists('xdebug_start_code_coverage')) {
@@ -43,16 +41,14 @@ class Coverage extends \lithium\test\Filter {
 			throw new RuntimeException($msg);
 		}
 
-		foreach ($tests as $test) {
-			$filter = function($params, $next) use ($test, $report) {
-				xdebug_start_code_coverage(XDEBUG_CC_UNUSED);
-				$next($params);
-				$results = xdebug_get_code_coverage();
-				xdebug_stop_code_coverage();
-				$report->collect(__CLASS__, [$test->subject() => $results]);
-			};
-			Filters::apply($test, $options['method'], $filter);
-		}
+		$filter = function($self, $params, $chain) use ($report, $options) {
+			xdebug_start_code_coverage(XDEBUG_CC_UNUSED | XDEBUG_CC_DEAD_CODE);
+			$chain->next($self, $params, $chain);
+			$results = xdebug_get_code_coverage();
+			xdebug_stop_code_coverage();
+			$report->collect(__CLASS__, array($self->subject() => $results));
+		};
+		$tests->invoke('applyFilter', array($options['method'], $filter));
 		return $tests;
 	}
 
@@ -65,24 +61,24 @@ class Coverage extends \lithium\test\Filter {
 	 * @return array Returns an array indexed by file and line, showing the number of
 	 *                    instances each line was called.
 	 */
-	public static function analyze($report, array $classes = []) {
+	public static function analyze($report, array $classes = array()) {
 		$data = static::collect($report->results['filters'][__CLASS__]);
 		$classes = $classes ?: array_filter(get_declared_classes(), function($class) use ($data) {
 			$unit = 'lithium\test\Unit';
 			return (!(is_subclass_of($class, $unit)) || array_key_exists($class, $data));
 		});
 		$classes = array_values(array_intersect((array) $classes, array_keys($data)));
-		$densities = $result = [];
+		$densities = $result = array();
 
 		foreach ($classes as $class) {
-			$classMap = [$class => Libraries::path($class)];
+			$classMap = array($class => Libraries::path($class));
 			$densities += static::_density($data[$class], $classMap);
 		}
-		$executableLines = [];
+		$executableLines = array();
 
 		if ($classes) {
 			$executableLines = array_combine($classes, array_map(
-				function($cls) { return Inspector::executable($cls, ['public' => false]); },
+				function($cls) { return Inspector::executable($cls, array('public' => false)); },
 				$classes
 			));
 		}
@@ -111,10 +107,11 @@ class Coverage extends \lithium\test\Filter {
 	 * @return array
 	 */
 	public static function collectLines($result) {
-		$aggregate = ['covered' => 0, 'executable' => 0];
+		$output = null;
+		$aggregate = array('covered' => 0, 'executable' => 0);
 
 		foreach ($result as $class => $coverage) {
-			$out = [];
+			$out = array();
 			$file = Libraries::path($class);
 
 			$aggregate['covered'] += count($coverage['covered']);
@@ -128,36 +125,36 @@ class Coverage extends \lithium\test\Filter {
 			for ($i = 1; $i <= $count; $i++) {
 				if (isset($uncovered[$i])) {
 					if (!isset($out[$i - 2])) {
-						$out[$i - 2] = [
+						$out[$i - 2] = array(
 							'class' => 'ignored',
 							'data' => '...'
-						];
+						);
 					}
 					if (!isset($out[$i - 1])) {
-						$out[$i - 1] = [
+						$out[$i - 1] = array(
 							'class' => 'covered',
 							'data' => $contents[$i - 1]
-						];
+						);
 					}
-					$out[$i] = [
+					$out[$i] = array(
 						'class' => 'uncovered',
 						'data' => $contents[$i]
-					];
+					);
 
 					if (!isset($uncovered[$i + 1])) {
-						$out[$i + 1] = [
+						$out[$i + 1] = array(
 							'class' => 'covered',
 							'data' => $contents[$i + 1]
-						];
+						);
 					}
 				} elseif (
 					isset($out[$i - 1]) && $out[$i - 1]['data'] !== '...' &&
 					!isset($out[$i]) && !isset($out[$i + 1])
 				) {
-					$out[$i] = [
+					$out[$i] = array(
 						'class' => 'ignored',
 						'data' => '...'
-					];
+					);
 				}
 			}
 			$result[$class]['output'][$file] = $out;
@@ -168,16 +165,16 @@ class Coverage extends \lithium\test\Filter {
 	/**
 	 * Collects code coverage analysis results from `xdebug_get_code_coverage()`.
 	 *
-	 * @see lithium\test\filter\Coverage::analyze()
+	 * @see lithium\test\Coverage::analyze()
 	 * @param array $filterResults An array of results arrays from `xdebug_get_code_coverage()`.
 	 * @param array $options Set of options defining how results should be collected.
 	 * @return array The packaged filter results.
 	 * @todo Implement $options['merging']
 	 */
-	public static function collect($filterResults, array $options = []) {
-		$defaults = ['merging' => 'class'];
+	public static function collect($filterResults, array $options = array()) {
+		$defaults = array('merging' => 'class');
 		$options += $defaults;
-		$packagedResults = [];
+		$packagedResults = array();
 
 		foreach ($filterResults as $results) {
 			$class = key($results);
@@ -190,7 +187,7 @@ class Coverage extends \lithium\test\Filter {
 				case 'class':
 				default:
 					if (!isset($packagedResults[$class])) {
-						$packagedResults[$class] = [];
+						$packagedResults[$class] = array();
 					}
 					$packagedResults[$class][] = $results;
 				break;
@@ -205,15 +202,15 @@ class Coverage extends \lithium\test\Filter {
 	 * aggregate line coverage density per file.
 	 *
 	 * @param array $runs An array containing multiple runs of raw XDebug coverage data, where
-	 *              each array key is a file name, and its value is XDebug's coverage
+	 *              each array key is a file name, and it's value is XDebug's coverage
 	 *              data for that file.
 	 * @param array $classMap An optional map with class names as array keys and corresponding file
 	 *              names as values. Used to filter the returned results, and will cause the array
 	 *              keys of the results to be class names instead of file names.
 	 * @return array
 	 */
-	protected static function _density($runs, $classMap = []) {
-		$results = [];
+	protected static function _density($runs, $classMap = array()) {
+		$results = array();
 
 		foreach ($runs as $run) {
 			foreach ($run as $file => $coverage) {
@@ -224,7 +221,7 @@ class Coverage extends \lithium\test\Filter {
 					$file = $class;
 				}
 				if (!isset($results[$file])) {
-					$results[$file] = [];
+					$results[$file] = array();
 				}
 				$coverage = array_filter($coverage, function($line) { return ($line === 1); });
 

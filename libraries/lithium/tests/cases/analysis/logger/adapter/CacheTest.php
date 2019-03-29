@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright	 Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license	   http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\cases\analysis\logger\adapter;
@@ -22,34 +21,34 @@ class CacheTest extends \lithium\test\Unit {
 	 * Sets up and configers the logger and also the cache storage for testing.
 	 */
 	public function setUp() {
-		CacheStorage::config([
-			'cachelog' => [
+		CacheStorage::config(array(
+			'cachelog' => array(
 				'adapter' => 'Memory'
-			]
-		]);
-		$this->cachelog = new Cache([
+			)
+		));
+		$this->cachelog = new Cache(array(
 			'key' => 'cachelog_testkey',
 			'config' => 'cachelog'
-		]);
-		Logger::config([
-			'cachelog' => [
+		));
+		Logger::config(array(
+			'cachelog' => array(
 				'adapter' => $this->cachelog,
 				'key' => 'cachelog_testkey',
 				'config' => 'cachelog'
-			]
-		]);
+			)
+		));
 	}
 
 	/**
 	 * Test the initialization of the cache log adapter.
 	 */
 	public function testConstruct() {
-		$expected = [
+		$expected = array(
 			'config' => "cachelog",
-			'expiry' => CacheStorage::PERSIST,
+			'expiry' => "+999 days",
 			'key' => "cachelog_testkey",
 			'init' => true
-		];
+		);
 		$result = $this->cachelog->_config;
 		$this->assertEqual($expected, $result);
 	}
@@ -68,7 +67,7 @@ class CacheTest extends \lithium\test\Unit {
 	 */
 	public function testWrite() {
 		$message = "CacheLog test message...";
-		$result = Logger::write('info', $message, ['name' => 'cachelog']);
+		$result = Logger::write('info', $message, array('name' => 'cachelog'));
 		$this->assertNotEmpty($result);
 		$result = CacheStorage::read('cachelog', 'cachelog_testkey');
 		$this->assertEqual($message, $result);

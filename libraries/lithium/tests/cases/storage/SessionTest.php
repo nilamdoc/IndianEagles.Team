@@ -1,15 +1,13 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\cases\storage;
 
-use lithium\aop\Filters;
 use lithium\storage\Session;
 use lithium\storage\session\adapter\Memory;
 use lithium\tests\mocks\storage\session\adapter\SessionStorageConditional;
@@ -18,28 +16,28 @@ use lithium\tests\mocks\storage\session\strategy\MockEncrypt;
 class SessionTest extends \lithium\test\Unit {
 
 	public function setUp() {
-		Session::config([
-			'default' => ['adapter' => new Memory()]
-		]);
+		Session::config(array(
+			'default' => array('adapter' => new Memory())
+		));
 	}
 
 	public function testSessionInitialization() {
 		$store1 = new Memory();
 		$store2 = new Memory();
-		$config = [
-			'store1' => ['adapter' => &$store1, 'filters' => []],
-			'store2' => ['adapter' => &$store2, 'filters' => []]
-		];
+		$config = array(
+			'store1' => array('adapter' => &$store1, 'filters' => array()),
+			'store2' => array('adapter' => &$store2, 'filters' => array())
+		);
 
 		Session::config($config);
 		$result = Session::config();
 		$this->assertEqual($config, $result);
 
 		Session::reset();
-		Session::config(['store1' => [
+		Session::config(array('store1' => array(
 			'adapter' => 'lithium\storage\session\adapter\Memory',
-			'filters' => []
-		]]);
+			'filters' => array()
+		)));
 		$this->assertTrue(Session::write('key', 'value'));
 		$result = Session::read('key');
 		$expected = 'value';
@@ -60,22 +58,22 @@ class SessionTest extends \lithium\test\Unit {
 	public function testNamedConfigurationReadWrite() {
 		$store1 = new Memory();
 		$store2 = new Memory();
-		$config = [
-			'store1' => ['adapter' => &$store1, 'filters' => []],
-			'store2' => ['adapter' => &$store2, 'filters' => []]
-		];
+		$config = array(
+			'store1' => array('adapter' => &$store1, 'filters' => array()),
+			'store2' => array('adapter' => &$store2, 'filters' => array())
+		);
 		Session::reset();
 		Session::config($config);
 		$result = Session::config();
 		$this->assertEqual($config, $result);
 
-		$result = Session::write('key', 'value', ['name' => 'store1']);
+		$result = Session::write('key', 'value', array('name' => 'store1'));
 		$this->assertTrue($result);
 
-		$result = Session::read('key', ['name' => 'store1']);
+		$result = Session::read('key', array('name' => 'store1'));
 		$this->assertEqual($result, 'value');
 
-		$result = Session::read('key', ['name' => 'store2']);
+		$result = Session::read('key', array('name' => 'store2'));
 		$this->assertEmpty($result);
 	}
 
@@ -92,64 +90,70 @@ class SessionTest extends \lithium\test\Unit {
 
 	/**
 	 * Tests a scenario where no session handler is available that matches the passed parameters.
+	 *
+	 * @return void
 	 */
 	public function testUnhandledWrite() {
-		Session::config([
-			'conditional' => ['adapter' => new SessionStorageConditional()]
-		]);
-		$result = Session::write('key', 'value', ['fail' => true]);
+		Session::config(array(
+			'conditional' => array('adapter' => new SessionStorageConditional())
+		));
+		$result = Session::write('key', 'value', array('fail' => true));
 		$this->assertFalse($result);
 	}
 
 	/**
 	 * Tests deleting a session key from one or all adapters.
+	 *
+	 * @return void
 	 */
 	public function testSessionKeyCheckAndDelete() {
-		Session::config([
-			'temp' => ['adapter' => new Memory(), 'filters' => []],
-			'persistent' => ['adapter' => new Memory(), 'filters' => []]
-		]);
-		Session::write('key1', 'value', ['name' => 'persistent']);
-		Session::write('key2', 'value', ['name' => 'temp']);
+		Session::config(array(
+			'temp' => array('adapter' => new Memory(), 'filters' => array()),
+			'persistent' => array('adapter' => new Memory(), 'filters' => array())
+		));
+		Session::write('key1', 'value', array('name' => 'persistent'));
+		Session::write('key2', 'value', array('name' => 'temp'));
 
 		$this->assertTrue(Session::check('key1'));
 		$this->assertTrue(Session::check('key2'));
 
-		$this->assertTrue(Session::check('key1', ['name' => 'persistent']));
-		$this->assertFalse(Session::check('key1', ['name' => 'temp']));
+		$this->assertTrue(Session::check('key1', array('name' => 'persistent')));
+		$this->assertFalse(Session::check('key1', array('name' => 'temp')));
 
-		$this->assertFalse(Session::check('key2', ['name' => 'persistent']));
-		$this->assertTrue(Session::check('key2', ['name' => 'temp']));
+		$this->assertFalse(Session::check('key2', array('name' => 'persistent')));
+		$this->assertTrue(Session::check('key2', array('name' => 'temp')));
 
 		Session::delete('key1');
 		$this->assertFalse(Session::check('key1'));
 
-		Session::write('key1', 'value', ['name' => 'persistent']);
+		Session::write('key1', 'value', array('name' => 'persistent'));
 		$this->assertTrue(Session::check('key1'));
 
-		Session::delete('key1', ['name' => 'temp']);
+		Session::delete('key1', array('name' => 'temp'));
 		$this->assertTrue(Session::check('key1'));
 
-		Session::delete('key1', ['name' => 'persistent']);
+		Session::delete('key1', array('name' => 'persistent'));
 		$this->assertFalse(Session::check('key1'));
 	}
 
 	/**
 	 * Tests clearing all session data from one or all adapters.
+	 *
+	 * @return void
 	 */
 	public function testSessionClear() {
-		Session::config([
-			'primary' => ['adapter' => new Memory(), 'filters' => []],
-			'secondary' => ['adapter' => new Memory(), 'filters' => []]
-		]);
-		Session::write('key1', 'value', ['name' => 'primary']);
-		Session::write('key2', 'value', ['name' => 'secondary']);
+		Session::config(array(
+			'primary' => array('adapter' => new Memory(), 'filters' => array()),
+			'secondary' => array('adapter' => new Memory(), 'filters' => array())
+		));
+		Session::write('key1', 'value', array('name' => 'primary'));
+		Session::write('key2', 'value', array('name' => 'secondary'));
 
-		Session::clear(['name' => 'secondary']);
+		Session::clear(array('name' => 'secondary'));
 		$this->assertTrue(Session::check('key1'));
 		$this->assertFalse(Session::check('key2'));
 
-		Session::write('key2', 'value', ['name' => 'secondary']);
+		Session::write('key2', 'value', array('name' => 'secondary'));
 		Session::clear();
 		$this->assertFalse(Session::check('key1'));
 		$this->assertFalse(Session::check('key2'));
@@ -166,20 +170,19 @@ class SessionTest extends \lithium\test\Unit {
 	}
 
 	public function testConfigNoAdapters() {
-		Session::config([
-			'conditional' => ['adapter' => new SessionStorageConditional()]
-		]);
+		Session::config(array(
+			'conditional' => array('adapter' => new SessionStorageConditional())
+		));
 		$this->assertTrue(Session::write('key', 'value'));
 		$this->assertEqual(Session::read('key'), 'value');
-		$this->assertEmpty(Session::read('key', ['fail' => true]));
+		$this->assertEmpty(Session::read('key', array('fail' => true)));
 	}
 
 	public function testSessionState() {
 		$this->assertTrue(Session::isStarted());
 		$this->assertTrue(Session::isStarted('default'));
-		$this->assertException("Configuration `invalid` has not been defined.", function() {
-			Session::isStarted('invalid');
-		});
+		$this->expectException("Configuration `invalid` has not been defined.");
+		$this->assertFalse(Session::isStarted('invalid'));
 	}
 
 	public function testSessionStateReset() {
@@ -189,18 +192,17 @@ class SessionTest extends \lithium\test\Unit {
 
 	public function testSessionStateResetNamed() {
 		Session::reset();
-		$this->assertException("Configuration `default` has not been defined.", function() {
-			Session::isStarted('default');
-		});
+		$this->expectException("Configuration `default` has not been defined.");
+		$this->assertFalse(Session::isStarted('default'));
 	}
 
 	public function testReadFilter() {
-		Session::config([
-			'primary' => ['adapter' => new Memory(), 'filters' => []],
-			'secondary' => ['adapter' => new Memory(), 'filters' => []]
-		]);
-		Filters::apply('lithium\storage\Session', 'read', function($params, $next) {
-			$result = $next($params);
+		Session::config(array(
+			'primary' => array('adapter' => new Memory(), 'filters' => array()),
+			'secondary' => array('adapter' => new Memory(), 'filters' => array())
+		));
+		Session::applyFilter('read', function($self, $params, $chain) {
+			$result = $chain->next($self, $params, $chain);
 
 			if (isset($params['options']['increment'])) {
 				$result += $params['options']['increment'];
@@ -211,82 +213,79 @@ class SessionTest extends \lithium\test\Unit {
 		$this->assertEqual('bar', Session::read('foo'));
 
 		Session::write('bar', 1);
-		$this->assertEqual(2, Session::read('bar', ['increment' => 1]));
-
-		Filters::clear('lithium\storage\Session');
+		$this->assertEqual(2, Session::read('bar', array('increment' => 1)));
 	}
 
 	public function testStrategies() {
-		Session::config(['primary' => [
-			'adapter' => new Memory(), 'filters' => [], 'strategies' => [
+		Session::config(array('primary' => array(
+			'adapter' => new Memory(), 'filters' => array(), 'strategies' => array(
 				'lithium\storage\cache\strategy\Json'
-			]
-		]]);
+			)
+		)));
 
-		Session::write('test', ['foo' => 'bar']);
-		$this->assertEqual(['foo' => 'bar'], Session::read('test'));
+		Session::write('test', array('foo' => 'bar'));
+		$this->assertEqual(array('foo' => 'bar'), Session::read('test'));
 
 		$this->assertTrue(Session::check('test'));
-		$this->assertTrue(Session::check('test', ['strategies' => false]));
+		$this->assertTrue(Session::check('test', array('strategies' => false)));
 
-		$result = Session::read('test', ['strategies' => false]);
+		$result = Session::read('test', array('strategies' => false));
 		$this->assertEqual('{"foo":"bar"}', $result);
 
-		$result = Session::clear(['strategies' => false]);
+		$result = Session::clear(array('strategies' => false));
 		$this->assertNull(Session::read('test'));
 
 		$this->assertFalse(Session::check('test'));
-		$this->assertFalse(Session::check('test', ['strategies' => false]));
+		$this->assertFalse(Session::check('test', array('strategies' => false)));
 	}
 
 	public function testMultipleStrategies() {
-		Session::config([
-			'primary' => [
+		Session::config(array(
+			'primary' => array(
 				'adapter' => new Memory(),
-				'filters' => [],
-				'strategies' => []
-			],
-			'secondary' => [
+				'filters' => array(),
+				'strategies' => array()
+			),
+			'secondary' => array(
 				'adapter' => new Memory(),
-				'filters' => [],
-				'strategies' => ['lithium\storage\cache\strategy\Json']
-			]
-		]);
+				'filters' => array(),
+				'strategies' => array('lithium\storage\cache\strategy\Json')
+			)
+		));
 
-		Session::write('test', ['foo' => 'bar']);
+		Session::write('test', array('foo' => 'bar'));
 		$result = Session::read('test');
-		$this->assertEqual(['foo' => 'bar'], $result);
+		$this->assertEqual(array('foo' => 'bar'), $result);
 
-		$result = Session::read('test', ['name' => 'primary', 'strategies' => false]);
-		$this->assertEqual(['foo' => 'bar'], $result);
+		$result = Session::read('test', array('name' => 'primary', 'strategies' => false));
+		$this->assertEqual(array('foo' => 'bar'), $result);
 
-		$result = Session::read('test', ['name' => 'secondary', 'strategies' => false]);
+		$result = Session::read('test', array('name' => 'secondary', 'strategies' => false));
 		$this->assertEqual('{"foo":"bar"}', $result);
 	}
 
 	public function testEncryptedStrategy() {
 		$this->skipIf(!MockEncrypt::enabled(), 'The Mcrypt extension is not installed or enabled.');
-		error_reporting(($this->_backup = error_reporting()) & ~E_DEPRECATED);
 
 		$key = 'foobar';
 		$adapter = new Memory();
-		Session::config(['primary' => [
-			'adapter' => $adapter, 'filters' => [], 'strategies' => [
-				'lithium\tests\mocks\storage\session\strategy\MockEncrypt' => [
+		Session::config(array('primary' => array(
+			'adapter' => $adapter, 'filters' => array(), 'strategies' => array(
+				'lithium\tests\mocks\storage\session\strategy\MockEncrypt' => array(
 					'secret' => $key
-				]
-			]
-		]]);
+				)
+			)
+		)));
 
-		$value = ['foo' => 'bar'];
+		$value = array('foo' => 'bar');
 
 		Session::write('test', $value);
-		$this->assertEqual(['foo' => 'bar'], Session::read('test'));
+		$this->assertEqual(array('foo' => 'bar'), Session::read('test'));
 
 		$this->assertTrue(Session::check('test'));
-		$this->assertTrue(Session::check('test', ['strategies' => false]));
+		$this->assertTrue(Session::check('test', array('strategies' => false)));
 
-		$encrypted = Session::read('test', ['strategies' => false]);
+		$encrypted = Session::read('test', array('strategies' => false));
 
 		$this->assertNotEqual($value, $encrypted);
 		$this->assertInternalType('string', $encrypted);
@@ -294,37 +293,19 @@ class SessionTest extends \lithium\test\Unit {
 		$result = Session::read('test');
 		$this->assertEqual($value, $result);
 
-		$result = Session::clear(['strategies' => false]);
+		$result = Session::clear(array('strategies' => false));
 		$this->assertNull(Session::read('test'));
 
 		$this->assertFalse(Session::check('test'));
-		$this->assertFalse(Session::check('test', ['strategies' => false]));
+		$this->assertFalse(Session::check('test', array('strategies' => false)));
 
-		$savedData = ['test' => $value];
+		$savedData = array('test' => $value);
 
-		$encrypt = new MockEncrypt(['secret' => $key]);
+		$encrypt = new MockEncrypt(array('secret' => $key));
 		$result = $encrypt->encrypt($savedData);
 		$this->assertEqual($encrypted, $result);
 		$result = $encrypt->decrypt($encrypted);
 		$this->assertEqual($savedData, $result);
-	}
-
-	public function testHmacStrategyOnNonExistKey() {
-		Session::config(['primary' => [
-			'adapter' => new Memory(),
-			'strategies' => [
-				'Hmac' => [
-					'secret' => 's3cr3t'
-				]
-			]
-		]]);
-
-		$this->assertEmpty(Session::read('test'));
-
-		Session::write('test', 'value');
-		$result = Session::read('test');
-		$expected = 'value';
-		$this->assertEqual($expected, $result);
 	}
 }
 

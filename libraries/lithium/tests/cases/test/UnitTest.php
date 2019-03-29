@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\cases\test;
@@ -48,18 +47,18 @@ class UnitTest extends \lithium\test\Unit {
 	}
 
 	public function testCompareTypes() {
-		$expected = [
+		$expected = array(
 			'trace' => null,
 			'expected' => "(array) Array\n(\n)",
 			'result' => "(string) string"
-		];
-		$result = $this->test->compare('equal', [], 'string');
+		);
+		$result = $this->test->compare('equal', array(), 'string');
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testAssertEqualNumeric() {
-		$expected = [1, 2, 3];
-		$result = [1, 2, 3];
+		$expected = array(1, 2, 3);
+		$result = array(1, 2, 3);
 		$this->test->assertEqual($expected, $result);
 
 		$expected = 'pass';
@@ -68,22 +67,22 @@ class UnitTest extends \lithium\test\Unit {
 	}
 
 	public function testAssertEqualNumericFail() {
-		$expected = [1, 2, 3];
-		$result = [1, 2];
+		$expected = array(1, 2, 3);
+		$result = array(1, 2);
 		$this->test->assertEqual($expected, $result);
 		$results = $this->test->results();
 
 		$expected = 'fail';
 		$this->assertEqual($expected, $results[0]['result']);
 
-		$expected = "trace: [2]\nexpected: 3\nresult: \n";
+		$expected = "trace: [2]\nexpected: 3\nresult: NULL\n";
 		$this->assertEqual($expected, $results[0]['message']);
 
-		$expected = [
+		$expected = array(
 			'trace' => '[2]',
 			'expected' => 3,
 			'result' => null
-		];
+		);
 		$this->assertEqual($expected, $results[0]['data']);
 	}
 
@@ -100,19 +99,19 @@ class UnitTest extends \lithium\test\Unit {
 		$expected = 'testSomething';
 		$this->assertEqual($expected, $results[0]['method']);
 
-		$expected = 26;
+		$expected = 25;
 		$this->assertEqual($expected, $results[0]['line']);
 	}
 
 	public function testAssertEqualAssociativeArray() {
-		$expected = [
+		$expected = array(
 			'expected' => 'array',
 			'result' => 'string'
-		];
-		$result = [
+		);
+		$result = array(
 			'expected' => 'array',
 			'result' => 'string'
-		];
+		);
 		$this->test->assertEqual($expected, $result);
 
 		$expected = 'pass';
@@ -121,40 +120,40 @@ class UnitTest extends \lithium\test\Unit {
 	}
 
 	public function testAssertEqualThreeDFail() {
-		$expected = [
-			[[1, 2], [1, 2]],
-			[[1, 2], [1, 2]]
-		];
-		$result = [
-			[[1, 2], [1]],
-			[[1, 2], [1]]
-		];
+		$expected = array(
+			array(array(1, 2), array(1, 2)),
+			array(array(1, 2), array(1, 2))
+		);
+		$result = array(
+			array(array(1, 2), array(1)),
+			array(array(1, 2), array(1))
+		);
 		$this->test->assertEqual($expected, $result);
 		$results = $this->test->results();
 
 		$expected = 'fail';
 		$this->assertEqual($expected, $results[0]['result']);
 
-		$expected  = "trace: [0][1][1]\nexpected: 2\nresult: \n";
-		$expected .= "trace: [1][1][1]\nexpected: 2\nresult: \n";
+		$expected  = "trace: [0][1][1]\nexpected: 2\nresult: NULL\n";
+		$expected .= "trace: [1][1][1]\nexpected: 2\nresult: NULL\n";
 		$this->assertEqual($expected, $results[0]['message']);
 
-		$expected = [
-			[
-				[
+		$expected = array(
+			array(
+				array(
 					'trace' => '[0][1][1]',
 					'expected' => 2,
 					'result' => null
-				]
-			],
-			[
-				[
+				)
+			),
+			array(
+				array(
 					'trace' => '[1][1][1]',
 					'expected' => 2,
 					'result' => null
-				]
-			]
-		];
+				)
+			)
+		);
 		$this->assertEqual($expected, $results[0]['data']);
 	}
 
@@ -176,16 +175,16 @@ class UnitTest extends \lithium\test\Unit {
 
 	public function testRun() {
 		$file = realpath(LITHIUM_LIBRARY_PATH) . '/lithium/tests/mocks/test/MockUnitTest.php';
-		$expected = [
+		$expected = array(
 			'result' => 'pass',
 			'class' => 'lithium\tests\mocks\test\MockUnitTest',
 			'method' => 'testNothing',
-			'message' => "expected: 1\nresult: 1\n",
-			'data' => ['expected' => true, 'result' => true],
+			'message' => "expected: true\nresult: true\n",
+			'data' => array('expected' => true, 'result' => true),
 			'file' => realpath($file),
-			'line' => 15,
+			'line' => 14,
 			'assertion' => 'assertTrue'
-		];
+		);
 		$result = $this->test->run();
 		$this->assertEqual($expected, $result[0]);
 	}
@@ -232,21 +231,21 @@ class UnitTest extends \lithium\test\Unit {
 	}
 
 	public function testAssertIdenticalArray() {
-		$expected = ['1', '2', '3'];
-		$result = ['1', '3', '4'];
+		$expected = array('1', '2', '3');
+		$result = array('1', '3', '4');
 		$this->test->assertIdentical($expected, $result);
 		$results = $this->test->results();
 
 		$expected = 'fail';
 		$this->assertEqual($expected, $results[0]['result']);
 
-		$expected = "trace: [1]\nexpected: 2\nresult: 3\n";
+		$expected = "trace: [1]\nexpected: '2'\nresult: '3'\n";
 		$this->assertEqual($expected, $results[0]['message']);
 	}
 
 	public function testAssertNotIdenticalArray() {
-		$expected = ['1', '2', '3'];
-		$result = ['1', '3', '4'];
+		$expected = array('1', '2', '3');
+		$result = array('1', '3', '4');
 		$this->test->assertNotIdentical($expected, $result);
 		$results = $this->test->results();
 
@@ -286,9 +285,9 @@ class UnitTest extends \lithium\test\Unit {
 
 	public function testAssertTags() {
 		$result = '<input id="test">';
-		$this->test->assertTags($result, [
-			'input' => ['id' => 'test']
-		]);
+		$this->test->assertTags($result, array(
+			'input' => array('id' => 'test')
+		));
 		$results = $this->test->results();
 
 		$expected = 'pass';
@@ -297,9 +296,9 @@ class UnitTest extends \lithium\test\Unit {
 
 	public function testAssertTagsNoClosingTag() {
 		$result = '<span id="test">';
-		$this->test->assertTags($result, [
-			'span' => ['id' => 'test'], '/span'
-		]);
+		$this->test->assertTags($result, array(
+			'span' => array('id' => 'test'), '/span'
+		));
 		$results = $this->test->results();
 
 		$expected = 'fail';
@@ -311,9 +310,9 @@ class UnitTest extends \lithium\test\Unit {
 
 	public function testAssertTagsMissingAttribute() {
 		$result = '<span></span>';
-		$this->test->assertTags($result, [
-			'span' => ['id' => 'test'], '/span'
-		]);
+		$this->test->assertTags($result, array(
+			'span' => array('id' => 'test'), '/span'
+		));
 		$results = $this->test->results();
 
 		$expected = 'fail';
@@ -325,7 +324,7 @@ class UnitTest extends \lithium\test\Unit {
 
 	public function testAssertTagsString() {
 		$result = '<span>ok</span>';
-		$this->test->assertTags($result, ['<span']);
+		$this->test->assertTags($result, array('<span'));
 		$results = $this->test->results();
 
 		$expected = 'pass';
@@ -334,7 +333,7 @@ class UnitTest extends \lithium\test\Unit {
 
 	public function testAssertTagsFailTextEqual() {
 		$result = '<span>ok</span>';
-		$this->test->assertTags($result, ['span']);
+		$this->test->assertTags($result, array('span'));
 		$results = $this->test->results();
 
 		$expected = 'fail';
@@ -402,15 +401,15 @@ class UnitTest extends \lithium\test\Unit {
 	}
 
 	public function testIdenticalArrayFail() {
-		$expected = ['1', '2', '3'];
-		$result = [1, '2', '3'];;
+		$expected = array('1', '2', '3');
+		$result = array(1, '2', '3');;
 		$this->test->assertIdentical($expected, $result);
 		$results = $this->test->results();
 
 		$expected = 'fail';
 		$this->assertEqual($expected, $results[0]['result']);
 
-		$expected = "trace: [0]\nexpected: (string) 1\nresult: (integer) 1\n";
+		$expected = "trace: [0]\nexpected: '(string) 1'\nresult: '(integer) 1'\n";
 		$this->assertEqual($expected, $results[0]['message']);
 	}
 
@@ -468,16 +467,13 @@ class UnitTest extends \lithium\test\Unit {
 		$this->assertEqual($expected, $result);
 	}
 
-	public function testErrorLevelHonored() {
-		$original = error_reporting();
+	public function testExpectException() {
+		$this->test->expectException('test expected exception');
+		$results = $this->test->results();
 
-		error_reporting($original & ~E_USER_DEPRECATED);
-
-		$this->assertNotException('/^test deprecation$/', function() {
-			trigger_error('test deprecation', E_USER_DEPRECATED);
-		});
-
-		error_reporting($original);
+		$expected = 'test expected exception';
+		$result = $this->test->expected();
+		$this->assertEqual($expected, $result[0]);
 	}
 
 	public function testHandleException() {
@@ -489,13 +485,26 @@ class UnitTest extends \lithium\test\Unit {
 	}
 
 	public function testExpectExceptionRegex() {
-		$test = $this->test;
-		$this->assertException('/deprecated/', function() use ($test) {
-			$test->expectException('/test handle exception/');
-		});
+		$this->test->expectException('/test handle exception/');
 		$this->test->handleException(new Exception('test handle exception'));
 
 		$this->assertEmpty($this->test->expected());
+	}
+
+	public function testExpectExceptionPostNotThrown() {
+		$this->test->run(array(
+			'methods' => array(
+				'prepareTestExpectExceptionNotThrown'
+			)
+		));
+		$results = $this->test->results();
+		$message = 'expectException in a method with no exception should result in a failed test.';
+
+		$expected = 'fail';
+		$this->assertEqual($expected, $results[0]['result'], $message);
+
+		$expected = 'Expected exception matching `test` uncaught.';
+		$this->assertEqual($expected, $results[0]['message']);
 	}
 
 	public function testGetTest() {
@@ -508,12 +517,12 @@ class UnitTest extends \lithium\test\Unit {
 	 * With a fresh PHP environment this might throw an exception:
 	 * `strtotime(): It is not safe to rely on the system's timezone settings. You are
 	 * *required* to use the date.timezone setting or the date_default_timezone_set() function.`
-	 * See also http://php.net/function.date-default-timezone-get.php
+	 * See also http://www.php.net/manual/en/function.date-default-timezone-get.php
 	 */
 	public function testAssertCookie() {
-		$expected = [
+		$expected = array(
 			'key' => 'key2.nested', 'value' => 'value1', 'expires' => 'May 04 2010 14:02:36 EST'
-		];
+		);
 		$this->test->assertCookie($expected);
 		$results = $this->test->results();
 
@@ -525,23 +534,19 @@ class UnitTest extends \lithium\test\Unit {
 	}
 
 	public function testAssertCookieWithHeaders() {
-		$maxAge = 60;
-		$time = time() + $maxAge;
-		$gmt = gmdate('D, d-M-Y H:i:s \G\M\T', $time);
-		$est = date('D, d-M-Y H:i:s \E\S\T', $time - (5 * 60 * 60));
+		$headers = array(
+			'Set-Cookie: name[key]=value; expires=Tue, 04-May-2010 19:02:36 GMT; path=/',
+			'Set-Cookie: name[key1]=value1; expires=Tue, 04-May-2010 19:02:36 GMT; path=/',
+			'Set-Cookie: name[key2][nested]=value1; expires=Tue, 04-May-2010 19:02:36 GMT; path=/'
+		);
 
-		$headers = [
-			'Set-Cookie: name[key]=value; expires=Tue, 04-May-2010 19:02:36 GMT; Max-Age=12; path=/',
-			'Set-Cookie: name[key1]=value1; expires=Tue, 04-May-2010 19:02:36 GMT; Max-Age=23; path=/',
-			'Set-Cookie: name[key2][nested]=value1; expires=' . $gmt . '; Max-Age=' . $maxAge . '; path=/'
-		];
-		$this->test->assertCookie(['key' => 'key', 'value' => 'value'], $headers);
-		$this->test->assertCookie(['key' => 'key1', 'value' => 'value1'], $headers);
-		$this->test->assertCookie(['key' => 'key2.nested', 'value' => 'value1'], $headers);
+		$this->test->assertCookie(array('key' => 'key', 'value' => 'value'), $headers);
+		$this->test->assertCookie(array('key' => 'key1', 'value' => 'value1'), $headers);
+		$this->test->assertCookie(array('key' => 'key2.nested', 'value' => 'value1'), $headers);
 
-		$expected = [
-			'key' => 'key2.nested', 'value' => 'value1', 'expires' => $est
-		];
+		$expected = array(
+			'key' => 'key2.nested', 'value' => 'value1', 'expires' => 'May 04 2010 14:02:36 EST'
+		);
 		$this->test->assertCookie($expected, $headers);
 
 		$results = $this->test->results();
@@ -554,13 +559,13 @@ class UnitTest extends \lithium\test\Unit {
 	}
 
 	public function testCompareWithEmptyResult() {
-		$result = $this->test->compare('equal', ['key' => ['val1', 'val2']], []);
+		$result = $this->test->compare('equal', array('key' => array('val1', 'val2')), array());
 
-		$expected = [
+		$expected = array(
 			'trace' => '[key]',
-			'expected' => ['val1', 'val2'],
-			'result' => []
-		];
+			'expected' => array('val1', 'val2'),
+			'result' => array()
+		);
 		$this->assertEqual($expected, $result);
 	}
 
@@ -585,26 +590,21 @@ class UnitTest extends \lithium\test\Unit {
 	}
 
 	public function testErrorHandling() {
-		$backup = error_reporting();
-		error_reporting(E_ALL);
-
 		$test = new MockErrorHandlingTest();
 
 		$test->run();
 
-		$expected = '/expects exactly 1 parameter/';
+		$expected = '/Missing argument 1/';
 		$results = $test->results();
 		$this->assertPattern($expected, $results[0]['message']);
 
-		$expected = '/array_shift\(\)/';
+		$expected = '/Unit::_arrayPermute()/';
 		$this->assertPattern($expected, $results[0]['message']);
-
-		error_reporting($backup);
 	}
 
 	public function testAssertObjects() {
-		$expected = (object) ['one' => 'two'];
-		$result = (object) ['one' => 'not-two'];
+		$expected = (object) array('one' => 'two');
+		$result = (object) array('one' => 'not-two');
 		$this->test->assertEqual($expected, $result);
 		$results = $this->test->results();
 
@@ -616,8 +616,8 @@ class UnitTest extends \lithium\test\Unit {
 	}
 
 	public function testAssertArrayIdentical() {
-		$expected = ['one' => ['one']];
-		$result = ['one' => []];
+		$expected = array('one' => array('one'));
+		$result = array('one' => array());
 		$this->test->assertIdentical($expected, $result);
 		$results = $this->test->results();
 
@@ -629,46 +629,46 @@ class UnitTest extends \lithium\test\Unit {
 	}
 
 	public function testCompareIdenticalArray() {
-		$expected = [
+		$expected = array(
 			'trace' => null,
-			'expected' => [],
-			'result' => ['two', 'values']
-		];
-		$result = $this->test->compare('identical', [], ['two', 'values']);
+			'expected' => array(),
+			'result' => array('two', 'values')
+		);
+		$result = $this->test->compare('identical', array(), array('two', 'values'));
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testCompareIdenticalMixedArray() {
-		$array1 = [
+		$array1 = array(
 			'command' => 'test',
 			'action' => 'action',
-			'args' => [],
+			'args' => array(),
 			'long' => 'something',
 			'i' => 1
-		];
+		);
 
-		$array2 = [
+		$array2 = array(
 			'command' => 'test',
 			'action' => 'action',
 			'long' => 'something',
-			'args' => [],
+			'args' => array(),
 			'i' => 1
-		];
+		);
 
 		$result = $this->test->compare('identical', $array1, $array2);
-		$expected = ['trace' => null, 'expected' => $array1, 'result' => $array2];
+		$expected = array('trace' => null, 'expected' => $array1, 'result' => $array2);
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testCompareEqualNullArray() {
-		$expected = ['trace' => null, 'expected' => [], 'result' => [null]];
-		$result = $this->test->compare('equal', [], [null]);
+		$expected = array('trace' => null, 'expected' => array(), 'result' => array(null));
+		$result = $this->test->compare('equal', array(), array(null));
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testCompareIdenticalNullArray() {
-		$expected = ['trace' => null, 'expected' => [], 'result' => [null]];
-		$result = $this->test->compare('identical', [], [null]);
+		$expected = array('trace' => null, 'expected' => array(), 'result' => array(null));
+		$result = $this->test->compare('identical', array(), array(null));
 		$this->assertEqual($expected, $result);
 	}
 
@@ -684,15 +684,15 @@ class UnitTest extends \lithium\test\Unit {
 	}
 
 	public function testTestMethods() {
-		$expected = [
+		$expected = array(
 			'testNothing', 'testSomething'
-		];
+		);
 		$result = $this->test->methods();
 		$this->assertIdentical($expected, $result);
 	}
 
 	public function testAssertCountTrue() {
-		$this->assertTrue($this->test->assertCount(1, ['foo']));
+		$this->assertTrue($this->test->assertCount(1, array('foo')));
 
 		$results = $this->test->results();
 		$result = array_pop($results);
@@ -701,20 +701,20 @@ class UnitTest extends \lithium\test\Unit {
 	}
 
 	public function testAssertCountFalse() {
-		$this->assertFalse($this->test->assertCount(2, ['foo', 'bar', 'bar']));
+		$this->assertFalse($this->test->assertCount(2, array('foo', 'bar', 'bar')));
 
 		$results = $this->test->results();
 		$result = array_pop($results);
 
 		$this->assertEqual('fail', $result['result']);
-		$this->assertIdentical([
+		$this->assertIdentical(array(
 			'expected' => 2,
 			'result' => 3
-		], $result['data']);
+		), $result['data']);
 	}
 
 	public function testAssertNotCountTrue() {
-		$this->assertTrue($this->test->assertNotCount(2, ['foo', 'bar', 'bar']));
+		$this->assertTrue($this->test->assertNotCount(2, array('foo', 'bar', 'bar')));
 
 		$results = $this->test->results();
 		$result = array_pop($results);
@@ -723,20 +723,20 @@ class UnitTest extends \lithium\test\Unit {
 	}
 
 	public function testAssertNotCountFalse() {
-		$this->assertFalse($this->test->assertNotCount(1, ['foo']));
+		$this->assertFalse($this->test->assertNotCount(1, array('foo')));
 
 		$results = $this->test->results();
 		$result = array_pop($results);
 
 		$this->assertEqual('fail', $result['result']);
-		$this->assertIdentical([
+		$this->assertIdentical(array(
 			'expected' => 1,
 			'result' => 1
-		], $result['data']);
+		), $result['data']);
 	}
 
 	public function testArrayHasKeyTrue() {
-		$this->assertTrue($this->test->assertArrayHasKey('bar', ['bar' => 'baz']));
+		$this->assertTrue($this->test->assertArrayHasKey('bar', array('bar' => 'baz')));
 
 		$results = $this->test->results();
 		$result = array_pop($results);
@@ -745,20 +745,20 @@ class UnitTest extends \lithium\test\Unit {
 	}
 
 	public function testArrayHasKeyFalse() {
-		$this->assertFalse($this->test->assertArrayHasKey('foo', ['bar' => 'baz']));
+		$this->assertFalse($this->test->assertArrayHasKey('foo', array('bar' => 'baz')));
 
 		$results = $this->test->results();
 		$result = array_pop($results);
 
 		$this->assertEqual('fail', $result['result']);
-		$this->assertIdentical([
+		$this->assertIdentical(array(
 			'expected' => 'foo',
-			'result' => ['bar' => 'baz']
-		], $result['data']);
+			'result' => array('bar' => 'baz')
+		), $result['data']);
 	}
 
 	public function testArrayHasKeyValueNull() {
-		$this->assertTrue($this->test->assertArrayHasKey('bar', ['bar' => null]));
+		$this->assertTrue($this->test->assertArrayHasKey('bar', array('bar' => null)));
 
 		$results = $this->test->results();
 		$result = array_pop($results);
@@ -767,7 +767,7 @@ class UnitTest extends \lithium\test\Unit {
 	}
 
 	public function testArrayNotHasKeyTrue() {
-		$this->assertTrue($this->test->assertArrayNotHasKey('foo', ['bar' => 'baz']));
+		$this->assertTrue($this->test->assertArrayNotHasKey('foo', array('bar' => 'baz')));
 
 		$results = $this->test->results();
 		$result = array_pop($results);
@@ -776,16 +776,16 @@ class UnitTest extends \lithium\test\Unit {
 	}
 
 	public function testArrayNotHasKeyFalse() {
-		$this->assertFalse($this->test->assertArrayNotHasKey('bar', ['bar' => 'baz']));
+		$this->assertFalse($this->test->assertArrayNotHasKey('bar', array('bar' => 'baz')));
 
 		$results = $this->test->results();
 		$result = array_pop($results);
 
 		$this->assertEqual('fail', $result['result']);
-		$this->assertIdentical([
+		$this->assertIdentical(array(
 			'expected' => 'bar',
-			'result' => ['bar' => 'baz']
-		], $result['data']);
+			'result' => array('bar' => 'baz')
+		), $result['data']);
 	}
 
 	public function testClassHasAttributeTrue() {
@@ -804,12 +804,12 @@ class UnitTest extends \lithium\test\Unit {
 		$result = array_pop($results);
 
 		$this->assertEqual('fail', $result['result']);
-		$this->assertEqual([
+		$this->assertEqual(array(
 			'expected' => 'foo',
-			'result' => [
+			'result' => array(
 				new \ReflectionProperty('ReflectionClass', 'name')
-			]
-		], $result['data']);
+			)
+		), $result['data']);
 	}
 
 	public function testClassHasAttributeWrongClassType() {
@@ -842,12 +842,12 @@ class UnitTest extends \lithium\test\Unit {
 		$result = array_pop($results);
 
 		$this->assertEqual('fail', $result['result']);
-		$this->assertEqual([
+		$this->assertEqual(array(
 			'expected' => 'name',
-			'result' => [
+			'result' => array(
 				new \ReflectionProperty('ReflectionClass', 'name')
-			]
-		], $result['data']);
+			)
+		), $result['data']);
 	}
 
 	public function testClassNotHasAttributeClassNotFound() {
@@ -882,13 +882,13 @@ class UnitTest extends \lithium\test\Unit {
 		$result = array_pop($results);
 
 		$this->assertEqual('fail', $result['result']);
-		$this->assertEqual([
+		$this->assertEqual(array(
 			'expected' => 'foobar',
-			'result' => [
-				new \ReflectionProperty('lithium\core\StaticObject', '_parents'),
-				new \ReflectionProperty('lithium\core\StaticObject', '_methodFilters')
-			]
-		], $result['data']);
+			'result' => array(
+				new \ReflectionProperty('lithium\core\StaticObject', '_methodFilters'),
+				new \ReflectionProperty('lithium\core\StaticObject', '_parents')
+			)
+		), $result['data']);
 	}
 
 	public function testClassHasStaticAttributeClassNotFound() {
@@ -916,13 +916,13 @@ class UnitTest extends \lithium\test\Unit {
 		$result = array_pop($results);
 
 		$this->assertEqual('fail', $result['result']);
-		$this->assertEqual([
+		$this->assertEqual(array(
 			'expected' => '_methodFilters',
-			'result' => [
-				new \ReflectionProperty('lithium\core\StaticObject', '_parents'),
-				new \ReflectionProperty('lithium\core\StaticObject', '_methodFilters')
-			]
-		], $result['data']);
+			'result' => array(
+				new \ReflectionProperty('lithium\core\StaticObject', '_methodFilters'),
+				new \ReflectionProperty('lithium\core\StaticObject', '_parents')
+			)
+		), $result['data']);
 	}
 
 	public function testClassNotHasStaticAttributeClassNotFound() {
@@ -948,14 +948,14 @@ class UnitTest extends \lithium\test\Unit {
 		$result = array_pop($results);
 
 		$this->assertEqual('fail', $result['result']);
-		$this->assertEqual([
+		$this->assertEqual(array(
 			'expected' => 'baz',
 			'result' => 'foobar'
-		], $result['data']);
+		), $result['data']);
 	}
 
 	public function testAssertContainsTrue() {
-		$this->assertTrue($this->test->assertContains('bar', ['foo', 'bar', 'baz']));
+		$this->assertTrue($this->test->assertContains('bar', array('foo', 'bar', 'baz')));
 
 		$results = $this->test->results();
 		$result = array_pop($results);
@@ -964,18 +964,18 @@ class UnitTest extends \lithium\test\Unit {
 	}
 
 	public function testAssertContainsFalse() {
-		$this->assertFalse($this->test->assertContains('foobar', ['foo', 'bar', 'baz']));
+		$this->assertFalse($this->test->assertContains('foobar', array('foo', 'bar', 'baz')));
 
 		$results = $this->test->results();
 		$result = array_pop($results);
 
 		$this->assertEqual('fail', $result['result']);
-		$this->assertEqual([
+		$this->assertEqual(array(
 			'expected' => 'foobar',
-			'result' => [
+			'result' => array(
 				'foo', 'bar', 'baz'
-			]
-		], $result['data']);
+			)
+		), $result['data']);
 	}
 
 	public function testAssertNotContainsStringInStrTrue() {
@@ -994,14 +994,14 @@ class UnitTest extends \lithium\test\Unit {
 		$result = array_pop($results);
 
 		$this->assertEqual('fail', $result['result']);
-		$this->assertEqual([
+		$this->assertEqual(array(
 			'expected' => 'foo',
 			'result' => 'foobar'
-		], $result['data']);
+		), $result['data']);
 	}
 
 	public function testAssertNotContainsTrue() {
-		$this->assertTrue($this->test->assertNotContains('foobar', ['foo', 'bar', 'baz']));
+		$this->assertTrue($this->test->assertNotContains('foobar', array('foo', 'bar', 'baz')));
 
 		$results = $this->test->results();
 		$result = array_pop($results);
@@ -1010,22 +1010,22 @@ class UnitTest extends \lithium\test\Unit {
 	}
 
 	public function testAssertNotContainsFalse() {
-		$this->assertFalse($this->test->assertNotContains('bar', ['foo', 'bar', 'baz']));
+		$this->assertFalse($this->test->assertNotContains('bar', array('foo', 'bar', 'baz')));
 
 		$results = $this->test->results();
 		$result = array_pop($results);
 
 		$this->assertEqual('fail', $result['result']);
-		$this->assertEqual([
+		$this->assertEqual(array(
 			'expected' => 'bar',
-			'result' => [
+			'result' => array(
 				'foo', 'bar', 'baz'
-			]
-		], $result['data']);
+			)
+		), $result['data']);
 	}
 
 	public function testAssertContainsOnlyTrue() {
-		$this->assertTrue($this->test->assertContainsOnly('int', [1,2,3]));
+		$this->assertTrue($this->test->assertContainsOnly('int', array(1,2,3)));
 
 		$results = $this->test->results();
 		$result = array_pop($results);
@@ -1034,22 +1034,22 @@ class UnitTest extends \lithium\test\Unit {
 	}
 
 	public function testAssertContainsOnlyFalse() {
-		$this->assertFalse($this->test->assertContainsOnly('string', [1,2,3]));
+		$this->assertFalse($this->test->assertContainsOnly('string', array(1,2,3)));
 
 		$results = $this->test->results();
 		$result = array_pop($results);
 
 		$this->assertEqual('fail', $result['result']);
-		$this->assertEqual([
+		$this->assertEqual(array(
 			'expected' => 'string',
-			'result' => [
+			'result' => array(
 				1,2,3
-			]
-		], $result['data']);
+			)
+		), $result['data']);
 	}
 
 	public function testAssertNotContainsOnlyTrue() {
-		$this->assertTrue($this->test->assertNotContainsOnly('string', [1,2,3]));
+		$this->assertTrue($this->test->assertNotContainsOnly('string', array(1,2,3)));
 
 		$results = $this->test->results();
 		$result = array_pop($results);
@@ -1058,23 +1058,23 @@ class UnitTest extends \lithium\test\Unit {
 	}
 
 	public function testAssertNotContainsOnlyFalse() {
-		$this->assertFalse($this->test->assertNotContainsOnly('int', [1,2,3]));
+		$this->assertFalse($this->test->assertNotContainsOnly('int', array(1,2,3)));
 
 		$results = $this->test->results();
 		$result = array_pop($results);
 
 		$this->assertEqual('fail', $result['result']);
-		$this->assertEqual([
+		$this->assertEqual(array(
 			'expected' => 'int',
-			'result' => [
+			'result' => array(
 				1,2,3
-			]
-		], $result['data']);
+			)
+		), $result['data']);
 	}
 
 	public function testAssertContainsOnlyInstanceOfTrue() {
 		$obj = new \stdClass;
-		$this->assertTrue($this->test->assertContainsOnlyInstancesOf('stdClass', [$obj]));
+		$this->assertTrue($this->test->assertContainsOnlyInstancesOf('stdClass', array($obj)));
 
 		$results = $this->test->results();
 		$result = array_pop($results);
@@ -1084,22 +1084,22 @@ class UnitTest extends \lithium\test\Unit {
 
 	public function testAssertContainsOnlyInstanceOfFalse() {
 		$obj = new \lithium\test\Unit;
-		$this->assertFalse($this->test->assertContainsOnlyInstancesOf('stdClass', [$obj]));
+		$this->assertFalse($this->test->assertContainsOnlyInstancesOf('stdClass', array($obj)));
 
 		$results = $this->test->results();
 		$result = array_pop($results);
 
 		$this->assertEqual('fail', $result['result']);
-		$this->assertEqual([
+		$this->assertEqual(array(
 			'expected' => 'stdClass',
-			'result' => [
+			'result' => array(
 				0 => new \lithium\test\Unit
-			]
-		], $result['data']);
+			)
+		), $result['data']);
 	}
 
 	public function testAssertEmptyTrue() {
-		$this->assertTrue($this->test->assertEmpty([]));
+		$this->assertTrue($this->test->assertEmpty(array()));
 
 		$results = $this->test->results();
 		$result = array_pop($results);
@@ -1108,20 +1108,20 @@ class UnitTest extends \lithium\test\Unit {
 	}
 
 	public function testAssertEmptyFalse() {
-		$this->assertFalse($this->test->assertEmpty([1]));
+		$this->assertFalse($this->test->assertEmpty(array(1)));
 
 		$results = $this->test->results();
 		$result = array_pop($results);
 
 		$this->assertEqual('fail', $result['result']);
-		$this->assertEqual([
-			'expected' => [1],
+		$this->assertEqual(array(
+			'expected' => array(1),
 			'result' => false
-		], $result['data']);
+		), $result['data']);
 	}
 
 	public function testAssertNotEmptyTrue() {
-		$this->assertTrue($this->test->assertNotEmpty([1]));
+		$this->assertTrue($this->test->assertNotEmpty(array(1)));
 
 		$results = $this->test->results();
 		$result = array_pop($results);
@@ -1130,16 +1130,16 @@ class UnitTest extends \lithium\test\Unit {
 	}
 
 	public function testAssertNotEmptyFalse() {
-		$this->assertFalse($this->test->assertNotEmpty([]));
+		$this->assertFalse($this->test->assertNotEmpty(array()));
 
 		$results = $this->test->results();
 		$result = array_pop($results);
 
 		$this->assertEqual('fail', $result['result']);
-		$this->assertEqual([
-			'expected' => [],
+		$this->assertEqual(array(
+			'expected' => array(),
 			'result' => false
-		], $result['data']);
+		), $result['data']);
 	}
 
 	public function testAssertFileEqualsTrue() {
@@ -1157,10 +1157,10 @@ class UnitTest extends \lithium\test\Unit {
 		$result = array_pop($results);
 
 		$this->assertEqual('fail', $result['result']);
-		$this->assertEqual([
+		$this->assertEqual(array(
 			'expected' => md5_file($file1),
 			'result' => md5_file($file2)
-		], $result['data']);
+		), $result['data']);
 	}
 
 	public function testAssertFileNotEqualsTrue() {
@@ -1183,10 +1183,10 @@ class UnitTest extends \lithium\test\Unit {
 		$result = array_pop($results);
 
 		$this->assertEqual('fail', $result['result']);
-		$this->assertEqual([
+		$this->assertEqual(array(
 			'expected' => md5_file($file1),
 			'result' => md5_file($file2)
-		], $result['data']);
+		), $result['data']);
 	}
 
 	public function testAssertFileExistsTrue() {
@@ -1207,10 +1207,10 @@ class UnitTest extends \lithium\test\Unit {
 		$result = array_pop($results);
 
 		$this->assertEqual('fail', $result['result']);
-		$this->assertEqual([
+		$this->assertEqual(array(
 			'expected' => __DIR__ . '/does/not/exist.txt',
 			'result' => false
-		], $result['data']);
+		), $result['data']);
 	}
 
 	public function testAssertFileNotExistsTrue() {
@@ -1231,10 +1231,10 @@ class UnitTest extends \lithium\test\Unit {
 		$result = array_pop($results);
 
 		$this->assertEqual('fail', $result['result']);
-		$this->assertEqual([
+		$this->assertEqual(array(
 			'expected' => __FILE__,
 			'result' => false
-		], $result['data']);
+		), $result['data']);
 	}
 
 	public function testAssertGreaterThanTrue() {
@@ -1253,10 +1253,10 @@ class UnitTest extends \lithium\test\Unit {
 		$result = array_pop($results);
 
 		$this->assertEqual('fail', $result['result']);
-		$this->assertEqual([
+		$this->assertEqual(array(
 			'expected' => 3,
 			'result' => 5
-		], $result['data']);
+		), $result['data']);
 	}
 
 	public function testAssertGreaterThanOrEqualTrue() {
@@ -1275,10 +1275,10 @@ class UnitTest extends \lithium\test\Unit {
 		$result = array_pop($results);
 
 		$this->assertEqual('fail', $result['result']);
-		$this->assertEqual([
+		$this->assertEqual(array(
 			'expected' => 3,
 			'result' => 5
-		], $result['data']);
+		), $result['data']);
 	}
 
 	public function testAssertLessThanTrue() {
@@ -1297,10 +1297,10 @@ class UnitTest extends \lithium\test\Unit {
 		$result = array_pop($results);
 
 		$this->assertEqual('fail', $result['result']);
-		$this->assertEqual([
+		$this->assertEqual(array(
 			'expected' => 5,
 			'result' => 3
-		], $result['data']);
+		), $result['data']);
 	}
 
 	public function testAssertLessThanOrEqualTrue() {
@@ -1319,10 +1319,10 @@ class UnitTest extends \lithium\test\Unit {
 		$result = array_pop($results);
 
 		$this->assertEqual('fail', $result['result']);
-		$this->assertEqual([
+		$this->assertEqual(array(
 			'expected' => 5,
 			'result' => 3
-		], $result['data']);
+		), $result['data']);
 	}
 
 	public function testAssertInstanceOfTrue() {
@@ -1341,10 +1341,10 @@ class UnitTest extends \lithium\test\Unit {
 		$result = array_pop($results);
 
 		$this->assertEqual('fail', $result['result']);
-		$this->assertEqual([
+		$this->assertEqual(array(
 			'expected' => '\ReflectionClass',
 			'result' => 'stdClass'
-		], $result['data']);
+		), $result['data']);
 	}
 
 	public function testAssertNotInstanceOfTrue() {
@@ -1363,10 +1363,10 @@ class UnitTest extends \lithium\test\Unit {
 		$result = array_pop($results);
 
 		$this->assertEqual('fail', $result['result']);
-		$this->assertEqual([
+		$this->assertEqual(array(
 			'expected' => '\stdClass',
 			'result' => 'stdClass'
-		], $result['data']);
+		), $result['data']);
 	}
 
 	public function testAssertInternalTypeTrue() {
@@ -1385,10 +1385,10 @@ class UnitTest extends \lithium\test\Unit {
 		$result = array_pop($results);
 
 		$this->assertEqual('fail', $result['result']);
-		$this->assertEqual([
+		$this->assertEqual(array(
 			'expected' => 'int',
 			'result' => 'string'
-		], $result['data']);
+		), $result['data']);
 	}
 
 	public function testAssertNotInternalTypeTrue() {
@@ -1407,10 +1407,10 @@ class UnitTest extends \lithium\test\Unit {
 		$result = array_pop($results);
 
 		$this->assertEqual('fail', $result['result']);
-		$this->assertEqual([
+		$this->assertEqual(array(
 			'expected' => 'string',
 			'result' => 'string'
-		], $result['data']);
+		), $result['data']);
 	}
 
 	public function testAssertNotNullTrue() {
@@ -1429,10 +1429,10 @@ class UnitTest extends \lithium\test\Unit {
 		$result = array_pop($results);
 
 		$this->assertEqual('fail', $result['result']);
-		$this->assertEqual([
+		$this->assertEqual(array(
 			'expected' => NULL,
 			'actual' => 'NULL',
-		], $result['data']);
+		), $result['data']);
 	}
 
 	public function testObjectHasAttributeTrue() {
@@ -1453,12 +1453,12 @@ class UnitTest extends \lithium\test\Unit {
 		$result = array_pop($results);
 
 		$this->assertEqual('fail', $result['result']);
-		$this->assertEqual([
+		$this->assertEqual(array(
 			'expected' => 'foo',
-			'result' => [
+			'result' => array(
 				new \ReflectionProperty('ReflectionClass', 'name')
-			]
-		], $result['data']);
+			)
+		), $result['data']);
 	}
 
 	public function testObjectHasAttributeWrongClassType() {
@@ -1486,12 +1486,12 @@ class UnitTest extends \lithium\test\Unit {
 		$result = array_pop($results);
 
 		$this->assertEqual('fail', $result['result']);
-		$this->assertEqual([
+		$this->assertEqual(array(
 			'expected' => 'name',
-			'result' => [
+			'result' => array(
 				new \ReflectionProperty('ReflectionClass', 'name')
-			]
-		], $result['data']);
+			)
+		), $result['data']);
 	}
 
 	public function testObjectNotHasAttributeWrongClassType() {
@@ -1517,10 +1517,10 @@ class UnitTest extends \lithium\test\Unit {
 		$result = array_pop($results);
 
 		$this->assertEqual('fail', $result['result']);
-		$this->assertEqual([
+		$this->assertEqual(array(
 			'expected' => '%d',
-			'result' => ['10']
-		], $result['data']);
+			'result' => array('10')
+		), $result['data']);
 	}
 
 	public function testAssertStringNotMatchesFormatTrue() {
@@ -1539,10 +1539,10 @@ class UnitTest extends \lithium\test\Unit {
 		$result = array_pop($results);
 
 		$this->assertEqual('fail', $result['result']);
-		$this->assertEqual([
+		$this->assertEqual(array(
 			'expected' => '%d',
-			'result' => ['10']
-		], $result['data']);
+			'result' => array('10')
+		), $result['data']);
 	}
 
 	public function testAssertStringEndsWithTrue() {
@@ -1561,10 +1561,10 @@ class UnitTest extends \lithium\test\Unit {
 		$result = array_pop($results);
 
 		$this->assertEqual('fail', $result['result']);
-		$this->assertEqual([
+		$this->assertEqual(array(
 			'expected' => 'foo',
 			'result' => 'foobar'
-		], $result['data']);
+		), $result['data']);
 	}
 
 	public function testAssertStringStartsWithTrue() {
@@ -1583,10 +1583,10 @@ class UnitTest extends \lithium\test\Unit {
 		$result = array_pop($results);
 
 		$this->assertEqual('fail', $result['result']);
-		$this->assertEqual([
+		$this->assertEqual(array(
 			'expected' => 'bar',
 			'result' => 'foobar'
-		], $result['data']);
+		), $result['data']);
 	}
 
 	public function testAssertNotExceptionPassesWithNoException() {
@@ -1615,18 +1615,6 @@ class UnitTest extends \lithium\test\Unit {
 		}));
 	}
 
-	public function testRecursivenessHandled() {
-		$test = $this->test;
-
-		$this->assertNotException('Exception', function() use ($test) {
-			$expected = ['bar' => 'foobarnotmatching'];
-
-			$result = ['foo'];
-			$result = ['bar' => &$result];
-
-			$test->assertEqual($expected, $result);
-		});
-	}
 }
 
 ?>

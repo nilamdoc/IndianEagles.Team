@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\data\collection;
@@ -15,13 +14,13 @@ class MultiKeyRecordSet extends \lithium\data\collection\RecordSet {
 	 * An array containing each record's unique key. This allows, for example, lookups of records
 	 * with composite keys, i.e.:
 	 *
-	 * ```
+	 * {{{
 	 * $payment = $records[array('client_id' => 42, 'invoice_id' => 21)];
-	 * ```
+	 * }}}
 	 *
 	 * @var array
 	 */
-	protected $_index = [];
+	protected $_index = array();
 
 	/**
 	 * A 2D array of column-mapping information, where the top-level key is the fully-namespaced
@@ -29,7 +28,7 @@ class MultiKeyRecordSet extends \lithium\data\collection\RecordSet {
 	 *
 	 * @var array
 	 */
-	protected $_columns = [];
+	protected $_columns = array();
 
 	/**
 	 * Initializes the record set and uses the database connection to get the column list contained
@@ -92,11 +91,9 @@ class MultiKeyRecordSet extends \lithium\data\collection\RecordSet {
 		}
 		if ($model = $this->_model) {
 			$offsetKey = $model::key($offset);
-
-			while ($record = $this->_populate()) {
+			while ($record = $this->_populate($offset)) {
 				$curKey = $model::key($record);
 				$keySet = $offsetKey == $curKey;
-
 				if (!is_null($offset) && $keySet) {
 					return $record;
 				}
@@ -157,8 +154,8 @@ class MultiKeyRecordSet extends \lithium\data\collection\RecordSet {
 	 * @param array $options
 	 * @return mixed
 	 */
-	public function to($format, array $options = []) {
-		$default = ['indexed' => true];
+	public function to($format, array $options = array()) {
+		$default = array('indexed' => true);
 		$options += $default;
 		$options['internal'] = !$options['indexed'];
 		unset($options['indexed']);
@@ -167,7 +164,7 @@ class MultiKeyRecordSet extends \lithium\data\collection\RecordSet {
 		if (!$options['internal'] && !is_scalar(current($this->_index))) {
 			$options['internal'] = true;
 		}
-		return parent::to($format, $options);
+		return $result = parent::to($format, $options);
 	}
 
 	/**
@@ -195,7 +192,7 @@ class MultiKeyRecordSet extends \lithium\data\collection\RecordSet {
 	 * @return mixed The filtered items. Will be an array unless `'collect'` is defined in the
 	 *         `$options` argument, then an instance of this class will be returned.
 	 */
-	public function find($filter, array $options = []) {
+	public function find($filter, array $options = array()) {
 		$this->offsetGet(null);
 		return parent::find($filter, $options);
 	}
@@ -212,21 +209,40 @@ class MultiKeyRecordSet extends \lithium\data\collection\RecordSet {
 	 *              in a new `Collection` object or subclass.
 	 * @return object The filtered data.
 	 */
-	public function map($filter, array $options = []) {
+	public function map($filter, array $options = array()) {
 		$this->offsetGet(null);
 		return parent::map($filter, $options);
 	}
 
-	protected function _set($data = null, $offset = null, $options = []) {
+	/**
+	 * Extract the next item from the result ressource and wraps it into a `Record` object.
+	 *
+	 * @return mixed Returns the next `Record` if exists. Returns `null` otherwise
+	 */
+	protected function _populate() {
+		if ($this->closed() || !$this->_result->valid()) {
+			return;
+		}
+
+		$data = $this->_result->current();
+		if ($this->_query) {
+			$data = $this->_mapRecord($data);
+		}
+		$result = $this->_set($data, null, array('exists' => true));
+		$this->_result->next();
+
+		return $result;
+	}
+
+	protected function _set($data = null, $offset = null, $options = array()) {
 		if ($model = $this->_model) {
-			$options += ['defaults' => false];
-			$data = !is_object($data) ? $model::create($data, $options) : $data;
+			$data = !is_object($data) ? $model::connection()->item($model, $data, $options) : $data;
 			$key = $model::key($data);
 		} else {
 			$key = $offset;
 		}
 
-		if ($key === [] || $key === null || is_bool($key)) {
+		if ($key === array() || $key === null || is_bool($key)) {
 			$key = count($this->_data);
 		}
 
@@ -242,38 +258,6 @@ class MultiKeyRecordSet extends \lithium\data\collection\RecordSet {
 		$this->_data[] = $data;
 		$this->_index[] = $key;
 		return $data;
-	}
-
-	/**
-	 * Extracts the numerical indices of the primary keys in numerical indexed row data.
-	 * Works only for the main row data and not for relationship rows.
-	 *
-	 * This method will also correctly detect primary keys which don't come
-	 * first or are in sequential order.
-	 *
-	 * @return array An array where key are index and value are primary key fieldname.
-	 */
-	protected function _keyIndex() {
-		if (!($model = $this->_model) || !isset($this->_columns[''])) {
-			return [];
-		}
-		$index = 0;
-
-		foreach ($this->_columns as $name => $fields) {
-			if ($name === '') {
-				$flip = array_flip($fields);
-
-				$keys = array_flip($model::meta('key'));
-				$keys = array_intersect_key($flip, $keys);
-
-				foreach ($keys as &$key) {
-					$key += $index;
-				}
-				return array_flip($keys);
-			}
-			$index += count($fields);
-		}
-		return [];
 	}
 }
 

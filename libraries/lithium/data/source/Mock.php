@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\data\source;
@@ -18,12 +17,12 @@ namespace lithium\data\source;
  */
 class Mock extends \lithium\data\Source {
 
-	protected $_classes = [
+	protected $_classes = array(
 		'entity' => 'lithium\data\Entity',
 		'set' => 'lithium\data\Collection',
 		'relationship' => 'lithium\data\model\Relationship',
 		'schema' => 'lithium\data\Schema'
-	];
+	);
 
 	public function connect() {
 		return true;
@@ -38,30 +37,30 @@ class Mock extends \lithium\data\Source {
 	}
 
 	public function sources($class = null) {
-		return [];
+		return array();
 	}
 
-	public function describe($entity, $fields = [], array $meta = []) {
+	public function describe($entity, $fields = array(), array $meta = array()) {
 		return $this->_instance('schema', compact('fields'));
 	}
 
-	public function relationship($class, $type, $name, array $options = []) {
+	public function relationship($class, $type, $name, array $options = array()) {
 		return false;
 	}
 
-	public function create($query, array $options = []) {
+	public function create($query, array $options = array()) {
 		return false;
 	}
 
-	public function read($query, array $options = []) {
+	public function read($query, array $options = array()) {
 		return false;
 	}
 
-	public function update($query, array $options = []) {
+	public function update($query, array $options = array()) {
 		return false;
 	}
 
-	public function delete($query, array $options = []) {
+	public function delete($query, array $options = array()) {
 		return false;
 	}
 }

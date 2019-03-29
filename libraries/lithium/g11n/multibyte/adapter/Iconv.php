@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\g11n\multibyte\adapter;
@@ -16,7 +15,7 @@ namespace lithium\g11n\multibyte\adapter;
  * No known limitations affecting used functionality. Returns `false` when
  * seeing badly formed UTF-8 sequences. Additionally triggers an error.
  *
- * @link http://php.net/book.iconv.php
+ * @link http://php.net/manual/en/book.iconv.php
  */
 class Iconv extends \lithium\core\Object {
 
@@ -32,7 +31,7 @@ class Iconv extends \lithium\core\Object {
 	/**
 	 * Here used as a multibyte enabled equivalent of `strlen()`.
 	 *
-	 * @link http://php.net/function.iconv-strlen.php
+	 * @link http://php.net/manual/en/function.iconv-strlen.php
 	 * @param string $string
 	 * @return integer|boolean
 	 */
@@ -43,7 +42,7 @@ class Iconv extends \lithium\core\Object {
 	/**
 	 * Here used as a multibyte enabled equivalent of `strpos()`.
 	 *
-	 * @link http://php.net/function.iconv-strpos.php
+	 * @link http://php.net/manual/en/function.iconv-strpos.php
 	 * @param string $haystack
 	 * @param string $needle
 	 * @param integer $offset
@@ -56,7 +55,7 @@ class Iconv extends \lithium\core\Object {
 	/**
 	 * Here used as a multibyte enabled equivalent of `strrpos()`.
 	 *
-	 * @link http://php.net/function.iconv-strpos.php
+	 * @link http://php.net/manual/en/function.iconv-strpos.php
 	 * @param string $haystack
 	 * @param string $needle
 	 * @return integer|boolean
@@ -68,7 +67,7 @@ class Iconv extends \lithium\core\Object {
 	/**
 	 * Here used as a multibyte enabled equivalent of `substr()`.
 	 *
-	 * @link http://php.net/function.iconv-substr.php
+	 * @link http://php.net/manual/en/function.iconv-substr.php
 	 * @param string $string
 	 * @param integer $start
 	 * @param integer $length

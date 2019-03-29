@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\cases\net;
@@ -29,30 +28,30 @@ class MessageTest extends \lithium\test\Unit {
 		$this->assertEqual($expected, $result);
 
 		$expected = "Part 1\r\nPart 2\r\nPart 3\r\nPart 4";
-		$result = $this->message->body(['Part 3', 'Part 4']);
+		$result = $this->message->body(array('Part 3', 'Part 4'));
 		$this->assertEqual($expected, $result);
 
-		$expected = ['Part 1', 'Part 2', 'Part 3', 'Part 4'];
+		$expected = array('Part 1', 'Part 2', 'Part 3', 'Part 4');
 		$result = $this->message->body;
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testBodyBuffer() {
-		$expected = ['P', 'a', 'r', 't', ' ', '1'];
-		$result = $this->message->body('Part 1', ['buffer' => 1]);
+		$expected = array('P', 'a', 'r', 't', ' ', '1');
+		$result = $this->message->body('Part 1', array('buffer' => 1));
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testToArray() {
-		$expected = [
+		$expected = array(
 			'scheme' => 'tcp',
 			'host' => 'localhost',
 			'port' => null,
 			'path' => null,
 			'username' => null,
 			'password' => null,
-			'body' => []
-		];
+			'body' => array()
+		);
 		$result = $this->message->to('array');
 		$this->assertEqual($expected, $result);
 	}
@@ -64,7 +63,7 @@ class MessageTest extends \lithium\test\Unit {
 	}
 
 	public function testToContext() {
-		$expected = ['tcp' => ['content' => null, 'ignore_errors' => true]];
+		$expected = array('tcp' => array('content' => null, 'ignore_errors' => true));
 		$result = $this->message->to('context');
 		$this->assertEqual($expected, $result);
 	}
@@ -80,15 +79,15 @@ class MessageTest extends \lithium\test\Unit {
 	}
 
 	public function testConstruct() {
-		$expected = [
+		$expected = array(
 			'scheme' => 'http',
 			'host' => 'localhost',
 			'port' => '80',
 			'path' => null,
 			'username' => null,
 			'password' => null,
-			'body' => []
-		];
+			'body' => array()
+		);
 		$message = new Message($expected);
 		$result = $message->to('array');
 		$this->assertEqual($expected, $result);

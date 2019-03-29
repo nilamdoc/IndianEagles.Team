@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of Rad, Inc. (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\cases\storage\session\adapter;
@@ -15,12 +14,10 @@ use lithium\core\Libraries;
 
 class CookieTest extends \lithium\test\Unit {
 
-	public $cookie;
-
-	public $name = 'testcookie';
-
 	/**
 	 * Skip the test if running under CLI.
+	 *
+	 * @return void
 	 */
 	public function skip() {
 		$sapi = PHP_SAPI;
@@ -29,7 +26,8 @@ class CookieTest extends \lithium\test\Unit {
 	}
 
 	public function setUp() {
-		$this->cookie = new Cookie(['name' => $this->name]);
+		$this->cookie = new Cookie();
+		$this->name = basename(Libraries::get(true, 'path')) . 'cookie';
 	}
 
 	public function tearDown() {
@@ -53,7 +51,7 @@ class CookieTest extends \lithium\test\Unit {
 		if (session_id()) {
 			session_destroy();
 		}
-		$_COOKIE = [];
+		$_COOKIE = array();
 	}
 
 	public function testEnabled() {
@@ -78,37 +76,37 @@ class CookieTest extends \lithium\test\Unit {
 		$this->assertInternalType('callable', $closure);
 
 		$params = compact('key', 'value');
-		$result = $closure($params);
+		$result = $closure($this->cookie, $params, null);
 
 		$this->assertCookie(compact('key', 'value', 'expires', 'path'));
 	}
 
 	public function testCustomCookieName() {
-		$cookie = new Cookie(['name' => 'test']);
+		$cookie = new Cookie(array('name' => 'test'));
 		$this->assertEqual('test', $cookie->key());
 	}
 
 	public function testWriteArrayData() {
 		$key = 'user';
-		$value = [
+		$value = array(
 			'email' => 'test@localhost',
 			'name' => 'Testy McTesterson',
-			'address' => ['country' => 'Iran', 'city' => 'Mashhad']
-		];
+			'address' => array('country' => 'Iran', 'city' => 'Mashhad')
+		);
 		$expires = "+2 days";
 		$path = '/';
 
 		$closure = $this->cookie->write($key, $value);
 		$this->assertInternalType('callable', $closure);
 		$params = compact('key', 'value');
-		$result = $closure($params);
+		$result = $closure($this->cookie, $params, null);
 
 		$expected = compact('expires');
-		$expected += ['key' => 'user.email', 'value' => 'test@localhost'];
+		$expected += array('key' => 'user.email', 'value' => 'test@localhost');
 		$this->assertCookie($expected);
 
 		$expected = compact('expires');
-		$expected += ['key' => 'user.address.country', 'value' => 'Iran'];
+		$expected += array('key' => 'user.address.country', 'value' => 'Iran');
 		$this->assertCookie($expected);
 	}
 
@@ -121,10 +119,10 @@ class CookieTest extends \lithium\test\Unit {
 		$this->assertInternalType('callable', $closure);
 
 		$params = compact('key');
-		$result = $closure($params, null);
+		$result = $closure($this->cookie, $params, null);
 		$this->assertEqual($value, $result);
 
-		$result = $closure(['key' => null], null);
+		$result = $closure($this->cookie, array('key' => null), null);
 		$this->assertEqual($_COOKIE[$this->name], $result);
 
 		$key = 'does.not.exist';
@@ -132,7 +130,7 @@ class CookieTest extends \lithium\test\Unit {
 		$this->assertInternalType('callable', $closure);
 
 		$params = compact('key');
-		$result = $closure($params, null);
+		$result = $closure($this->cookie, $params, null);
 		$this->assertNull($result);
 
 	}
@@ -142,13 +140,13 @@ class CookieTest extends \lithium\test\Unit {
 		$value = 'value to be written';
 		$expires = "+1 day";
 		$path = '/';
-		$options = ['expire' => $expires];
+		$options = array('expire' => $expires);
 
 		$closure = $this->cookie->write($key, $value, $options);
 		$this->assertInternalType('callable', $closure);
 
 		$params = compact('key', 'value', 'options');
-		$result = $closure($params);
+		$result = $closure($this->cookie, $params, null);
 
 		$this->assertCookie(compact('key', 'value', 'expires', 'path'));
 	}
@@ -162,10 +160,10 @@ class CookieTest extends \lithium\test\Unit {
 		$this->assertInternalType('callable', $closure);
 
 		$params = compact('key');
-		$result = $closure($params, null);
+		$result = $closure($this->cookie, $params, null);
 		$this->assertEqual($value, $result);
 
-		$result = $closure(['key' => null], null);
+		$result = $closure($this->cookie, array('key' => null), null);
 		$this->assertEqual($_COOKIE[$this->name], $result);
 
 		$key = 'does_not_exist';
@@ -173,7 +171,7 @@ class CookieTest extends \lithium\test\Unit {
 		$this->assertInternalType('callable', $closure);
 
 		$params = compact('key');
-		$result = $closure($params, null);
+		$result = $closure($this->cookie, $params, null);
 		$this->assertNull($result);
 	}
 
@@ -186,7 +184,7 @@ class CookieTest extends \lithium\test\Unit {
 		$this->assertInternalType('callable', $closure);
 
 		$params = compact('key');
-		$result = $closure($params, null);
+		$result = $closure($this->cookie, $params, null);
 		$this->assertTrue($result);
 
 		$key = 'does_not_exist';
@@ -194,7 +192,7 @@ class CookieTest extends \lithium\test\Unit {
 		$this->assertInternalType('callable', $closure);
 
 		$params = compact('key');
-		$result = $closure($params, null);
+		$result = $closure($this->cookie, $params, null);
 		$this->assertFalse($result);
 	}
 
@@ -207,14 +205,14 @@ class CookieTest extends \lithium\test\Unit {
 		$this->assertInternalType('callable', $closure);
 
 		$params = compact('key');
-		$result = $closure($params, null);
+		$result = $closure($this->cookie, $params, null);
 		$this->assertTrue($result);
 
 		$closure = $this->cookie->clear();
 		$this->assertInternalType('callable', $closure);
 
-		$params = [];
-		$result = $closure($params, null);
+		$params = array();
+		$result = $closure($this->cookie, $params, null);
 		$this->assertTrue($result);
 		$this->assertNoCookie(compact('key', 'value'));
 
@@ -222,20 +220,20 @@ class CookieTest extends \lithium\test\Unit {
 
 	public function testDeleteArrayData() {
 		$key = 'user';
-		$value = ['email' => 'user@localhost', 'name' => 'Ali'];
+		$value = array('email' => 'user@localhost', 'name' => 'Ali');
 		$_COOKIE[$this->name][$key] = $value;
 
 		$closure = $this->cookie->delete($key);
 		$this->assertInternalType('callable', $closure);
 
 		$params = compact('key');
-		$result = $closure($params, null);
+		$result = $closure($this->cookie, $params, null);
 		$this->assertTrue($result);
 
-		$expected = ['key' => 'user.name', 'value' => 'deleted'];
+		$expected = array('key' => 'user.name', 'value' => 'deleted');
 		$this->assertCookie($expected);
 
-		$expected = ['key' => 'user.email', 'value' => 'deleted'];
+		$expected = array('key' => 'user.email', 'value' => 'deleted');
 		$this->assertCookie($expected);
 	}
 
@@ -248,7 +246,7 @@ class CookieTest extends \lithium\test\Unit {
 		$this->assertInternalType('callable', $closure);
 
 		$params = compact('key');
-		$result = $closure($params, null);
+		$result = $closure($this->cookie, $params, null);
 		$this->assertTrue($result);
 		$this->assertCookie(compact('key', 'value', 'path'));
 	}
@@ -260,15 +258,15 @@ class CookieTest extends \lithium\test\Unit {
 	}
 
 	public function testBadWrite() {
-		$cookie = new Cookie(['expire' => null]);
+		$cookie = new Cookie(array('expire' => null));
 		$this->assertNull($cookie->write('bad', 'val'));
 	}
 
 	public function testNameWithDotCookie() {
-		$cookie = new Cookie(['name' => 'my.name']);
+		$cookie = new Cookie(array('name' => 'my.name'));
 		$key = 'key';
 		$value = 'value';
-		$result = $cookie->write($key, $value)->__invoke(compact('key', 'value'));
+		$result = $cookie->write($key, $value)->__invoke($cookie, compact('key', 'value'), null);
 		$this->assertCookie(compact('key', 'value'));
 	}
 }

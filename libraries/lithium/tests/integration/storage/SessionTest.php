@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\integration\storage;
@@ -13,22 +12,22 @@ use lithium\storage\Session;
 
 class SessionTest extends \lithium\test\Integration {
 
+	public function skip() {
+		$this->skipIf(PHP_SAPI === 'cli', 'No session support in cli SAPI');
+	}
+
 	public function tearDown() {
-		if (Session::config()) {
-			Session::clear();
-		}
+		Session::clear();
 	}
 
 	public function testPhpReadWriteDelete() {
-		$this->skipIf(PHP_SAPI === 'cli', 'No PHP session support in cli SAPI.');
+		$config = array('name' => 'phpInt');
 
-		$config = ['name' => 'phpInt'];
-
-		Session::config([
-			$config['name'] => [
+		Session::config(array(
+			$config['name'] => array(
 				'adapter' => 'Php'
-			]
-		]);
+			)
+		));
 
 		Session::clear($config);
 
@@ -46,15 +45,13 @@ class SessionTest extends \lithium\test\Integration {
 	}
 
 	public function testCookieReadWriteDelete() {
-		$this->skipIf(PHP_SAPI === 'cli', 'No headers support in cli SAPI.');
+		$config = array('name' => 'cookieInt');
 
-		$config = ['name' => 'cookieInt'];
-
-		Session::config([
-			$config['name'] => [
+		Session::config(array(
+			$config['name'] => array(
 				'adapter' => 'Cookie'
-			]
-		]);
+			)
+		));
 
 		Session::clear($config);
 
@@ -65,22 +62,22 @@ class SessionTest extends \lithium\test\Integration {
 
 		$this->assertNull(Session::read($key1, $config));
 		$this->assertTrue(Session::write($key1, $value1, $config));
-		$this->assertCookie(['key' => $key1, 'value' => $value1]);
+		$this->assertCookie(array('key' => $key1, 'value' => $value1));
 		$this->assertNull(Session::read($key2, $config));
 		$this->assertTrue(Session::delete($key1, $config));
-		$this->assertCookie(['key' => $key1, 'value' => 'deleted']);
-		$this->assertNoCookie(['key' => $key2, 'value' => $value2]);
+		$this->assertCookie(array('key' => $key1, 'value' => 'deleted'));
+		$this->assertNoCookie(array('key' => $key2, 'value' => $value2));
 		$this->assertNull(Session::read($key1, $config));
 	}
 
 	public function testMemoryReadWriteDelete() {
-		$config = ['name' => 'memoryInt'];
+		$config = array('name' => 'memoryInt');
 
-		Session::config([
-			$config['name'] => [
+		Session::config(array(
+			$config['name'] => array(
 				'adapter' => 'Memory'
-			]
-		]);
+			)
+		));
 
 		Session::clear($config);
 
@@ -98,15 +95,13 @@ class SessionTest extends \lithium\test\Integration {
 	}
 
 	public function testNamespacesWithPhpAdapter() {
-		$this->skipIf(PHP_SAPI === 'cli', 'No PHP session support in cli SAPI.');
+		$config = array('name' => 'namespaceInt');
 
-		$config = ['name' => 'namespaceInt'];
-
-		Session::config([
-			$config['name'] => [
+		Session::config(array(
+			$config['name'] => array(
 				'adapter' => 'Php'
-			]
-		]);
+			)
+		));
 
 		Session::clear($config);
 
@@ -119,25 +114,23 @@ class SessionTest extends \lithium\test\Integration {
 		$this->assertTrue(Session::write($key2, $value2, $config));
 		$this->assertEqual($value1, Session::read($key1, $config));
 		$this->assertEqual($value2, Session::read($key2, $config));
-		$expected = ['nested' => ['key' => $value1]];
+		$expected = array('nested' => array('key' => $value1));
 		$this->assertEqual($expected, Session::read('really.deep', $config));
 	}
 
 	public function testHmacStrategyWithPhpAdapter() {
-		$this->skipIf(PHP_SAPI === 'cli', 'No PHP session support in cli SAPI.');
+		$config = array('name' => 'hmacInt');
 
-		$config = ['name' => 'hmacInt'];
-
-		Session::config([
-			$config['name'] => [
+		Session::config(array(
+			$config['name'] => array(
 				'adapter' => 'Php',
-				'strategies' => [
-					'Hmac' => [
+				'strategies' => array(
+					'Hmac' => array(
 						'secret' => 's3cr3t'
-					]
-				]
-			]
-		]);
+					)
+				)
+			)
+		));
 
 		Session::clear($config);
 
@@ -163,31 +156,28 @@ class SessionTest extends \lithium\test\Integration {
 
 		$cache = $_SESSION;
 		$_SESSION['injectedkey'] = 'hax0r';
-		$expected = '/Possible data tampering: HMAC signature does not match data./';
-		$this->asssertException($expected, function() use ($key, $config) {
-			Session::read($key, $config);
-		});
+		$this->expectException('/Possible data tampering: HMAC signature does not match data./');
+		Session::read($key, $config);
 		$_SESSION = $cache;
 
 		Session::reset();
 	}
 
 	public function testEncryptStrategyWithPhpAdapter() {
-		$this->skipIf(PHP_SAPI === 'cli', 'No PHP session support in cli SAPI.');
 		$this->skipIf(!extension_loaded('mcrypt'), 'The `mcrypt` extension is not loaded.');
 
-		$config = ['name' => 'encryptInt'];
+		$config = array('name' => 'encryptInt');
 
-		Session::config([
-			$config['name'] => [
+		Session::config(array(
+			$config['name'] => array(
 				'adapter' => 'Php',
-				'strategies' => [
-					'Encrypt' => [
+				'strategies' => array(
+					'Encrypt' => array(
 						'secret' => 's3cr3t'
-					]
-				]
-			]
-		]);
+					)
+				)
+			)
+		));
 
 		Session::clear($config);
 

@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 namespace lithium\console\command;
 
@@ -22,23 +21,23 @@ class Route extends \lithium\console\Command {
 	 * Override the default 'development' environment.
 	 *
 	 * For example:
-	 * ```sh
+	 * {{{
 	 * li3 route --env=production
 	 * li3 route show /foo --env=test
-	 * ```
+	 * }}}
 	 *
 	 * @var string
 	 */
 	public $env = 'development';
 
 	/**
-	 * Constructor. Load the routes file and set the environment.
+	 * Load the routes file and set the environment.
 	 *
-	 * @param array $config The default configuration, wherein the absolute path to the
-	 *        routes file to load may be specified, using the `'routes'` key.
+	 * @param array $config The default configuration, wherein the absolute path to the routes file
+	 *              to load may be specified, using the `'routes'` key.
 	 */
-	public function __construct($config = []) {
-		$defaults = ['routes' => Libraries::get(true, 'path') . '/config/routes.php'];
+	public function __construct($config = array()) {
+		$defaults = array('routes' => Libraries::get(true, 'path') . '/config/routes.php');
 		parent::__construct($config + $defaults);
 	}
 
@@ -67,31 +66,31 @@ class Route extends \lithium\console\Command {
 	 * alias for the `show()` method.
 	 *
 	 * Example:
-	 * ```sh
+	 * {{{
 	 * li3 route
 	 * li3 route all
-	 * ```
+	 * }}}
 	 *
 	 * Will return an output similar to:
 	 *
-	 * ```
+	 * {{{
 	 * Template                        	Params
 	 * --------                        	------
 	 * /                               	{"controller":"pages","action":"view"}
 	 * /pages/{:args}                  	{"controller":"pages","action":"view"}
 	 * /{:slug:[\w\-]+}                	{"controller":"posts","action":"show"}
 	 * /{:controller}/{:action}/{:args}	{"action":"index"}
-	 * ```
+	 * }}}
 	 *
 	 * @return void
 	 */
 	public function all($scope = true) {
 		$routes = Router::get(null, true);
-		$columns = [['Template', 'Params'], ['--------', '------']];
+		$columns = array(array('Template', 'Params'), array('--------', '------'));
 
 		foreach ($routes As $route) {
 			$info = $route->export();
-			$columns[] = [$info['template'], json_encode($info['params'])];
+			$columns[] = array($info['template'], json_encode($info['params']));
 		}
 		$this->columns($columns);
 	}
@@ -101,21 +100,21 @@ class Route extends \lithium\console\Command {
 	 * method.
 	 *
 	 * Examples:
-	 * ```
+	 * {{{
 	 * 1: li3 route show /foo
 	 * 2: li3 route show post /foo/bar/1
 	 * 3: li3 route show /test
 	 * 4: li3 route show /test --env=production
-	 * ```
+	 * }}}
 	 *
 	 * Will return outputs similar to:
 	 *
-	 * ```
+	 * {{{
 	 * 1: {"controller":"foo","action":"index"	}
 	 * 2: {"controller":"foo","action":"bar","args":["1"]}
 	 * 3: {"controller":"lithium\\test\\Controller","action":"index"}
 	 * 4: {"controller":"test","action":"index"}
-	 * ```
+	 * }}}
 	 *
 	 * @return void
 	 */
@@ -132,7 +131,7 @@ class Route extends \lithium\console\Command {
 			$url = $matches[2];
 		}
 
-		$request = new Request(compact('url') + ['env' => ['REQUEST_METHOD' => $method]]);
+		$request = new Request(compact('url') + array('env' => array('REQUEST_METHOD' => $method)));
 		$result = Router::process($request);
 		$this->out($result->params ? json_encode($result->params) : "No route found.");
 	}

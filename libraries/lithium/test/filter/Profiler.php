@@ -1,15 +1,12 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\test\filter;
-
-use lithium\aop\Filters;
 
 /**
  * The `Profiler` filter tracks timing and memory usage information for each test method, and
@@ -26,46 +23,50 @@ class Profiler extends \lithium\test\Filter {
 	 * @var array
 	 * @see lithium\test\Profiler::check()
 	 */
-	protected static $_metrics = [
-		'Time' => [
-			'function' => ['microtime', true],
+	protected static $_metrics = array(
+		'Time' => array(
+			'function' => array('microtime', true),
 			'format' => 'seconds'
-		],
-		'Current Memory' => [
+		),
+		'Current Memory' => array(
 			'function' => 'memory_get_usage',
 			'format' => 'bytes'
-		],
-		'Peak Memory' => [
+		),
+		'Peak Memory' => array(
 			'function' => 'memory_get_peak_usage',
 			'format' => 'bytes'
-		],
-		'Current Memory (Xdebug)' => [
+		),
+		'Current Memory (Xdebug)' => array(
 			'function' => 'xdebug_memory_usage',
 			'format' => 'bytes'
-		],
-		'Peak Memory (Xdebug)' => [
+		),
+		'Peak Memory (Xdebug)' => array(
 			'function' => 'xdebug_peak_memory_usage',
 			'format' => 'bytes'
-		]
-	];
+		)
+	);
 
-	protected static $_formatters = [];
+	protected static $_formatters = array();
 
 	/**
 	 * Verifies that the corresponding function exists for each built-in profiler check.
 	 * Initializes display formatters.
+	 *
+	 * @return void
 	 */
-	public static function reset() {
+	public static function __init() {
 		foreach (static::$_metrics as $name => $check) {
+			$function = current((array) $check['function']);
+
 			if (is_string($check['function']) && !function_exists($check['function'])) {
 				unset(static::$_metrics[$name]);
 			}
 		}
 
-		static::$_formatters = [
+		static::$_formatters = array(
 			'seconds' => function($value) { return number_format($value, 4) . 's'; },
 			'bytes' => function($value) { return number_format($value / 1024, 3) . 'k'; }
-		];
+		);
 	}
 
 	/**
@@ -73,54 +74,52 @@ class Profiler extends \lithium\test\Filter {
 	 * instances. Allows for preparing tests before they are run.
 	 *
 	 * @param object $report Instance of Report which is calling apply.
-	 * @param \lithium\util\Collection $tests The tests to apply this filter on.
+	 * @param array $tests The test to apply this filter on
 	 * @param array $options Options for how this filter should be applied. Available options are:
 	 *              - `'method'`
 	 *              - `'run'`
 	 *              - `'checks'`
 	 * @return object Returns the instance of `$tests`.
 	 */
-	public static function apply($report, $tests, array $options = []) {
-		$defaults = ['method' => 'run', 'checks' => static::$_metrics];
+	public static function apply($report, $tests, array $options = array()) {
+		$defaults = array('method' => 'run', 'checks' => static::$_metrics);
 		$options += $defaults;
+		$m = $options['method'];
+		$filter = function($self, $params, $chain) use ($report, $options) {
+			$start = $results = array();
 
-		foreach ($tests as $test) {
-			$filter = function($params, $next) use ($report, $options, $test) {
-				$start = $results = [];
-
-				$runCheck = function($check) {
-					switch (true) {
-						case (is_object($check) || is_string($check)):
-							return $check();
-						break;
-						case (is_array($check)):
-							$function = array_shift($check);
-							$result = !$check ? $check() : call_user_func_array($function, $check);
-						break;
-					}
-					return $result;
-				};
-
-				foreach ($options['checks'] as $name => $check) {
-					$start[$name] = $runCheck($check['function']);
+			$runCheck = function($check) {
+				switch (true) {
+					case (is_object($check) || is_string($check)):
+						return $check();
+					break;
+					case (is_array($check)):
+						$function = array_shift($check);
+						$result = !$check ? $check() : call_user_func_array($function, $check);
+					break;
 				}
-				$methodResult = $next($params);
-
-				foreach ($options['checks'] as $name => $check) {
-					$results[$name] = $runCheck($check['function']) - $start[$name];
-				}
-				$report->collect(
-					__CLASS__,
-					[
-						$test->subject() => $results,
-						'options' => $options + ['test' => get_class($test)],
-						'method' => $params['method']
-					]
-				);
-				return $methodResult;
+				return $result;
 			};
-			Filters::apply($test, $options['method'], $filter);
-		}
+
+			foreach ($options['checks'] as $name => $check) {
+				$start[$name] = $runCheck($check['function']);
+			}
+			$methodResult = $chain->next($self, $params, $chain);
+
+			foreach ($options['checks'] as $name => $check) {
+				$results[$name] = $runCheck($check['function']) - $start[$name];
+			}
+			$report->collect(
+				__CLASS__,
+				array(
+					$self->subject() => $results,
+					'options' => $options + array('test' => get_class($self)),
+					'method' => $params['method']
+				)
+			);
+			return $methodResult;
+		};
+		$tests->invoke('applyFilter', array($m, $filter));
 		return $tests;
 	}
 
@@ -131,11 +130,11 @@ class Profiler extends \lithium\test\Filter {
 	 * @param array $options Not used.
 	 * @return array The results of the analysis.
 	 */
-	public static function analyze($report, array $options = []) {
+	public static function analyze($report, array $options = array()) {
 		$results = $report->results['group'];
 		$collectedResults = static::collect($report->results['filters'][__CLASS__]);
 		extract($collectedResults, EXTR_OVERWRITE);
-		$metrics = [];
+		$metrics = array();
 
 		foreach ($results as $testCase) {
 			foreach ((array) $testCase as $assertion) {
@@ -145,7 +144,7 @@ class Profiler extends \lithium\test\Filter {
 				$class = $classMap[$assertion['class']];
 
 				if (!isset($metrics[$class])) {
-					$metrics[$class] = ['assertions' => 0];
+					$metrics[$class] = array('assertions' => 0);
 				}
 				$metrics[$class]['assertions']++;
 			}
@@ -162,7 +161,7 @@ class Profiler extends \lithium\test\Filter {
 			}
 		}
 
-		$totals = [];
+		$totals = array();
 		foreach ($metrics as $class => $data) {
 			foreach ($data as $title => $value) {
 				if (isset(static::$_metrics[$title])) {
@@ -193,7 +192,7 @@ class Profiler extends \lithium\test\Filter {
 	 * @return mixed
 	 */
 	public function check($name, $value = null) {
-		if ($value === null && !is_array($name)) {
+		if (is_null($value) && !is_array($name)) {
 			return isset(static::$_metrics[$name]) ? static::$_metrics[$name] : null;
 		}
 
@@ -218,9 +217,9 @@ class Profiler extends \lithium\test\Filter {
 	 * @return array The packaged filter results prepared for analysis.
 	 */
 	public static function collect($filterResults) {
-		$defaults = ['test' => null];
-		$classMap = [];
-		$packagedResults = [];
+		$defaults = array('test' => null);
+		$classMap = array();
+		$packagedResults = array();
 
 		foreach ($filterResults as $results) {
 			$class = key($results);
@@ -230,20 +229,18 @@ class Profiler extends \lithium\test\Filter {
 
 			$classMap[$options['test']] = $class;
 			if (!isset($packagedResults[$class])) {
-				$packagedResults[$class] = [];
+				$packagedResults[$class] = array();
 			}
 			$packagedResults[$class][$method] = $results[$class];
 		}
 
 		$filterResults = $packagedResults;
 
-		return [
+		return array(
 			'filterResults' => $filterResults,
 			'classMap' => $classMap
-		];
+		);
 	}
 }
-
-Profiler::reset();
 
 ?>

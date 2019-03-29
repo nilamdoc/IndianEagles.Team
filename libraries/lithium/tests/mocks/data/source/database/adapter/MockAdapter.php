@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\mocks\data\source\database\adapter;
@@ -19,21 +18,21 @@ class MockAdapter extends \lithium\data\source\Database {
 	 *
 	 * @var array
 	 */
-	protected $_records = [];
+	protected $_records = array();
 
 	/**
 	 * A list of columns for the current test
 	 *
 	 * @var array
 	 */
-	protected $_columns = [];
+	protected $_columns = array();
 
 	/**
 	 * Holds an array of values that should be processed on initialisation.
 	 *
 	 * @var array
 	 */
-	protected $_autoConfig = ['records', 'columns'];
+	protected $_autoConfig = array('records', 'columns');
 
 	/**
 	 * Internal pointer to indicate the current record.
@@ -42,8 +41,8 @@ class MockAdapter extends \lithium\data\source\Database {
 	 */
 	protected $_pointer = 0;
 
-	public function __construct(array $config = []) {
-		$defaults =  ['records' => [], 'columns' => [], 'database' => 'mock'];
+	public function __construct(array $config = array()) {
+		$defaults =  array('records' => array(), 'columns' => array());
 		$config['autoConnect'] = false;
 		parent::__construct((array) $config + $defaults);
 	}
@@ -63,23 +62,23 @@ class MockAdapter extends \lithium\data\source\Database {
 		return $encoding ?: '';
 	}
 
-	public function describe($entity, $fields = [], array $meta = []) {
+	public function describe($entity, $fields = array(), array $meta = array()) {
 		return $this->_instance('schema', compact('fields', 'meta'));
 	}
 
-	public function create($record, array $options = []) {
+	public function create($record, array $options = array()) {
 		return true;
 	}
 
-	public function read($query, array $options = []) {
+	public function read($query, array $options = array()) {
 		return true;
 	}
 
-	public function update($query, array $options = []) {
+	public function update($query, array $options = array()) {
 		return true;
 	}
 
-	public function delete($query, array $options = []) {
+	public function delete($query, array $options = array()) {
 		return true;
 	}
 
@@ -99,7 +98,7 @@ class MockAdapter extends \lithium\data\source\Database {
 		return $name;
 	}
 
-	public function value($value, array $schema = []) {
+	public function value($value, array $schema = array()) {
 		if (is_array($value)) {
 			return parent::value($value, $schema);
 		}
@@ -110,7 +109,7 @@ class MockAdapter extends \lithium\data\source\Database {
 		return $this->_columns;
 	}
 
-	public function conditions($conditions, $context, array $options = []) {
+	public function conditions($conditions, $context, array $options = array()) {
 		return $conditions;
 	}
 
@@ -152,14 +151,14 @@ class MockAdapter extends \lithium\data\source\Database {
 		if (!$feature) {
 			return true;
 		}
-		$features = [
+		$features = array(
 			'arrays' => false,
 			'transactions' => true,
 			'booleans' => true,
 			'schema' => true,
 			'relationships' => true,
 			'sources' => true
-		];
+		);
 		return isset($features[$feature]) ? $features[$feature] : null;
 	}
 }

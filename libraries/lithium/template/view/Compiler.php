@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\template\view;
@@ -35,11 +34,11 @@ class Compiler extends \lithium\core\StaticObject {
 	 *
 	 * @var array
 	 */
-	protected static $_processors = [
+	protected static $_processors = array(
 		'/\<\?=\s*\$this->(.+?)\s*;?\s*\?>/msx' => '<?php echo $this->$1; ?>',
 		'/\<\?=\s*(\$h\(.+?)\s*;?\s*\?>/msx' => '<?php echo $1; ?>',
 		'/\<\?=\s*(.+?)\s*;?\s*\?>/msx' => '<?php echo $h($1); ?>'
-	];
+	);
 
 	/**
 	 * Compiles a template and writes it to a cache file, which is used for inclusion.
@@ -52,17 +51,15 @@ class Compiler extends \lithium\core\StaticObject {
 	 *                      should still be returned and no exception be thrown.
 	 * @return string The compiled template.
 	 */
-	public static function template($file, array $options = []) {
+	public static function template($file, array $options = array()) {
 		$cachePath = Libraries::get(true, 'resources') . '/tmp/cache/templates';
-		$defaults = ['path' => $cachePath, 'fallback' => false];
+		$defaults = array('path' => $cachePath, 'fallback' => false);
 		$options += $defaults;
 
 		$stats = stat($file);
-
-		$oname  = basename(dirname($file)) . '_' . basename($file, '.php');
-		$oname .= '_' . ($stats['ino'] ?: hash('md5', $file));
-
-		$template = "template_{$oname}_{$stats['mtime']}_{$stats['size']}.php";
+		$dir = dirname($file);
+		$oname = basename(dirname($dir)) . '_' . basename($dir) . '_' . basename($file, '.php');
+		$template = "template_{$oname}_{$stats['ino']}_{$stats['mtime']}_{$stats['size']}.php";
 		$template = "{$options['path']}/{$template}";
 
 		if (file_exists($template)) {
@@ -71,7 +68,7 @@ class Compiler extends \lithium\core\StaticObject {
 		$compiled = static::compile(file_get_contents($file));
 
 		if (is_writable($cachePath) && file_put_contents($template, $compiled) !== false) {
-			foreach (glob("{$options['path']}/template_{$oname}_*.php", GLOB_NOSORT) as $expired) {
+			foreach (glob("{$options['path']}/template_{$oname}_*.php") as $expired) {
 				if ($expired !== $template) {
 					unlink($expired);
 				}

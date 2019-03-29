@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\test;
@@ -20,18 +19,18 @@ use lithium\util\Collection;
  * Tests are added to this group either on `construct` by passing a fully-namespaced test class
  * or namespace string-based path, e.g.
  *
- * ```
- * $group = new Group(['data' => [
+ * {{{
+ * $group = new Group(array('data' => array(
  *     'data\ModelTest',
  *     new \lithium\tests\cases\core\ObjectTest()
- * ]]);
- * ```
+ * )));
+ * }}}
  *
  * Or they can be added programmatically:
  *
- * ```
+ * {{{
  * $group->add('data\ModelTest');
- * ```
+ * }}}
  */
 class Group extends \lithium\util\Collection {
 
@@ -43,7 +42,7 @@ class Group extends \lithium\util\Collection {
 	protected function _init() {
 		parent::_init();
 		$data = $this->_data;
-		$this->_data = [];
+		$this->_data = array();
 
 		foreach ($data as $item) {
 			$this->add($item);
@@ -56,12 +55,12 @@ class Group extends \lithium\util\Collection {
 	 * @param array $options
 	 * @return array
 	 */
-	public static function all(array $options = []) {
-		$defaults = [
+	public static function all(array $options = array()) {
+		$defaults = array(
 			'filter' => '/cases/',
 			'exclude' => '/mocks/',
 			'recursive' => true
-		];
+		);
 		return Libraries::locate('tests', null, $options + $defaults);
 	}
 
@@ -72,26 +71,26 @@ class Group extends \lithium\util\Collection {
 	 * @param array $options Method options. Currently not used in this method.
 	 * @return array Updated list of tests contained within this collection.
 	 */
-	public function add($test = null, array $options = []) {
-		$resolve = function($test) {
+	public function add($test = null, array $options = array()) {
+		$resolve = function($self, $test) {
 			switch (true) {
 				case !$test:
-					return [];
+					return array();
 				case is_object($test) && $test instanceof Unit:
-					return [get_class($test)];
+					return array(get_class($test));
 				case is_string($test) && !file_exists(Libraries::path($test)):
-					return $this->_resolve($test);
+					return $self->invokeMethod('_resolve', array($test));
 				default:
 					return (array) $test;
 			}
 		};
 		if (is_array($test)) {
 			foreach ($test as $t) {
-				$this->_data = array_filter(array_merge($this->_data, $resolve($t)));
+				$this->_data = array_filter(array_merge($this->_data, $resolve($this, $t)));
 			}
 			return $this->_data;
 		}
-		return $this->_data = array_merge($this->_data, $resolve($test));
+		return $this->_data = array_merge($this->_data, $resolve($this, $test));
 	}
 
 	/**
@@ -101,7 +100,7 @@ class Group extends \lithium\util\Collection {
 	 * @param array $options
 	 * @return lithium\util\Collection
 	 */
-	public function tests($params = [], array $options = []) {
+	public function tests($params = array(), array $options = array()) {
 		$tests = new Collection();
 
 		foreach ($this->_data as $test) {
@@ -123,23 +122,23 @@ class Group extends \lithium\util\Collection {
 	 */
 	protected function _resolve($test) {
 		if (strpos($test, '\\') === false && Libraries::get($test)) {
-			return (array) Libraries::find($test, [
+			return (array) Libraries::find($test, array(
 				'recursive' => true,
 				'filter' => '/(cases|integration|functional)\\\.*Test$/',
 				'exclude' => '/tests\\\mocks/'
-			]);
+			));
 		}
 		if (!$test = trim($test, '\\')) {
-			return [];
+			return array();
 		}
-		list($library, $path) = explode('\\', $test, 2) + [$test, null];
+		list($library, $path) = explode('\\', $test, 2) + array($test, null);
 
-		return (array) Libraries::find($library, [
+		return (array) Libraries::find($library, array(
 			'recursive' => true,
 			'path' => '/' . str_replace('\\', '/', $path),
 			'filter' => '/(cases|integration|functional)\\\.*Test$/',
 			'exclude' => strstr($test, 'tests\mocks') ? '' : '/tests\\\mocks/'
-		]);
+		));
 	}
 }
 

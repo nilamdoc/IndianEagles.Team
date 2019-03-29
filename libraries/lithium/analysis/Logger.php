@@ -1,15 +1,13 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\analysis;
 
-use lithium\aop\Filters;
 use UnexpectedValueException;
 
 /**
@@ -23,27 +21,25 @@ use UnexpectedValueException;
  * levels. When a log message is written, all adapters that are configured to accept the priority
  * level with which the message was written will receive the message.
  *
- * ```
- * Logger::config([
- * 	'default' => ['adapter' => 'Syslog'],
- * 	'badnews' => [
+ * {{{
+ * Logger::config(array(
+ * 	'default' => array('adapter' => 'Syslog'),
+ * 	'badnews' => array(
  * 		'adapter' => 'File',
- * 		'priority' => ['emergency', 'alert', 'critical', 'error']
- * 	]
- * ]);
- * ```
+ * 		'priority' => array('emergency', 'alert', 'critical', 'error')
+ * 	)
+ * ));
+ * }}}
  *
  * In the above configuration, all messages will be written to the system log (`syslogd`), but only
  * messages with the priority `error` or higher will be logged to a file. Messages can then be
  * written to the log(s) using the `write()` method:
- * ```
- * Logger::write('alert', 'This is an alert-level message that will be logged in 2 places');
- * ```
+ *
+ * {{{ Logger::write('alert', 'This is an alert-level message that will be logged in 2 places'); }}}
  *
  * Messages can also be written using the log priority as a method name:
- * ```
- * Logger::alert('This is an alert-level message that will be logged in 2 places');
- * ```
+ *
+ * {{{ Logger::alert('This is an alert-level message that will be logged in 2 places'); }}}
  *
  * This works identically to the above. The message priority levels which `Logger` supports are as
  * follows: `emergency`, `alert`, `critical`, `error`, `warning`, `notice`, `info` and `debug`.
@@ -59,7 +55,7 @@ class Logger extends \lithium\core\Adaptable {
 	 *
 	 * @var object `Collection` of logger configurations.
 	 */
-	protected static $_configurations = [];
+	protected static $_configurations = array();
 
 	/**
 	 * Libraries::locate() compatible path to adapters for this class.
@@ -74,7 +70,7 @@ class Logger extends \lithium\core\Adaptable {
 	 *
 	 * @var array
 	 */
-	protected static $_priorities = [
+	protected static $_priorities = array(
 		'emergency' => 0,
 		'alert'     => 1,
 		'critical'  => 2,
@@ -83,7 +79,7 @@ class Logger extends \lithium\core\Adaptable {
 		'notice'    => 5,
 		'info'      => 6,
 		'debug'     => 7
-	];
+	);
 
 	/**
 	 * Writes a message to one or more log adapters, where the adapters that are written to are the
@@ -102,14 +98,14 @@ class Logger extends \lithium\core\Adaptable {
 	 *         an `UnexpectedValueException` will be thrown.
 	 * @filter
 	 */
-	public static function write($priority, $message, array $options = []) {
-		$defaults = ['name' => null];
+	public static function write($priority, $message, array $options = array()) {
+		$defaults = array('name' => null);
 		$options += $defaults;
 		$result = true;
 
-		if (isset(static::$_configurations[$options['name']])) {
+		if (isset(self::$_configurations[$options['name']])) {
 			$name = $options['name'];
-			$methods = [$name => static::adapter($name)->write($priority, $message, $options)];
+			$methods = array($name => static::adapter($name)->write($priority, $message, $options));
 		} elseif (!isset(static::$_priorities[$priority])) {
 			$message = "Attempted to write log message with invalid priority `{$priority}`.";
 			throw new UnexpectedValueException($message);
@@ -120,21 +116,7 @@ class Logger extends \lithium\core\Adaptable {
 		foreach ($methods as $name => $method) {
 			$params = compact('priority', 'message', 'options');
 			$config = static::_config($name);
-
-			if (!empty($config['filters'])) {
-				$message  = 'Per adapter filters have been deprecated. Please ';
-				$message .= "filter the manager class' static methods instead.";
-				trigger_error($message, E_USER_DEPRECATED);
-
-				$r = Filters::bcRun(
-					get_called_class(), __FUNCTION__, $params, $method, $config['filters']
-				);
-			} else {
-				$r = Filters::run(get_called_class(), __FUNCTION__, $params, $method);
-			}
-			if (!$r) {
-				$result = false;
-			}
+			$result &= static::_filter(__FUNCTION__, $params, $method, $config['filters']);
 		}
 		return $methods ? $result : false;
 	}
@@ -142,10 +124,10 @@ class Logger extends \lithium\core\Adaptable {
 	/**
 	 * Acts as a proxy for the `write()` method, allowing log message priority names to be called as
 	 * methods, i.e.:
-	 * ```
+	 * {{{
 	 * Logger::emergency('Something bad happened.');
 	 * // This is equivalent to Logger::write('emergency', 'Something bad happened')
-	 * ```
+	 * }}}
 	 *
 	 * @param string $priority The name of the method called on the `Logger` class. This should map
 	 *               to a log type.
@@ -153,18 +135,16 @@ class Logger extends \lithium\core\Adaptable {
 	 * @return boolean Returns `true` or `false`, depending on the success of the `write()` method.
 	 */
 	public static function __callStatic($priority, $params) {
-		$params += [null, []];
+		$params += array(null, array());
 		return static::write($priority, $params[0], $params[1]);
 	}
 
 	/**
-	 * Determines if a given method can be called.
+	 * Custom check to determine if our given magic methods can be responded to.
 	 *
-	 * @param string $method Name of the method.
-	 * @param boolean $internal Provide `true` to perform check from inside the
-	 *                class/object. When `false` checks also for public visibility;
-	 *                defaults to `false`.
-	 * @return boolean Returns `true` if the method can be called, `false` otherwise.
+	 * @param  string  $method     Method name.
+	 * @param  bool    $internal   Interal call or not.
+	 * @return bool
 	 */
 	public static function respondsTo($method, $internal = false) {
 		return isset(static::$_priorities[$method]) || parent::respondsTo($method, $internal);
@@ -180,7 +160,7 @@ class Logger extends \lithium\core\Adaptable {
 	 * @return array Returns an array of configuration data, merged with default values.
 	 */
 	protected static function _initConfig($name, $config) {
-		$defaults = ['priority' => true];
+		$defaults = array('priority' => true);
 		return parent::_initConfig($name, $config) + $defaults;
 	}
 
@@ -195,8 +175,8 @@ class Logger extends \lithium\core\Adaptable {
 	 *         message priority specified in `$priority`, or configured to respond to _all_ message
 	 *        priorities.
 	 */
-	protected static function _configsByPriority($priority, $message, array $options = []) {
-		$configs = [];
+	protected static function _configsByPriority($priority, $message, array $options = array()) {
+		$configs = array();
 		$key = 'priority';
 
 		foreach (array_keys(static::$_configurations) as $name) {

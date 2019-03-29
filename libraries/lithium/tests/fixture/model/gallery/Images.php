@@ -1,21 +1,19 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\fixture\model\gallery;
 
 class Images extends \lithium\data\Model {
 
-	public $belongsTo = ['Galleries'];
+	public $belongsTo = array('Galleries');
 
-	public $hasMany = ['ImagesTags', 'Comments'];
+	public $hasMany = array('ImagesTags', 'Comments');
 
-	protected $_meta = ['connection' => 'test'];
 }
 
 ?>

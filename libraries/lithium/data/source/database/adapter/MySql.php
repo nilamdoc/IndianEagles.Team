@@ -1,109 +1,117 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\data\source\database\adapter;
 
 use PDO;
 use PDOException;
-use lithium\aop\Filters;
-use lithium\core\ConfigException;
-use lithium\net\HostString;
 
 /**
- * MySQL database driver. Extends the `Database` class to implement the necessary
- * SQL-formatting and resultset-fetching features for working with MySQL databases.
+ * Extends the `Database` class to implement the necessary SQL-formatting and resultset-fetching
+ * features for working with MySQL databases.
  *
- * - Implements optional strict mode.
- *
- * For more information on configuring the database connection, see
- * the `__construct()` method.
+ * For more information on configuring the database connection, see the `__construct()` method.
  *
  * @see lithium\data\source\database\adapter\MySql::__construct()
- * @see lithium\data\source\database\adapter\MySql::strict()
  */
 class MySql extends \lithium\data\source\Database {
-
-	/**
-	 * The default host used to connect to the server.
-	 */
-	const DEFAULT_HOST = 'localhost';
-
-	/**
-	 * The default port used to connect to the server.
-	 */
-	const DEFAULT_PORT = 3306;
 
 	/**
 	 * MySQL column type definitions.
 	 *
 	 * @var array
 	 */
-	protected $_columns = [
-		'id' => ['use' => 'int', 'length' => 11, 'increment' => true],
-		'string' => ['use' => 'varchar', 'length' => 255],
-		'text' => ['use' => 'text'],
-		'integer' => ['use' => 'int', 'length' => 11, 'formatter' => 'intval'],
-		'float' => ['use' => 'float', 'formatter' => 'floatval'],
-		'datetime' => ['use' => 'datetime', 'format' => 'Y-m-d H:i:s'],
-		'timestamp' => ['use' => 'timestamp', 'format' => 'Y-m-d H:i:s'],
-		'time' => ['use' => 'time', 'format' => 'H:i:s', 'formatter' => 'date'],
-		'date' => ['use' => 'date', 'format' => 'Y-m-d', 'formatter' => 'date'],
-		'binary' => ['use' => 'blob'],
-		'boolean' => ['use' => 'tinyint', 'length' => 1]
-	];
-
+	protected $_columns = array(
+		'id' => array('use' => 'int', 'length' => 11, 'increment' => true),
+		'string' => array('use' => 'varchar', 'length' => 255),
+		'text' => array('use' => 'text'),
+		'integer' => array('use' => 'int', 'length' => 11, 'formatter' => 'intval'),
+		'float' => array('use' => 'float', 'formatter' => 'floatval'),
+		'datetime' => array('use' => 'datetime', 'format' => 'Y-m-d H:i:s'),
+		'timestamp' => array('use' => 'timestamp', 'format' => 'Y-m-d H:i:s'),
+		'time' => array('use' => 'time', 'format' => 'H:i:s', 'formatter' => 'date'),
+		'date' => array('use' => 'date', 'format' => 'Y-m-d', 'formatter' => 'date'),
+		'binary' => array('use' => 'blob'),
+		'boolean' => array('use' => 'tinyint', 'length' => 1)
+	);
 	/**
-	 * Meta atrribute syntax.
-	 *
-	 * By default `'escape'` is false and 'join' is `' '`.
+	 * Meta atrribute syntax
+	 * By default `'escape'` is false and 'join' is `' '`
 	 *
 	 * @var array
 	 */
-	protected $_metas = [
-		'column' => [
-			'charset' => ['keyword' => 'CHARACTER SET'],
-			'collate' => ['keyword' => 'COLLATE'],
-			'comment' => ['keyword' => 'COMMENT', 'escape' => true]
-		],
-		'table' => [
-			'charset' => ['keyword' => 'DEFAULT CHARSET'],
-			'collate' => ['keyword' => 'COLLATE'],
-			'engine' => ['keyword' => 'ENGINE'],
-			'tablespace' => ['keyword' => 'TABLESPACE']
-		]
-	];
-
+	protected $_metas = array(
+		'column' => array(
+			'charset' => array('keyword' => 'CHARACTER SET'),
+			'collate' => array('keyword' => 'COLLATE'),
+			'comment' => array('keyword' => 'COMMENT', 'escape' => true)
+		),
+		'table' => array(
+			'charset' => array('keyword' => 'DEFAULT CHARSET'),
+			'collate' => array('keyword' => 'COLLATE'),
+			'engine' => array('keyword' => 'ENGINE'),
+			'tablespace' => array('keyword' => 'TABLESPACE')
+		)
+	);
 	/**
 	 * Column contraints
 	 *
 	 * @var array
 	 */
-	protected $_constraints = [
-		'primary' => ['template' => 'PRIMARY KEY ({:column})'],
-		'foreign_key' => [
+	protected $_constraints = array(
+		'primary' => array('template' => 'PRIMARY KEY ({:column})'),
+		'foreign_key' => array(
 			'template' => 'FOREIGN KEY ({:column}) REFERENCES {:to} ({:toColumn}) {:on}'
-		],
-		'index' => ['template' => 'INDEX ({:column})'],
-		'unique' => [
+		),
+		'index' => array('template' => 'INDEX ({:column})'),
+		'unique' => array(
 			'template' => 'UNIQUE {:index} ({:column})',
 			'key' => 'KEY',
 			'index' => 'INDEX'
-		],
-		'check' => ['template' => 'CHECK ({:expr})']
-	];
-
+		),
+		'check' => array('template' => 'CHECK ({:expr})')
+	);
 	/**
 	 * Pair of opening and closing quote characters used for quoting identifiers in queries.
 	 *
 	 * @var array
 	 */
-	protected $_quotes = ['`', '`'];
+	protected $_quotes = array('`', '`');
+
+	/**
+	 * MySQL-specific value denoting whether or not table aliases should be used in DELETE and
+	 * UPDATE queries.
+	 *
+	 * @var boolean
+	 */
+	protected $_useAlias = true;
+
+	/**
+	 * Constructs the MySQL adapter and sets the default port to 3306.
+	 *
+	 * @see lithium\data\source\Database::__construct()
+	 * @see lithium\data\Source::__construct()
+	 * @see lithium\data\Connections::add()
+	 * @param array $config Configuration options for this class. For additional configuration,
+	 *        see `lithium\data\source\Database` and `lithium\data\Source`. Available options
+	 *        defined by this class:
+	 *        - `'database'`: The name of the database to connect to. Defaults to 'lithium'.
+	 *        - `'host'`: The IP or machine name where MySQL is running, followed by a colon,
+	 *          followed by a port number or socket. Defaults to `'localhost:3306'`.
+	 *        - `'persistent'`: If a persistent connection (if available) should be made.
+	 *          Defaults to true.
+	 *        Typically, these parameters are set in `Connections::add()`, when adding the
+	 *        adapter to the list of active connections.
+	 */
+	public function __construct(array $config = array()) {
+		$defaults = array('host' => 'localhost:3306', 'encoding' => null);
+		parent::__construct($config + $defaults);
+	}
 
 	/**
 	 * Check for required PHP extension, or supported database feature.
@@ -117,101 +125,37 @@ class MySql extends \lithium\data\source\Database {
 		if (!$feature) {
 			return extension_loaded('pdo_mysql');
 		}
-		$features = [
+		$features = array(
 			'arrays' => false,
 			'transactions' => false,
 			'booleans' => true,
 			'schema' => true,
 			'relationships' => true,
 			'sources' => true
-		];
+		);
 		return isset($features[$feature]) ? $features[$feature] : null;
 	}
 
 	/**
-	 * Constructor.
+	 * Connects to the database using the options provided to the class constructor.
 	 *
-	 * @link http://dev.mysql.com/doc/refman/5.7/en/sql-mode.html#sql-mode-strict
-	 * @see lithium\data\source\Database::__construct()
-	 * @see lithium\data\Source::__construct()
-	 * @see lithium\data\Connections::add()
-	 * @param array $config The available configuration options are the following. Further
-	 *        options are inherited from the parent classes. Typically, these parameters are
-	 *        set in `Connections::add()`, when adding the adapter to the list of active
-	 *        connections.
-	 *        - `'host'` _string_: A string in the form of `'<host>'`, `'<host>:<port>'` or
-	 *          `':<port>'` indicating the host and/or port to connect to. When one or both are
-	 *          not provided uses general server defaults.
-	 *          To use Unix sockets specify the path to the socket (i.e. `'/path/to/socket'`).
-	 *        - `'strict'` _boolean|null_: When `true` will enable strict mode by setting
-	 *          sql-mode to `STRICT_ALL_TABLES`. When `false` will disable strict mode
-	 *          explictly by settings sql-mode to an empty value ``. A value of `null`
-	 *          leaves the setting untouched (this is the default) and the default setting
-	 *          of the database is used.
-	 * @return void
-	 */
-	public function __construct(array $config = []) {
-		$defaults = [
-			'host' => static::DEFAULT_HOST . ':' . static::DEFAULT_PORT,
-			'strict' => null
-		];
-		parent::__construct($config + $defaults);
-	}
-
-	/**
-	 * Initializer. Adds MySQL-specific operators to `$_operators`. Constructs
-	 * a DSN from configuration.
-	 *
-	 * @see lithium\data\source\database\adapter\MySql::$_operators
-	 * @see lithium\data\source\Database::$_operators
-	 * @return void
-	 */
-	protected function _init() {
-		if (!$this->_config['host']) {
-			throw new ConfigException('No host configured.');
-		}
-
-		if (HostString::isSocket($this->_config['host'])) {
-			$this->_config['dsn'] = sprintf(
-				'mysql:unix_socket=%s;dbname=%s',
-				$this->_config['host'],
-				$this->_config['database']
-			);
-		} else {
-			$host = HostString::parse($this->_config['host']) + [
-				'host' => static::DEFAULT_HOST,
-				'port' => static::DEFAULT_PORT
-			];
-			$this->_config['dsn'] = sprintf(
-				'mysql:host=%s;port=%s;dbname=%s',
-				$host['host'],
-				$host['port'],
-				$this->_config['database']
-			);
-		}
-		parent::_init();
-
-		$this->_operators += [
-			'REGEXP' => [],
-			'NOT REGEXP' => [],
-			'SOUNDS LIKE' => []
-		];
-	}
-
-	/**
-	 * Connects to the database by creating a PDO intance using the constructed DSN string.
-	 * Will set specific options on the connection as provided.
-	 *
-	 * @return boolean Returns `true` if a database connection could be established,
-	 *         otherwise `false`.
+	 * @return boolean Returns `true` if a database connection could be established, otherwise
+	 *         `false`.
 	 */
 	public function connect() {
+		if (!$this->_config['dsn']) {
+			$host = $this->_config['host'];
+			list($host, $port) = explode(':', $host) + array(1 => "3306");
+			$dsn = "mysql:host=%s;port=%s;dbname=%s";
+			$this->_config['dsn'] = sprintf($dsn, $host, $port, $this->_config['database']);
+		}
+
 		if (!parent::connect()) {
 			return false;
 		}
-		if ($this->_config['strict'] !== null && !$this->strict($this->_config['strict'])) {
-			return false;
-		}
+
+		$info = $this->connection->getAttribute(PDO::ATTR_SERVER_VERSION);
+		$this->_useAlias = (boolean) version_compare($info, "4.1", ">=");
 		return true;
 	}
 
@@ -220,21 +164,22 @@ class MySql extends \lithium\data\source\Database {
 	 *
 	 * @param string $model The fully-name-spaced class name of the model object making the request.
 	 * @return array Returns an array of sources to which models can connect.
-	 * @filter
+	 * @filter This method can be filtered.
 	 */
 	public function sources($model = null) {
+		$_config = $this->_config;
 		$params = compact('model');
 
-		return Filters::run($this, __FUNCTION__, $params, function($params) {
-			$name = $this->name($this->_config['database']);
+		return $this->_filter(__METHOD__, $params, function($self, $params) use ($_config) {
+			$name = $self->name($_config['database']);
 
-			if (!$result = $this->_execute("SHOW TABLES FROM {$name};")) {
+			if (!$result = $self->invokeMethod('_execute', array("SHOW TABLES FROM {$name};"))) {
 				return null;
 			}
-			$sources = [];
+			$sources = array();
 
-			foreach ($result as $row) {
-				$sources[] = $row[0];
+			while ($data = $result->next()) {
+				$sources[] = array_shift($data);
 			}
 			return $sources;
 		});
@@ -252,25 +197,24 @@ class MySql extends \lithium\data\source\Database {
 	 *         array keys are the available fields, and the values are arrays describing each
 	 *         field, containing the following keys:
 	 *         - `'type'`: The field type name
-	 * @filter
+	 * @filter This method can be filtered.
 	 */
-	public function describe($entity,  $fields = [], array $meta = []) {
+	public function describe($entity,  $fields = array(), array $meta = array()) {
 		$params = compact('entity', 'meta', 'fields');
-
-		return Filters::run($this, __FUNCTION__, $params, function($params) {
+		return $this->_filter(__METHOD__, $params, function($self, $params) {
 			extract($params);
 
 			if ($fields) {
-				return $this->_instance('schema', compact('fields'));
+				return $self->invokeMethod('_instance', array('schema', compact('fields')));
 			}
-			$name = $this->_entityName($entity, ['quoted' => true]);
-			$columns = $this->read("DESCRIBE {$name}", ['return' => 'array', 'schema' => [
+			$name = $self->invokeMethod('_entityName', array($entity, array('quoted' => true)));
+			$columns = $self->read("DESCRIBE {$name}", array('return' => 'array', 'schema' => array(
 				'field', 'type', 'null', 'key', 'default', 'extra'
-			]]);
-			$fields = [];
+			)));
+			$fields = array();
 
 			foreach ($columns as $column) {
-				$schema = $this->_column($column['type']);
+				$schema = $self->invokeMethod('_column', array($column['type']));
 				$default = $column['default'];
 
 				if ($default === 'CURRENT_TIMESTAMP') {
@@ -278,70 +222,38 @@ class MySql extends \lithium\data\source\Database {
 				} elseif ($schema['type'] === 'boolean') {
 					$default = !!$default;
 				}
-				$fields[$column['field']] = $schema + [
+				$fields[$column['field']] = $schema + array(
 					'null'     => ($column['null'] === 'YES' ? true : false),
 					'default'  => $default
-				];
+				);
 			}
-			return $this->_instance('schema', compact('fields'));
+			return $self->invokeMethod('_instance', array('schema', compact('fields')));
 		});
 	}
 
 	/**
-	 * Getter/Setter for the connection's encoding.
+	 * Gets or sets the encoding for the connection.
 	 *
-	 * MySQL uses the string `utf8` to identify the UTF-8 encoding. In general `UTF-8` is used
-	 * to identify that encoding. This methods allows both strings to be used for _setting_ the
-	 * encoding (in lower and uppercase, with or without dash) and will transparently convert
-	 * to MySQL native format. When _getting_ the encoding, it is converted back into `UTF-8`.
-	 * So that this method should ever only return `UTF-8` when the encoding is used.
-	 *
-	 * @param null|string $encoding Either `null` to retrieve the current encoding, or
-	 *        a string to set the current encoding to. For UTF-8 accepts any permutation.
-	 * @return string|boolean When $encoding is `null` returns the current encoding
-	 *         in effect, otherwise a boolean indicating if setting the encoding
-	 *         succeeded or failed. Returns `'UTF-8'` when this encoding is used.
+	 * @param $encoding
+	 * @return mixed If setting the encoding; returns true on success, else false.
+	 *         When getting, returns the encoding.
 	 */
 	public function encoding($encoding = null) {
-		if ($encoding === null) {
-			$encoding = $this->connection
-				->query("SHOW VARIABLES LIKE 'character_set_client'")
-				->fetchColumn(1);
+		$encodingMap = array('UTF-8' => 'utf8');
 
-			return $encoding === 'utf8' ? 'UTF-8' : $encoding;
+		if (empty($encoding)) {
+			$query = $this->connection->query("SHOW VARIABLES LIKE 'character_set_client'");
+			$encoding = $query->fetchColumn(1);
+			return ($key = array_search($encoding, $encodingMap)) ? $key : $encoding;
 		}
-		if (strcasecmp($encoding, 'utf-8') === 0 || strcasecmp($encoding, 'utf8') === 0) {
-			$encoding = 'utf8';
-		}
-		return $this->connection->exec("SET NAMES '{$encoding}'") !== false;
-	}
+		$encoding = isset($encodingMap[$encoding]) ? $encodingMap[$encoding] : $encoding;
 
-	/**
-	 * Enables/disables or retrieves strictness setting.
-	 *
-	 * This method will only operate on _session_ level, it will not check/set
-	 * _global_ settings. `STRICT_ALL_TABLES` mode is used to enable strict mode.
-	 *
-	 * @link http://dev.mysql.com/doc/refman/5.7/en/sql-mode.html#sql-mode-strict
-	 * @param boolean|null $value `true` to enable strict mode, `false` to disable or `null`
-	 *        to retrieve the current setting.
-	 * @return boolean When setting, returns `true` on success, else `false`. When $value was
-	 *         `null` return either `true` or `false` indicating whether strict mode is enabled
-	 *         or disabled.
-	 */
-	public function strict($value = null) {
-		if ($value === null) {
-			return strpos(
-				$this->connection->query('SELECT @@SESSION.sql_mode')->fetchColumn(),
-				'STRICT_ALL_TABLES'
-			) !== false;
+		try {
+			$this->connection->exec("SET NAMES '{$encoding}'");
+			return true;
+		} catch (PDOException $e) {
+			return false;
 		}
-		if ($value) {
-			$sql = "SET SESSION sql_mode = 'STRICT_ALL_TABLES'";
-		} else {
-			$sql = "SET SESSION sql_mode = ''";
-		}
-		return $this->connection->exec($sql) !== false;
 	}
 
 	/**
@@ -352,7 +264,7 @@ class MySql extends \lithium\data\source\Database {
 	 * @param array $schema Formatted array from `lithium\data\source\Database::schema()`
 	 * @return mixed Value with converted type.
 	 */
-	public function value($value, array $schema = []) {
+	public function value($value, array $schema = array()) {
 		if (($result = parent::value($value, $schema)) !== null) {
 			return $result;
 		}
@@ -366,7 +278,7 @@ class MySql extends \lithium\data\source\Database {
 	 */
 	public function error() {
 		if ($error = $this->connection->errorInfo()) {
-			return [$error[1], $error[2]];
+			return array($error[1], $error[2]);
 		}
 	}
 
@@ -378,6 +290,18 @@ class MySql extends \lithium\data\source\Database {
 	}
 
 	/**
+	 * @todo Eventually, this will need to rewrite aliases for DELETE and UPDATE queries, same with
+	 *       order().
+	 * @param string $conditions
+	 * @param string $context
+	 * @param array $options
+	 * @return void
+	 */
+	public function conditions($conditions, $context, array $options = array()) {
+		return parent::conditions($conditions, $context, $options);
+	}
+
+	/**
 	 * Execute a given query.
 	 *
 	 * @see lithium\data\source\Database::renderCommand()
@@ -386,26 +310,29 @@ class MySql extends \lithium\data\source\Database {
 	 *        - 'buffered': If set to `false` uses mysql_unbuffered_query which
 	 *          sends the SQL query query to MySQL without automatically fetching and buffering the
 	 *          result rows as `mysql_query()` does (for less memory usage).
-	 * @return \lithium\data\source\Result Returns a result object if the query was successful.
+	 * @return resource Returns the result resource handle if the query is successful.
 	 * @filter
 	 */
-	protected function _execute($sql, array $options = []) {
-		$defaults = ['buffered' => true];
+	protected function _execute($sql, array $options = array()) {
+		$defaults = array('buffered' => true);
 		$options += $defaults;
+		$this->connection->exec("USE  `{$this->_config['database']}`");
+
+		$conn = $this->connection;
 
 		$params = compact('sql', 'options');
 
-		return Filters::run($this, __FUNCTION__, $params, function($params) {
-			$this->connection->setAttribute(
-				PDO::MYSQL_ATTR_USE_BUFFERED_QUERY,
-				$params['options']['buffered']
-			);
+		return $this->_filter(__METHOD__, $params, function($self, $params) use ($conn) {
+			$sql = $params['sql'];
+			$options = $params['options'];
+			$conn->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, $options['buffered']);
+
 			try {
-				$resource = $this->connection->query($params['sql']);
-			} catch (PDOException $e) {
-				$this->_error($params['sql']);
+				$resource = $conn->query($sql);
+			} catch(PDOException $e) {
+				$self->invokeMethod('_error', array($sql));
 			};
-			return $this->_instance('result', compact('resource'));
+			return $self->invokeMethod('_instance', array('result', compact('resource')));
 		});
 	}
 
@@ -417,8 +344,9 @@ class MySql extends \lithium\data\source\Database {
 	 *         bound to a sequence.
 	 */
 	protected function _insertId($query) {
-		$row = $this->_execute('SELECT LAST_INSERT_ID() AS insertID')->current();
-		return ($row[0] && $row[0] !== '0') ? $row[0] : null;
+		$resource = $this->_execute('SELECT LAST_INSERT_ID() AS insertID');
+		list($id) = $resource->next();
+		return ($id && $id !== '0') ? $id : null;
 	}
 
 	/**
@@ -435,20 +363,20 @@ class MySql extends \lithium\data\source\Database {
 		if (!preg_match('/(?P<type>\w+)(?:\((?P<length>[\d,]+)\))?/', $real, $column)) {
 			return $real;
 		}
-		$column = array_intersect_key($column, ['type' => null, 'length' => null]);
+		$column = array_intersect_key($column, array('type' => null, 'length' => null));
 
 		if (isset($column['length']) && $column['length']) {
-			$length = explode(',', $column['length']) + [null, null];
-			$column['length'] = $length[0] ? (integer) $length[0] : null;
-			$length[1] ? $column['precision'] = (integer) $length[1] : null;
+			$length = explode(',', $column['length']) + array(null, null);
+			$column['length'] = $length[0] ? intval($length[0]) : null;
+			$length[1] ? $column['precision'] = intval($length[1]) : null;
 		}
 
 		switch (true) {
-			case in_array($column['type'], ['date', 'time', 'datetime', 'timestamp']):
+			case in_array($column['type'], array('date', 'time', 'datetime', 'timestamp')):
 				return $column;
 			case ($column['type'] === 'tinyint' && $column['length'] == '1'):
 			case ($column['type'] === 'boolean'):
-				return ['type' => 'boolean'];
+				return array('type' => 'boolean');
 			break;
 			case (strpos($column['type'], 'int') !== false):
 				$column['type'] = 'integer';
@@ -473,15 +401,13 @@ class MySql extends \lithium\data\source\Database {
 	}
 
 	/**
-	 * Helper for `Database::column()`
+	 * Helper for `DatabaseSchema::_column()`
 	 *
-	 * @see lithium\data\Database::column()
-	 * @param array $field A field array.
-	 * @return string The SQL column string.
+	 * @param array $field A field array
+	 * @return string The SQL column string
 	 */
 	protected function _buildColumn($field) {
 		extract($field);
-
 		if ($type === 'float' && $precision) {
 			$use = 'decimal';
 		}
@@ -495,7 +421,7 @@ class MySql extends \lithium\data\source\Database {
 			$out .= "({$length}{$precision})";
 		}
 
-		$out .= $this->_buildMetas('column', $field, ['charset', 'collate']);
+		$out .= $this->_buildMetas('column', $field, array('charset', 'collate'));
 
 		if (isset($increment) && $increment) {
 			$out .= ' NOT NULL AUTO_INCREMENT';
@@ -504,7 +430,7 @@ class MySql extends \lithium\data\source\Database {
 			$out .= $default ? ' DEFAULT ' . $this->value($default, $field) : '';
 		}
 
-		return $out . $this->_buildMetas('column', $field, ['comment']);
+		return $out . $this->_buildMetas('column', $field, array('comment'));
 	}
 }
 

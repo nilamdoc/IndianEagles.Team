@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\data\source\database\adapter\pdo;
@@ -14,34 +13,44 @@ use PDOStatement;
 use PDOException;
 
 /**
- * This is the result class for all PDO based databases. It needs a `PDOStatement` as
- * a resource to operate on. Results will be fetched using `PDO::FETCH_NUM` as a numerically
- * indexed array.
+ * This class is a wrapper around the MySQL result returned and can be used to iterate over it.
  *
- * @link http://php.net/manual/class.pdostatement.php The PDOStatement class.
+ * It also provides a simple caching mechanism which stores the result after the first load.
+ * You are then free to iterate over the result back and forth through the provided methods
+ * and don't have to think about hitting the database too often.
+ *
+ * On initialization, it needs a `PDOStatement` to operate on. You are then free to use all
+ * methods provided by the `Iterator` interface.
+ *
+ * @link http://php.net/manual/de/class.pdostatement.php The PDOStatement class.
+ * @link http://php.net/manual/de/class.iterator.php The Iterator interface.
  */
 class Result extends \lithium\data\source\Result {
 
+	public $named = false;
+
 	/**
-	 * Fetches the next result from the resource.
+	 * Fetches the result from the resource and caches it.
 	 *
-	 * @return array|boolean|null Returns a key/value pair for the next result,
-	 *         `null` if there is none, `false` if something bad happened.
+	 * @return boolean Return `true` on success or `false` if it is not valid.
 	 */
-	protected function _fetch() {
-		if (!$this->_resource instanceof PDOStatement) {
-			$this->close();
-			return false;
+	protected function _fetchFromResource() {
+		if ($this->_resource instanceof PDOStatement) {
+			try {
+				$mode = $this->named ? PDO::FETCH_NAMED : PDO::FETCH_NUM;
+				if ($result = $this->_resource->fetch($mode)) {
+					$this->_key = $this->_iterator;
+					$this->_current = $this->_cache[$this->_iterator++] = $result;
+					return true;
+				}
+			} catch (PDOException $e) {}
 		}
-		try {
-			if ($result = $this->_resource->fetch(PDO::FETCH_NUM)) {
-				return [$this->_iterator++, $result];
-			}
-		} catch (PDOException $e) {
-			$this->close();
-			return false;
-		}
-		return null;
+		$this->_resource = null;
+		return false;
+	}
+
+	public function __destruct() {
+		$this->close();
 	}
 }
 

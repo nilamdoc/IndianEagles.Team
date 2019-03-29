@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\cases\net\http;
@@ -12,7 +11,6 @@ namespace lithium\tests\cases\net\http;
 use lithium\action\Request;
 use lithium\net\http\Router;
 use lithium\action\Response;
-use lithium\tests\mocks\action\MockDispatcher;
 
 class RouterTest extends \lithium\test\Unit {
 
@@ -27,35 +25,35 @@ class RouterTest extends \lithium\test\Unit {
 	}
 
 	public function testBasicRouteConnection() {
-		$result = Router::connect('/hello', ['controller' => 'Posts', 'action' => 'index']);
-		$expected = [
+		$result = Router::connect('/hello', array('controller' => 'Posts', 'action' => 'index'));
+		$expected = array(
 			'template' => '/hello',
 			'pattern' => '@^/hello$@u',
-			'params' => ['controller' => 'Posts', 'action' => 'index'],
-			'match' => ['controller' => 'Posts', 'action' => 'index'],
-			'meta' => [],
-			'persist' => ['controller'],
-			'defaults' => [],
-			'keys' => [],
-			'subPatterns' => [],
+			'params' => array('controller' => 'Posts', 'action' => 'index'),
+			'match' => array('controller' => 'Posts', 'action' => 'index'),
+			'meta' => array(),
+			'persist' => array('controller'),
+			'defaults' => array(),
+			'keys' => array(),
+			'subPatterns' => array(),
 			'handler' => null
-		];
+		);
 		$this->assertEqual($expected, $result->export());
 
-		$result = Router::connect('/{:controller}/{:action}', ['action' => 'view']);
+		$result = Router::connect('/{:controller}/{:action}', array('action' => 'view'));
 		$this->assertInstanceOf('lithium\net\http\Route', $result);
-		$expected = [
+		$expected = array(
 			'template' => '/{:controller}/{:action}',
 			'pattern' => '@^(?:/(?P<controller>[^\\/]+))(?:/(?P<action>[^\\/]+)?)?$@u',
-			'params' => ['action' => 'view'],
-			'defaults' => ['action' => 'view'],
-			'match' => [],
-			'meta' => [],
-			'persist' => ['controller'],
-			'keys' => ['controller' => 'controller', 'action' => 'action'],
-			'subPatterns' => [],
+			'params' => array('action' => 'view'),
+			'defaults' => array('action' => 'view'),
+			'match' => array(),
+			'meta' => array(),
+			'persist' => array('controller'),
+			'keys' => array('controller' => 'controller', 'action' => 'action'),
+			'subPatterns' => array(),
 			'handler' => null
-		];
+		);
 		$this->assertEqual($expected, $result->export());
 	}
 
@@ -63,38 +61,38 @@ class RouterTest extends \lithium\test\Unit {
 	 * Tests generating routes with required parameters which are not present in the URL.
 	 */
 	public function testConnectingWithRequiredParams() {
-		$result = Router::connect('/{:controller}/{:action}', [
+		$result = Router::connect('/{:controller}/{:action}', array(
 			'action' => 'view', 'required' => true
-		]);
-		$expected = [
+		));
+		$expected = array(
 			'template' => '/{:controller}/{:action}',
 			'pattern' => '@^(?:/(?P<controller>[^\\/]+))(?:/(?P<action>[^\\/]+)?)?$@u',
-			'keys' => ['controller' => 'controller', 'action' => 'action'],
-			'params' => ['action' => 'view', 'required' => true],
-			'defaults' => ['action' => 'view'],
-			'match' => ['required' => true],
-			'meta' => [],
-			'persist' => ['controller'],
-			'subPatterns' => [],
+			'keys' => array('controller' => 'controller', 'action' => 'action'),
+			'params' => array('action' => 'view', 'required' => true),
+			'defaults' => array('action' => 'view'),
+			'match' => array('required' => true),
+			'meta' => array(),
+			'persist' => array('controller'),
+			'subPatterns' => array(),
 			'handler' => null
-		];
+		);
 		$this->assertEqual($expected, $result->export());
 	}
 
 	public function testConnectingWithDefaultParams() {
-		$result = Router::connect('/{:controller}/{:action}', ['action' => 'archive']);
-		$expected = [
+		$result = Router::connect('/{:controller}/{:action}', array('action' => 'archive'));
+		$expected = array(
 			'template' => '/{:controller}/{:action}',
 			'pattern' => '@^(?:/(?P<controller>[^\/]+))(?:/(?P<action>[^\/]+)?)?$@u',
-			'keys' => ['controller' => 'controller', 'action' => 'action'],
-			'params' => ['action' => 'archive'],
-			'match' => [],
-			'meta' => [],
-			'persist' => ['controller'],
-			'defaults' => ['action' => 'archive'],
-			'subPatterns' => [],
+			'keys' => array('controller' => 'controller', 'action' => 'action'),
+			'params' => array('action' => 'archive'),
+			'match' => array(),
+			'meta' => array(),
+			'persist' => array('controller'),
+			'defaults' => array('action' => 'archive'),
+			'subPatterns' => array(),
 			'handler' => null
-		];
+		);
 		$this->assertEqual($expected, $result->export());
 	}
 
@@ -102,30 +100,30 @@ class RouterTest extends \lithium\test\Unit {
 	 * Tests basic options for connecting routes.
 	 */
 	public function testBasicRouteMatching() {
-		Router::connect('/hello', ['controller' => 'Posts', 'action' => 'index']);
-		$expected = ['controller' => 'Posts', 'action' => 'index'];
+		Router::connect('/hello', array('controller' => 'Posts', 'action' => 'index'));
+		$expected = array('controller' => 'Posts', 'action' => 'index');
 
-		foreach (['/hello/', '/hello', 'hello/', 'hello'] as $url) {
+		foreach (array('/hello/', '/hello', 'hello/', 'hello') as $url) {
 			$this->request->url = $url;
 			$result = Router::parse($this->request);
 			$this->assertEqual($expected, $result->params);
-			$this->assertEqual(['controller'], $result->persist);
+			$this->assertEqual(array('controller'), $result->persist);
 		}
 	}
 
 	public function testRouteMatchingWithDefaultParameters() {
-		Router::connect('/{:controller}/{:action}', ['action' => 'view']);
-		$expected = ['controller' => 'Posts', 'action' => 'view'];
+		Router::connect('/{:controller}/{:action}', array('action' => 'view'));
+		$expected = array('controller' => 'Posts', 'action' => 'view');
 
-		foreach (['/posts/view', '/posts', 'posts', 'posts/view', 'posts/view/'] as $url) {
+		foreach (array('/posts/view', '/posts', 'posts', 'posts/view', 'posts/view/') as $url) {
 			$this->request->url = $url;
 			$result = Router::parse($this->request);
 			$this->assertEqual($expected, $result->params);
-			$this->assertEqual(['controller'], $result->persist);
+			$this->assertEqual(array('controller'), $result->persist);
 		}
 		$expected['action'] = 'index';
 
-		foreach (['/posts/index', 'posts/index', 'posts/index/'] as $url) {
+		foreach (array('/posts/index', 'posts/index', 'posts/index/') as $url) {
 			$this->request->url = $url;
 			$result = Router::parse($this->request);
 			$this->assertEqual($expected, $result->params);
@@ -139,7 +137,7 @@ class RouterTest extends \lithium\test\Unit {
 	 * Tests that URLs specified as "Controller::action" are interpreted properly.
 	 */
 	public function testStringActions() {
-		Router::connect('/login', ['controller' => 'sessions', 'action' => 'create']);
+		Router::connect('/login', array('controller' => 'sessions', 'action' => 'create'));
 		Router::connect('/{:controller}/{:action}');
 
 		$result = Router::match("Sessions::create");
@@ -154,33 +152,33 @@ class RouterTest extends \lithium\test\Unit {
 
 	public function testNamedAnchor() {
 		Router::connect('/{:controller}/{:action}');
-		Router::connect('/{:controller}/{:action}/{:id:[0-9]+}', ['id' => null]);
+		Router::connect('/{:controller}/{:action}/{:id:[0-9]+}', array('id' => null));
 
-		$result = Router::match(['Posts::edit', '#' => 'foo']);
+		$result = Router::match(array('Posts::edit', '#' => 'foo'));
 		$this->assertIdentical('/posts/edit#foo', $result);
 
-		$result = Router::match(['Posts::edit', 'id' => 42, '#' => 'foo']);
+		$result = Router::match(array('Posts::edit', 'id' => 42, '#' => 'foo'));
 		$this->assertIdentical('/posts/edit/42#foo', $result);
 
-		$result = Router::match(['controller' => 'users', 'action' => 'view', '#' => 'blah']);
+		$result = Router::match(array('controller' => 'users', 'action' => 'view', '#' => 'blah'));
 		$this->assertIdentical('/users/view#blah', $result);
 
-		$result = Router::match([
+		$result = Router::match(array(
 			'controller' => 'users', 'action' => 'view', 'id' => 47, '#' => 'blargh'
-		]);
+		));
 		$this->assertIdentical('/users/view/47#blargh', $result);
 	}
 
 	public function testQueryString() {
 		Router::connect('/{:controller}/{:action}');
-		Router::connect('/{:controller}/{:action}/{:id:[0-9]+}', ['id' => null]);
+		Router::connect('/{:controller}/{:action}/{:id:[0-9]+}', array('id' => null));
 
-		$result = Router::match(['Posts::edit', '?' => ['key' => 'value']]);
+		$result = Router::match(array('Posts::edit', '?' => array('key' => 'value')));
 		$this->assertIdentical('/posts/edit?key=value', $result);
 
-		$result = Router::match([
-			'Posts::edit', 'id' => 42, '?' => ['key' => 'value', 'test' => 'foo']
-		]);
+		$result = Router::match(array(
+			'Posts::edit', 'id' => 42, '?' => array('key' => 'value', 'test' => 'foo')
+		));
 		$this->assertIdentical('/posts/edit/42?key=value&test=foo', $result);
 	}
 
@@ -189,19 +187,19 @@ class RouterTest extends \lithium\test\Unit {
 	 * interpreted properly.
 	 */
 	public function testEmbeddedStringActions() {
-		Router::connect('/logout/{:id:[0-9]{5,6}}', [
+		Router::connect('/logout/{:id:[0-9]{5,6}}', array(
 			'controller' => 'sessions', 'action' => 'destroy', 'id' => null
-		]);
+		));
 		Router::connect('/{:controller}/{:action}');
-		Router::connect('/{:controller}/{:action}/{:id:[0-9]+}', ['id' => null]);
+		Router::connect('/{:controller}/{:action}/{:id:[0-9]+}', array('id' => null));
 
 		$result = Router::match("Sessions::create");
 		$this->assertIdentical('/sessions/create', $result);
 
-		$result = Router::match(["Sessions::create"]);
+		$result = Router::match(array("Sessions::create"));
 		$this->assertIdentical('/sessions/create', $result);
 
-		$result = Router::match(["Sessions::destroy", 'id' => '03815']);
+		$result = Router::match(array("Sessions::destroy", 'id' => '03815'));
 		$this->assertIdentical('/logout/03815', $result);
 
 		$result = Router::match("Posts::index");
@@ -209,9 +207,8 @@ class RouterTest extends \lithium\test\Unit {
 
 		$ex = "No parameter match found for URL ";
 		$ex .= "`('controller' => 'Sessions', 'action' => 'create', 'id' => 'foo')`.";
-		$this->assertException($ex, function() {
-			Router::match(["Sessions::create", 'id' => 'foo']);
-		});
+		$this->expectException($ex);
+		$result = Router::match(array("Sessions::create", 'id' => 'foo'));
 	}
 
 	/**
@@ -221,41 +218,41 @@ class RouterTest extends \lithium\test\Unit {
 	public function testStringParameterConnect() {
 		Router::connect('/posts/{:id:[0-9a-f]{24}}', 'Posts::edit');
 
-		$result = Router::match([
+		$result = Router::match(array(
 			'controller' => 'posts', 'action' => 'edit', 'id' => '4bbf25bd8ead0e5180130000'
-		]);
+		));
 		$expected = '/posts/4bbf25bd8ead0e5180130000';
 		$this->assertIdentical($expected, $result);
 
 		$ex = "No parameter match found for URL `(";
 		$ex .= "'controller' => 'Posts', 'action' => 'view', 'id' => '4bbf25bd8ead0e5180130000')`.";
-		$this->assertException($ex, function() {
-			Router::match([
-				'controller' => 'posts', 'action' => 'view', 'id' => '4bbf25bd8ead0e5180130000'
-			]);
-		});
+		$this->expectException($ex);
+		$result = Router::match(array(
+			'controller' => 'posts', 'action' => 'view', 'id' => '4bbf25bd8ead0e5180130000'
+		));
+		$this->assertFalse(ob_get_length());
 	}
 
 	public function testShorthandParameterMatching() {
 		Router::reset();
-		Router::connect('/posts/{:page:[0-9]+}', ['Posts::index', 'page' => '1']);
-		Router::connect('/admin/posts/{:page:[0-9]+}', ['Posts::index', 'page' => '1', 'library' => 'admin']);
+		Router::connect('/posts/{:page:[0-9]+}', array('Posts::index', 'page' => '1'));
+		Router::connect('/admin/posts/{:page:[0-9]+}', array('Posts::index', 'page' => '1', 'library' => 'admin'));
 
-		$result = Router::match(['controller' => 'posts', 'page' => '5']);
+		$result = Router::match(array('controller' => 'posts', 'page' => '5'));
 		$expected = '/posts/5';
 		$this->assertIdentical($expected, $result);
 
-		$result = Router::match(['Posts::index', 'page' => '10']);
+		$result = Router::match(array('Posts::index', 'page' => '10'));
 		$expected = '/posts/10';
 		$this->assertIdentical($expected, $result);
 
-		$result = Router::match(["admin.Posts::index", 'page' => '9']);
+		$result = Router::match(array("admin.Posts::index", 'page' => '9'));
 		$expected = '/admin/posts/9';
 		$this->assertEqual($expected, $result);
 
-		$request = new Request(['url' => '/posts/13']);
+		$request = new Request(array('url' => '/posts/13'));
 		$result = Router::process($request);
-		$expected = ['controller' => 'Posts', 'action' => 'index', 'page' => '13'];
+		$expected = array('controller' => 'Posts', 'action' => 'index', 'page' => '13');
 		$this->assertEqual($expected, $result->params);
 	}
 
@@ -263,10 +260,10 @@ class RouterTest extends \lithium\test\Unit {
 	 * Tests that routing is fully reset when calling `Router::reset()`.
 	 */
 	public function testResettingRoutes() {
-		Router::connect('/{:controller}', ['controller' => 'Posts']);
+		Router::connect('/{:controller}', array('controller' => 'Posts'));
 		$this->request->url = '/hello';
 
-		$expected = ['controller' => 'Hello', 'action' => 'index'];
+		$expected = array('controller' => 'Hello', 'action' => 'index');
 		$result = Router::parse($this->request);
 		$this->assertEqual($expected, $result->params);
 
@@ -278,15 +275,14 @@ class RouterTest extends \lithium\test\Unit {
 	 * Tests matching routes where the route template is a static string with no insert parameters.
 	 */
 	public function testRouteMatchingWithNoInserts() {
-		Router::connect('/login', ['controller' => 'sessions', 'action' => 'add']);
-		$result = Router::match(['controller' => 'sessions', 'action' => 'add']);
+		Router::connect('/login', array('controller' => 'sessions', 'action' => 'add'));
+		$result = Router::match(array('controller' => 'sessions', 'action' => 'add'));
 		$this->assertIdentical('/login', $result);
 
-		$expected  = "No parameter match found for URL `('controller' => 'Sessions', ";
-		$expected .= "'action' => 'index')`.";
-		$this->assertException($expected, function() {
-			Router::match(['controller' => 'sessions', 'action' => 'index']);
-		});
+		$this->expectException(
+			"No parameter match found for URL `('controller' => 'Sessions', 'action' => 'index')`."
+		);
+		Router::match(array('controller' => 'sessions', 'action' => 'index'));
 	}
 
 	/**
@@ -294,58 +290,56 @@ class RouterTest extends \lithium\test\Unit {
 	 */
 	public function testRouteMatchingWithOnlyInserts() {
 		Router::connect('/{:controller}');
-		$this->assertIdentical('/posts', Router::match(['controller' => 'posts']));
+		$this->assertIdentical('/posts', Router::match(array('controller' => 'posts')));
 
-		$expected  = "No parameter match found for URL `('controller' => 'Posts', ";
-		$expected .= "'action' => 'view')`.";
-		$this->assertException($expected, function() {
-			Router::match(['controller' => 'posts', 'action' => 'view']);
-		});
+		$this->expectException(
+			"No parameter match found for URL `('controller' => 'Posts', 'action' => 'view')`."
+		);
+		Router::match(array('controller' => 'posts', 'action' => 'view'));
 	}
 
 	/**
 	 * Test matching routes with insert parameters which have default values.
 	 */
 	public function testRouteMatchingWithInsertsAndDefaults() {
-		Router::connect('/{:controller}/{:action}', ['action' => 'archive']);
-		$this->assertIdentical('/posts/index', Router::match(['controller' => 'posts']));
+		Router::connect('/{:controller}/{:action}', array('action' => 'archive'));
+		$this->assertIdentical('/posts/index', Router::match(array('controller' => 'posts')));
 
-		$result = Router::match(['controller' => 'posts', 'action' => 'archive']);
+		$result = Router::match(array('controller' => 'posts', 'action' => 'archive'));
 		$this->assertIdentical('/posts', $result);
 
 		Router::reset();
-		Router::connect('/{:controller}/{:action}', ['controller' => 'users']);
+		Router::connect('/{:controller}/{:action}', array('controller' => 'users'));
 
-		$result = Router::match(['action' => 'view']);
+		$result = Router::match(array('action' => 'view'));
 		$this->assertIdentical('/users/view', $result);
 
-		$result = Router::match(['controller' => 'posts', 'action' => 'view']);
+		$result = Router::match(array('controller' => 'posts', 'action' => 'view'));
 		$this->assertIdentical('/posts/view', $result);
 
 		$ex = "No parameter match found for URL ";
 		$ex .= "`('controller' => 'Posts', 'action' => 'view', 'id' => '2')`.";
-		$this->assertException($ex, function() {
-			Router::match(['controller' => 'posts', 'action' => 'view', 'id' => '2']);
-		});
+		$this->expectException($ex);
+		Router::match(array('controller' => 'posts', 'action' => 'view', 'id' => '2'));
 	}
 
 	/**
 	 * Tests matching routes and returning an absolute (protocol + hostname) URL.
 	 */
 	public function testRouteMatchAbsoluteUrl() {
-		Router::connect('/login', ['controller' => 'sessions', 'action' => 'add']);
+		Router::connect('/login', array('controller' => 'sessions', 'action' => 'add'));
 		$result = Router::match('Sessions::add', $this->request);
 		$base = $this->request->env('base');
 		$this->assertIdentical($base . '/login', $result);
 
-		$result = Router::match('Sessions::add', $this->request, ['absolute' => true]);
+		$result = Router::match('Sessions::add', $this->request, array('absolute' => true));
 		$base  = $this->request->env('HTTPS') ? 'https://' : 'http://';
 		$base .= $this->request->env('HTTP_HOST');
 		$base .= $this->request->env('base');
 		$this->assertIdentical($base . '/login', $result);
 
 		$result = Router::match('Sessions::add',
-			$this->request, ['host' => 'test.local', 'absolute' => true]
+			$this->request, array('host' => 'test.local', 'absolute' => true)
 		);
 		$base = $this->request->env('HTTPS') ? 'https://' : 'http://';
 		$base .= 'test.local';
@@ -353,28 +347,18 @@ class RouterTest extends \lithium\test\Unit {
 		$this->assertIdentical($base . '/login', $result);
 
 		$result = Router::match('Sessions::add',
-			$this->request, ['scheme' => 'https://', 'absolute' => true]
+			$this->request, array('scheme' => 'https://', 'absolute' => true)
 		);
 		$base = 'https://' . $this->request->env('HTTP_HOST');
 		$base .= $this->request->env('base');
 		$this->assertIdentical($base . '/login', $result);
 
 		$result = Router::match('Sessions::add',
-			$this->request, ['scheme' => 'https://', 'absolute' => true]
+			$this->request, array('scheme' => 'https://', 'absolute' => true)
 		);
 		$base = 'https://' . $this->request->env('HTTP_HOST');
 		$base .= $this->request->env('base');
 		$this->assertIdentical($base . '/login', $result);
-	}
-
-	public function testEmptyUrlMatching() {
-		$result = Router::match('');
-		$expected = '/';
-		$this->assertIdentical($expected, $result);
-
-		$this->assertException('/No parameter match found for URL/', function() {
-			Router::match([]);
-		});
 	}
 
 	/**
@@ -382,7 +366,7 @@ class RouterTest extends \lithium\test\Unit {
 	 * the routes connected.
 	 */
 	public function testRouteRetrieval() {
-		$expected = Router::connect('/hello', ['controller' => 'posts', 'action' => 'index']);
+		$expected = Router::connect('/hello', array('controller' => 'posts', 'action' => 'index'));
 		$result = Router::get(0, true);
 		$this->assertIdentical($expected, $result);
 
@@ -402,42 +386,34 @@ class RouterTest extends \lithium\test\Unit {
 		$expected = '/posts/view/5';
 		$this->assertIdentical($expected, $result);
 
-		$request = new Request(['base' => '/my/web/path']);
+		$request = new Request(array('base' => '/my/web/path'));
 		$result = Router::match('/posts', $request);
 		$expected = '/my/web/path/posts';
 		$this->assertIdentical($expected, $result);
 
-		$request = new Request(['base' => '/my/web/path']);
-		$result = Router::match('/some/where', $request, ['absolute' => true]);
+		$request = new Request(array('base' => '/my/web/path'));
+		$result = Router::match('/some/where', $request, array('absolute' => true));
 		$prefix  = $this->request->env('HTTPS') ? 'https://' : 'http://';
 		$prefix .= $this->request->env('HTTP_HOST');
 		$this->assertIdentical($prefix . '/my/web/path/some/where', $result);
-	}
 
-	public function testStringUrlGenerationPassedThrough() {
 		$result = Router::match('mailto:foo@localhost');
 		$expected = 'mailto:foo@localhost';
-		$this->assertIdentical($expected, $result);
-
-		$result = Router::match('tel:+49401234567');
-		$expected = 'tel:+49401234567';
-		$this->assertIdentical($expected, $result);
-
-		$result = Router::match('sms:+49401234567');
-		$expected = 'sms:+49401234567';
 		$this->assertIdentical($expected, $result);
 
 		$result = Router::match('#top');
 		$expected = '#top';
 		$this->assertIdentical($expected, $result);
+	}
 
+	public function testJavaScriptUrlGeneration() {
 		$result = Router::match('javascript:alert(1)');
 		$expected = 'javascript:alert(1)';
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testWithWildcardString() {
-		Router::connect('/add/{:args}', ['controller' => 'tests', 'action' => 'add']);
+		Router::connect('/add/{:args}', array('controller' => 'tests', 'action' => 'add'));
 
 		$expected = '/add';
 		$result = Router::match('/add');
@@ -449,47 +425,47 @@ class RouterTest extends \lithium\test\Unit {
 	}
 
 	public function testWithWildcardArray() {
-		Router::connect('/add/{:args}', ['controller' => 'tests', 'action' => 'add']);
+		Router::connect('/add/{:args}', array('controller' => 'tests', 'action' => 'add'));
 
 		$expected = '/add';
-		$result = Router::match(['controller' => 'tests', 'action' => 'add']);
+		$result = Router::match(array('controller' => 'tests', 'action' => 'add'));
 		$this->assertIdentical($expected, $result);
 
 		$expected = '/add/alke';
-		$result = Router::match([
-			'controller' => 'tests', 'action' => 'add', 'args' => ['alke']
-		]);
+		$result = Router::match(array(
+			'controller' => 'tests', 'action' => 'add', 'args' => array('alke')
+		));
 		$this->assertIdentical($expected, $result);
 
 		$expected = '/add/alke/php';
-		$result = Router::match([
-			'controller' => 'tests', 'action' => 'add', 'args' => ['alke', 'php']
-		]);
+		$result = Router::match(array(
+			'controller' => 'tests', 'action' => 'add', 'args' => array('alke', 'php')
+		));
 		$this->assertIdentical($expected, $result);
 	}
 
 	public function testProcess() {
-		Router::connect('/add/{:args}', ['controller' => 'tests', 'action' => 'add']);
-		$request = Router::process(new Request(['url' => '/add/foo/bar']));
+		Router::connect('/add/{:args}', array('controller' => 'tests', 'action' => 'add'));
+		$request = Router::process(new Request(array('url' => '/add/foo/bar')));
 
-		$params = ['controller' => 'Tests', 'action' => 'add', 'args' => ['foo', 'bar']];
+		$params = array('controller' => 'Tests', 'action' => 'add', 'args' => array('foo', 'bar'));
 		$this->assertEqual($params, $request->params);
-		$this->assertEqual(['controller'], $request->persist);
+		$this->assertEqual(array('controller'), $request->persist);
 
-		$request = Router::process(new Request(['url' => '/remove/foo/bar']));
+		$request = Router::process(new Request(array('url' => '/remove/foo/bar')));
 		$this->assertEmpty($request->params);
 	}
 
 	public function testActionWithProcess() {
 		Router::connect('/{:controller}/{:action}/{:args}');
-		$request = Router::process(new Request(['url' => '/users/toJson']));
+		$request = Router::process(new Request(array('url' => '/users/toJson')));
 
-		$params = ['controller' => 'Users', 'action' => 'toJson', 'args' => []];
+		$params = array('controller' => 'Users', 'action' => 'toJson', 'args' => array());
 		$this->assertEqual($params, $request->params);
 
-		$request = Router::process(new Request(['url' => '/users/to_json']));
+		$request = Router::process(new Request(array('url' => '/users/to_json')));
 
-		$params = ['controller' => 'Users', 'action' => 'to_json', 'args' => []];
+		$params = array('controller' => 'Users', 'action' => 'to_json', 'args' => array());
 		$this->assertEqual($params, $request->params);
 	}
 
@@ -501,14 +477,14 @@ class RouterTest extends \lithium\test\Unit {
 		Router::connect('/{:locale}/{:controller}/{:action}/{:args}');
 		Router::connect('/{:controller}/{:action}/{:args}');
 
-		$request = Router::process(new Request(['url' => 'posts']));
+		$request = Router::process(new Request(array('url' => 'posts')));
 
 		$url = Router::match('Posts::index', $request);
 		$this->assertIdentical($this->request->env('base') . '/posts', $url);
 
-		$request = Router::process(new Request(['url' => 'fr/posts']));
+		$request = Router::process(new Request(array('url' => 'fr/posts')));
 
-		$params = ['Posts::index', 'locale' => 'fr'];
+		$params = array('Posts::index', 'locale' => 'fr');
 		$url = Router::match($params, $request);
 		$this->assertIdentical($this->request->env('base') . '/fr/posts', $url);
 	}
@@ -518,25 +494,25 @@ class RouterTest extends \lithium\test\Unit {
 	 * are properly taken into account.
 	 */
 	public function testParameterPersistence() {
-		Router::connect('/{:controller}/{:action}/{:id:[0-9]+}', [], [
-			'persist' => ['controller', 'id']
-		]);
+		Router::connect('/{:controller}/{:action}/{:id:[0-9]+}', array(), array(
+			'persist' => array('controller', 'id')
+		));
 
 		// URLs generated with $request will now have the 'controller' and 'id'
 		// parameters copied to new URLs.
-		$request = Router::process(new Request(['url' => 'posts/view/1138']));
+		$request = Router::process(new Request(array('url' => 'posts/view/1138')));
 
-		$params = ['action' => 'edit'];
+		$params = array('action' => 'edit');
 		$url = Router::match($params, $request); // Returns: '/posts/edit/1138'
 		$this->assertIdentical($this->request->env('base') . '/posts/edit/1138', $url);
 
 		Router::connect(
 			'/add/{:args}',
-			['controller' => 'tests', 'action' => 'add'],
-			['persist' => ['controller', 'action']]
+			array('controller' => 'tests', 'action' => 'add'),
+			array('persist' => array('controller', 'action'))
 		);
-		$request = Router::process(new Request(['url' => '/add/foo/bar', 'base' => '']));
-		$path = Router::match(['args' => ['baz', 'dib']], $request);
+		$request = Router::process(new Request(array('url' => '/add/foo/bar', 'base' => '')));
+		$path = Router::match(array('args' => array('baz', 'dib')), $request);
 		$this->assertIdentical('/add/baz/dib', $path);
 	}
 
@@ -546,20 +522,20 @@ class RouterTest extends \lithium\test\Unit {
 	public function testOverridingPersistentParameters() {
 		Router::connect(
 			'/admin/{:controller}/{:action}',
-			['admin' => true],
-			['persist' => ['admin', 'controller']]
+			array('admin' => true),
+			array('persist' => array('admin', 'controller'))
 		);
 		Router::connect('/{:controller}/{:action}');
 
-		$request = Router::process(new Request(['url' => '/admin/posts/add', 'base' => '']));
-		$expected = ['controller' => 'Posts', 'action' => 'add', 'admin' => true];
+		$request = Router::process(new Request(array('url' => '/admin/posts/add', 'base' => '')));
+		$expected = array('controller' => 'Posts', 'action' => 'add', 'admin' => true);
 		$this->assertEqual($expected, $request->params);
-		$this->assertEqual(['admin', 'controller'], $request->persist);
+		$this->assertEqual(array('admin', 'controller'), $request->persist);
 
-		$url = Router::match(['action' => 'archive'], $request);
+		$url = Router::match(array('action' => 'archive'), $request);
 		$this->assertIdentical('/admin/posts/archive', $url);
 
-		$url = Router::match(['action' => 'archive', 'admin' => null], $request);
+		$url = Router::match(array('action' => 'archive', 'admin' => null), $request);
 		$this->assertIdentical('/posts/archive', $url);
 	}
 
@@ -570,16 +546,16 @@ class RouterTest extends \lithium\test\Unit {
 	public function testRouteHandler() {
 		Router::connect('/login', 'Users::login');
 
-		Router::connect('/users/login', [], function($request) {
-			return new Response([
-				'location' => ['controller' => 'Users', 'action' => 'login']
-			]);
+		Router::connect('/users/login', array(), function($request) {
+			return new Response(array(
+				'location' => array('controller' => 'Users', 'action' => 'login')
+			));
 		});
 
-		$result = Router::process(new Request(['url' => '/users/login']));
+		$result = Router::process(new Request(array('url' => '/users/login')));
 		$this->assertInstanceOf('lithium\action\Response', $result);
 
-		$headers = ['Location' => '/login'];
+		$headers = array('Location' => '/login');
 		$this->assertEqual($headers, $result->headers);
 	}
 
@@ -590,12 +566,12 @@ class RouterTest extends \lithium\test\Unit {
 	public function testMatchingEmptyRoute() {
 		Router::connect('/', 'Users::view');
 
-		$request = new Request(['base' => '/']);
-		$url = Router::match(['controller' => 'users', 'action' => 'view'], $request);
+		$request = new Request(array('base' => '/'));
+		$url = Router::match(array('controller' => 'users', 'action' => 'view'), $request);
 		$this->assertIdentical('/', $url);
 
-		$request = new Request(['base' => '']);
-		$url = Router::match(['controller' => 'users', 'action' => 'view'], $request);
+		$request = new Request(array('base' => ''));
+		$url = Router::match(array('controller' => 'users', 'action' => 'view'), $request);
 		$this->assertIdentical('/', $url);
 	}
 
@@ -604,22 +580,22 @@ class RouterTest extends \lithium\test\Unit {
 	 * not defined.
 	 */
 	public function testTypeBasedRouting() {
-		Router::connect('/{:controller}/{:id:[0-9]+}', [
+		Router::connect('/{:controller}/{:id:[0-9]+}', array(
 			'action' => 'index', 'type' => 'html', 'id' => null
-		]);
-		Router::connect('/{:controller}/{:id:[0-9]+}.{:type}', [
+		));
+		Router::connect('/{:controller}/{:id:[0-9]+}.{:type}', array(
 			'action' => 'index', 'id' => null
-		]);
+		));
 
-		Router::connect('/{:controller}/{:action}/{:id:[0-9]+}', [
+		Router::connect('/{:controller}/{:action}/{:id:[0-9]+}', array(
 			'type' => 'html', 'id' => null
-		]);
-		Router::connect('/{:controller}/{:action}/{:id:[0-9]+}.{:type}', ['id' => null]);
+		));
+		Router::connect('/{:controller}/{:action}/{:id:[0-9]+}.{:type}', array('id' => null));
 
-		$url = Router::match(['controller' => 'posts', 'type' => 'html']);
+		$url = Router::match(array('controller' => 'posts', 'type' => 'html'));
 		$this->assertIdentical('/posts', $url);
 
-		$url = Router::match(['controller' => 'posts', 'type' => 'json']);
+		$url = Router::match(array('controller' => 'posts', 'type' => 'json'));
 		$this->assertIdentical('/posts.json', $url);
 	}
 
@@ -627,32 +603,32 @@ class RouterTest extends \lithium\test\Unit {
 	 * Tests that routes can be connected and correctly match based on HTTP headers or method verbs.
 	 */
 	public function testHttpMethodBasedRouting() {
-		Router::connect('/{:controller}/{:id:[0-9]+}', [
+		Router::connect('/{:controller}/{:id:[0-9]+}', array(
 			'http:method' => 'GET', 'action' => 'view'
-		]);
-		Router::connect('/{:controller}/{:id:[0-9]+}', [
+		));
+		Router::connect('/{:controller}/{:id:[0-9]+}', array(
 			'http:method' => 'PUT', 'action' => 'edit'
-		]);
+		));
 
-		$request = new Request(['url' => '/posts/13', 'env' => [
+		$request = new Request(array('url' => '/posts/13', 'env' => array(
 			'REQUEST_METHOD' => 'GET'
-		]]);
+		)));
 		$params = Router::process($request)->params;
-		$expected = ['controller' => 'Posts', 'action' => 'view', 'id' => '13'];
+		$expected = array('controller' => 'Posts', 'action' => 'view', 'id' => '13');
 		$this->assertEqual($expected, $params);
 
 		$this->assertIdentical('/posts/13', Router::match($params));
 
-		$request = new Request(['url' => '/posts/13', 'env' => [
+		$request = new Request(array('url' => '/posts/13', 'env' => array(
 			'REQUEST_METHOD' => 'PUT'
-		]]);
+		)));
 		$params = Router::process($request)->params;
-		$expected = ['controller' => 'Posts', 'action' => 'edit', 'id' => '13'];
+		$expected = array('controller' => 'Posts', 'action' => 'edit', 'id' => '13');
 		$this->assertEqual($expected, $params);
 
-		$request = new Request(['url' => '/posts/13', 'env' => [
+		$request = new Request(array('url' => '/posts/13', 'env' => array(
 			'REQUEST_METHOD' => 'POST'
-		]]);
+		)));
 		$params = Router::process($request)->params;
 		$this->assertEmpty($params);
 	}
@@ -662,10 +638,10 @@ class RouterTest extends \lithium\test\Unit {
 	 */
 	public function testCustomConfiguration() {
 		$old = Router::config();
-		$config = ['classes' => [
+		$config = array('classes' => array(
 			'route' => 'my\custom\Route',
 			'configuration' => 'lithium\net\http\Configuration'
-		], 'unicode' => true];
+		), 'unicode' => true);
 
 		Router::config($config);
 		$this->assertEqual($config, Router::config());
@@ -678,34 +654,34 @@ class RouterTest extends \lithium\test\Unit {
 	 * Tests that continuation routes properly fall through and aggregate multiple route parameters.
 	 */
 	public function testRouteContinuations() {
-		Router::connect('/{:locale:en|de|it|jp}/{:args}', [], ['continue' => true]);
+		Router::connect('/{:locale:en|de|it|jp}/{:args}', array(), array('continue' => true));
 		Router::connect('/{:controller}/{:action}/{:id:[0-9]+}');
 
-		$request = new Request(['url' => '/en/posts/view/1138']);
+		$request = new Request(array('url' => '/en/posts/view/1138'));
 		$result = Router::process($request)->params;
-		$expected = [
+		$expected = array (
 			'controller' => 'Posts', 'action' => 'view', 'id' => '1138', 'locale' => 'en'
-		];
+		);
 		$this->assertEqual($expected, $result);
 
-		$request = new Request(['url' => '/en/foo/bar/baz']);
+		$request = new Request(array('url' => '/en/foo/bar/baz'));
 		$this->assertNull(Router::parse($request));
 
 		Router::reset();
-		Router::connect('/{:args}/{:locale:en|de|it|jp}', [], ['continue' => true]);
+		Router::connect('/{:args}/{:locale:en|de|it|jp}', array(), array('continue' => true));
 		Router::connect('/{:controller}/{:action}/{:id:[0-9]+}');
 
-		$request = new Request(['url' => '/posts/view/1138/en']);
+		$request = new Request(array('url' => '/posts/view/1138/en'));
 		$result = Router::process($request)->params;
 		$this->assertEqual($expected, $result);
 
 		Router::reset();
-		Router::connect('/{:locale:en|de|it|jp}/{:args}', [], ['continue' => true]);
+		Router::connect('/{:locale:en|de|it|jp}/{:args}', array(), array('continue' => true));
 		Router::connect('/', 'Pages::view');
 
-		$request = new Request(['url' => '/en']);
+		$request = new Request(array('url' => '/en'));
 		$result = Router::process($request)->params;
-		$expected = ['locale' => 'en', 'controller' => 'Pages', 'action' => 'view'];
+		$expected = array('locale' => 'en', 'controller' => 'Pages', 'action' => 'view');
 		$this->assertEqual($expected, $result);
 	}
 
@@ -713,28 +689,28 @@ class RouterTest extends \lithium\test\Unit {
 	 * Tests that URLs are properly generated with route continuations.
 	 */
 	public function testReversingContinuations() {
-		Router::connect('/{:locale:en|de|it|jp}/{:args}', [], ['continue' => true]);
+		Router::connect('/{:locale:en|de|it|jp}/{:args}', array(), array('continue' => true));
 		Router::connect('/{:controller}/{:action}/{:id:[0-9]+}');
 		Router::connect('/{:controller}/{:action}/{:args}');
 
-		$result = Router::match(['Posts::view', 'id' => 5, 'locale' => 'de']);
+		$result = Router::match(array('Posts::view', 'id' => 5, 'locale' => 'de'));
 		$this->assertEqual($result, '/de/posts/view/5');
 
-		$result = Router::match(['Posts::index', 'locale' => 'en', '?' => ['page' => 2]]);
+		$result = Router::match(array('Posts::index', 'locale' => 'en', '?' => array('page' => 2)));
 		$this->assertIdentical('/en/posts?page=2', $result);
 
 		Router::reset();
-		Router::connect('/{:locale:en|de|it|jp}/{:args}', [], ['continue' => true]);
+		Router::connect('/{:locale:en|de|it|jp}/{:args}', array(), array('continue' => true));
 		Router::connect('/pages/{:args}', 'Pages::view');
 
-		$result = Router::match(['Pages::view', 'locale' => 'en', 'args' => ['about']]);
+		$result = Router::match(array('Pages::view', 'locale' => 'en', 'args' => array('about')));
 		$this->assertIdentical('/en/pages/about', $result);
 
 		Router::reset();
-		Router::connect('/admin/{:args}', ['admin' => true], ['continue' => true]);
+		Router::connect('/admin/{:args}', array('admin' => true), array('continue' => true));
 		Router::connect('/login', 'Users::login');
 
-		$result = Router::match(['Users::login', 'admin' => true]);
+		$result = Router::match(array('Users::login', 'admin' => true));
 		$this->assertIdentical('/admin/login', $result);
 	}
 
@@ -742,34 +718,34 @@ class RouterTest extends \lithium\test\Unit {
 	 * Tests that multiple continuation routes can be applied to the same URL.
 	 */
 	public function testStackedContinuationRoutes() {
-		Router::connect('/admin/{:args}', ['admin' => true], ['continue' => true]);
-		Router::connect('/{:locale:en|de|it|jp}/{:args}', [], ['continue' => true]);
-		Router::connect('/{:controller}/{:action}/{:id:[0-9]+}', ['id' => null]);
+		Router::connect('/admin/{:args}', array('admin' => true), array('continue' => true));
+		Router::connect('/{:locale:en|de|it|jp}/{:args}', array(), array('continue' => true));
+		Router::connect('/{:controller}/{:action}/{:id:[0-9]+}', array('id' => null));
 
-		$request = new Request(['url' => '/en/foo/bar/5']);
-		$expected = ['controller' => 'Foo', 'action' => 'bar', 'id' => '5', 'locale' => 'en'];
+		$request = new Request(array('url' => '/en/foo/bar/5'));
+		$expected = array('controller' => 'Foo', 'action' => 'bar', 'id' => '5', 'locale' => 'en');
 		$this->assertEqual($expected, Router::process($request)->params);
 
-		$request = new Request(['url' => '/admin/foo/bar/5']);
-		$expected = ['controller' => 'Foo', 'action' => 'bar', 'id' => '5', 'admin' => true];
+		$request = new Request(array('url' => '/admin/foo/bar/5'));
+		$expected = array('controller' => 'Foo', 'action' => 'bar', 'id' => '5', 'admin' => true);
 		$this->assertEqual($expected, Router::process($request)->params);
 
-		$request = new Request(['url' => '/admin/de/foo/bar/5']);
-		$expected = [
+		$request = new Request(array('url' => '/admin/de/foo/bar/5'));
+		$expected = array(
 			'controller' => 'Foo', 'action' => 'bar', 'id' => '5', 'locale' => 'de', 'admin' => true
-		];
+		);
 		$this->assertEqual($expected, Router::process($request)->params);
 
-		$request = new Request(['url' => '/en/admin/foo/bar/5']);
+		$request = new Request(array('url' => '/en/admin/foo/bar/5'));
 		$this->assertEmpty(Router::process($request)->params);
 
-		$result = Router::match(['Foo::bar', 'id' => 5]);
+		$result = Router::match(array('Foo::bar', 'id' => 5));
 		$this->assertIdentical('/foo/bar/5', $result);
 
-		$result = Router::match(['Foo::bar', 'id' => 5, 'admin' => true]);
+		$result = Router::match(array('Foo::bar', 'id' => 5, 'admin' => true));
 		$this->assertIdentical('/admin/foo/bar/5', $result);
 
-		$result = Router::match(['Foo::bar', 'id' => 5, 'admin' => true, 'locale' => 'jp']);
+		$result = Router::match(array('Foo::bar', 'id' => 5, 'admin' => true, 'locale' => 'jp'));
 		$this->assertIdentical('/admin/jp/foo/bar/5', $result);
 	}
 
@@ -777,43 +753,23 @@ class RouterTest extends \lithium\test\Unit {
 	 * Tests that continuations can be used for route suffixes.
 	 */
 	public function testSuffixContinuation() {
-		Router::connect("/{:args}.{:type}", [], ['continue' => true]);
-		Router::connect('/{:controller}/{:id:[0-9]+}', ['action' => 'view']);
+		Router::connect("/{:args}.{:type}", array(), array('continue' => true));
+		Router::connect('/{:controller}/{:id:[0-9]+}', array('action' => 'view'));
 
-		$result = Router::match([
+		$result = Router::match(array(
 			'controller' => 'versions',
 			'action' => 'view',
 			'id' => 13,
 			'type' => 'jsonp'
-		]);
+		));
 		$this->assertIdentical('/versions/13.jsonp', $result);
 
-		$result = Router::match([
+		$result = Router::match(array(
 			'controller' => 'versions',
 			'action' => 'view',
 			'id' => 13
-		]);
+		));
 		$this->assertIdentical('/versions/13', $result);
-	}
-
-	public function testRouteContinuationsWithQueryString() {
-		Router::connect('/{:args}/page-{:page:[\d]+}', [], ['continue' => true]);
-		Router::connect('/hello/world', 'Hello::world');
-
-		$expected = '/hello/world/page-2?foo=bar';
-
-		$result = Router::match(['Hello::world', 'page' => 2, '?' => ['foo' => 'bar']]);
-		$this->assertEqual($expected, $result);
-	}
-
-	public function testRouteContinuationsOnRootUrl() {
-		Router::connect('/{:args}/page-{:page:[\d]+}', [], ['continue' => true]);
-		Router::connect('/', 'Home::index');
-
-		$expected = '/page-1';
-
-		$result = Router::match(['Home::index', 'page' => 1]);
-		$this->assertEqual($expected, $result);
 	}
 
 	/**
@@ -821,58 +777,43 @@ class RouterTest extends \lithium\test\Unit {
 	 */
 	public function testRouteFormatters() {
 		$formatters = Router::formatters();
-		$this->assertEqual(['args', 'controller'], array_keys($formatters));
+		$this->assertEqual(array('args', 'controller'), array_keys($formatters));
 
-		$this->assertIdentical('foo/bar', $formatters['args'](['foo', 'bar']));
+		$this->assertIdentical('foo/bar', $formatters['args'](array('foo', 'bar')));
 		$this->assertIdentical('list_items', $formatters['controller']('ListItems'));
 
-		Router::formatters(['action' => function($value) { return strtolower($value); }]);
+		Router::formatters(array('action' => function($value) { return strtolower($value); }));
 		$formatters = Router::formatters();
-		$this->assertEqual(['action', 'args', 'controller'], array_keys($formatters));
+		$this->assertEqual(array('action', 'args', 'controller'), array_keys($formatters));
 
-		Router::formatters(['action' => null]);
+		Router::formatters(array('action' => null));
 		$formatters = Router::formatters();
-		$this->assertEqual(['args', 'controller'], array_keys($formatters));
-	}
-
-	public function testRouteFormattersAppliedOnMatch() {
-		Router::reset();
-		Router::connect('/{:controller:lists}/{:action:add}');
-		$this->assertIdentical(
-			'/lists/add',
-			Router::match(['controller' => 'lists', 'action' => 'add'])
-		);
-
-		Router::connect('/lists/{:action:add}', ['controller' => 'lists']);
-		$this->assertIdentical(
-			'/lists/add',
-			Router::match(['controller' => 'lists', 'action' => 'add'])
-		);
+		$this->assertEqual(array('args', 'controller'), array_keys($formatters));
 	}
 
 	public function testRouteModifiers() {
 		$modifiers = Router::modifiers();
-		$this->assertEqual(['args', 'controller'], array_keys($modifiers));
+		$this->assertEqual(array('args', 'controller'), array_keys($modifiers));
 
-		$this->assertEqual(['foo', 'bar'], $modifiers['args']('foo/bar'));
+		$this->assertEqual(array('foo', 'bar'), $modifiers['args']('foo/bar'));
 		$this->assertIdentical('HelloWorld', $modifiers['controller']('hello_world'));
 	}
 
 	public function testAttachAbsolute() {
-		Router::attach('app', [
+		Router::attach('app', array(
 			'absolute' => true,
 			'host' => '{:subdomain:[a-z]+}.{:domain}.{:tld}',
 			'scheme' => 'http',
 			'prefix' => 'web/tests'
-		]);
+		));
 
-		$result = Router::attached('app', [
+		$result = Router::attached('app', array(
 			'subdomain' => 'admin',
 			'domain' => 'myserver',
 			'tld' => 'com'
-		]);
+		));
 
-		$expected = [
+		$expected = array(
 			'absolute' => true,
 			'host' => 'admin.myserver.com',
 			'scheme' => 'http',
@@ -881,28 +822,28 @@ class RouterTest extends \lithium\test\Unit {
 			'pattern' => '@^http://(?P<subdomain>[a-z]+)\\.(?P<domain>[^/]+?)\\.' .
 			             '(?P<tld>[^/]+?)/web/tests/@',
 			'library' => 'app',
-			'params' => ['subdomain', 'domain', 'tld'],
-			'values' => []
-		];
+			'params' => array('subdomain', 'domain', 'tld'),
+			'values' => array()
+		);
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testAttachAbsoluteWithHttps() {
-		Router::attach('app', [
+		Router::attach('app', array(
 			'absolute' => true,
 			'host' => '{:subdomain:[a-z]+}.{:domain}.{:tld}',
 			'scheme' => '{:scheme:https}',
 			'prefix' => ''
-		]);
+		));
 
-		$result = Router::attached('app', [
+		$result = Router::attached('app', array(
 			'scheme' => 'https',
 			'subdomain' => 'admin',
 			'domain' => 'myserver',
 			'tld' => 'co.uk'
-		]);
+		));
 
-		$expected = [
+		$expected = array(
 			'absolute' => true,
 			'host' => 'admin.myserver.co.uk',
 			'scheme' => 'https',
@@ -911,57 +852,57 @@ class RouterTest extends \lithium\test\Unit {
 			'pattern' => '@^(?P<scheme>https)://(?P<subdomain>[a-z]+)\\.(?P<domain>[^/]+?)\\.' .
 			             '(?P<tld>[^/]+?)/@',
 			'library' => 'app',
-			'params' => ['scheme', 'subdomain', 'domain', 'tld'],
-			'values' => []
-		];
+			'params' => array('scheme', 'subdomain', 'domain', 'tld'),
+			'values' => array()
+		);
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testCompileScopeAbsolute() {
-		$result = Router::invokeMethod('_compileScope', [[
+		$result = Router::invokeMethod('_compileScope', array(array(
 			'absolute' => true
-		]]);
-		$expected = [
+		)));
+		$expected = array(
 			'absolute' => true,
 			'host' => null,
 			'scheme' => null,
 			'base' => null,
 			'prefix' => '',
 			'pattern' => '@^(.*?)//localhost/@',
-			'params' => []
-		];
+			'params' => array()
+		);
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testCompileScopeAbsoluteWithPrefix() {
-		$result = Router::invokeMethod('_compileScope', [[
+		$result = Router::invokeMethod('_compileScope', array(array(
 			'absolute' => true,
 			'host' => 'www.hostname.com',
 			'scheme' => 'http',
 			'prefix' => 'web/tests'
-		]]);
+		)));
 
-		$expected = [
+		$expected = array(
 			'absolute' => true,
 			'host' => 'www.hostname.com',
 			'scheme' => 'http',
 			'base' => null,
 			'prefix' => 'web/tests',
 			'pattern' => '@^http://www\.hostname\.com/web/tests/@',
-			'params' => []
-		];
+			'params' => array()
+		);
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testCompileScopeAbsoluteWithVariables() {
-		$result = Router::invokeMethod('_compileScope', [[
+		$result = Router::invokeMethod('_compileScope', array(array(
 			'absolute' => true,
 			'host' => '{:subdomain:[a-z]+}.{:domain}.{:tld}',
 			'scheme' => 'http',
 			'prefix' => 'web/tests'
-		]]);
+		)));
 
-		$expected = [
+		$expected = array(
 			'absolute' => true,
 			'host' => '{:subdomain:[a-z]+}.{:domain}.{:tld}',
 			'scheme' => 'http',
@@ -969,18 +910,18 @@ class RouterTest extends \lithium\test\Unit {
 			'prefix' => 'web/tests',
 			'pattern' => '@^http://(?P<subdomain>[a-z]+)\\.(?P<domain>[^/]+?)\\.' .
 			             '(?P<tld>[^/]+?)/web/tests/@',
-			'params' => ['subdomain', 'domain', 'tld']
-		];
+			'params' => array('subdomain', 'domain', 'tld')
+		);
 		$this->assertEqual($expected, $result);
 
-		$result = Router::invokeMethod('_compileScope', [[
+		$result = Router::invokeMethod('_compileScope', array(array(
 			'absolute' => true,
 			'host' => '{:subdomain:[a-z]+}.{:domain}.{:tld}',
 			'scheme' => '{:scheme:https}',
 			'prefix' => ''
-		]]);
+		)));
 
-		$expected = [
+		$expected = array(
 			'absolute' => true,
 			'host' => '{:subdomain:[a-z]+}.{:domain}.{:tld}',
 			'scheme' => '{:scheme:https}',
@@ -988,243 +929,243 @@ class RouterTest extends \lithium\test\Unit {
 			'prefix' => '',
 			'pattern' => '@^(?P<scheme>https)://(?P<subdomain>[a-z]+)\\.(?P<domain>[^/]+?)\\.' .
 			             '(?P<tld>[^/]+?)/@',
-			'params' => ['scheme', 'subdomain', 'domain', 'tld']
-		];
+			'params' => array('scheme', 'subdomain', 'domain', 'tld')
+		);
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testParseScopeWithRelativeAttachment() {
-		$request = new Request([
+		$request = new Request(array(
 			'host' => 'www.amiga.com',
 			'scheme' => 'http',
 			'url' => '/'
-		]);
-		Router::attach('app', [
+		));
+		Router::attach('app', array(
 			'absolute' => false,
 			'host' => 'www.atari.com',
 			'scheme' => 'http'
-		]);
-		$result = Router::invokeMethod('_parseScope', ['app', $request]);
+		));
+		$result = Router::invokeMethod('_parseScope', array('app', $request));
 		$this->assertIdentical('/', $result);
 	}
 
 	public function testParseScopeWithAbsoluteAttachment() {
-		$request = new Request([
+		$request = new Request(array(
 			'host' => 'www.amiga.com',
 			'scheme' => 'http',
 			'url' => '/'
-		]);
-		Router::attach('app', [
+		));
+		Router::attach('app', array(
 			'absolute' => true,
 			'host' => 'www.atari.com',
 			'scheme' => 'http'
-		]);
-		$result = Router::invokeMethod('_parseScope', ['app', $request]);
+		));
+		$result = Router::invokeMethod('_parseScope', array('app', $request));
 		$this->assertFalse($result);
 
-		Router::attach('app', [
+		Router::attach('app', array(
 			'absolute' => true,
 			'host' => 'www.amiga.com',
 			'scheme' => 'http'
-		]);
-		$result = Router::invokeMethod('_parseScope', ['app', $request]);
+		));
+		$result = Router::invokeMethod('_parseScope', array('app', $request));
 		$this->assertIdentical('/', $result);
 	}
 
 	public function testParseScopeWithRelativeAndPrefixedAttachment() {
-		$request = new Request([
+		$request = new Request(array(
 			'host' => 'www.amiga.com',
 			'scheme' => 'http',
 			'url' => '/web'
-		]);
-		Router::attach('app', [
+		));
+		Router::attach('app', array(
 			'absolute' => false,
 			'host' => 'www.atari.com',
 			'scheme' => 'http',
 			'prefix' => '/web'
-		]);
-		$result = Router::invokeMethod('_parseScope', ['app', $request]);
+		));
+		$result = Router::invokeMethod('_parseScope', array('app', $request));
 		$this->assertIdentical('/', $result);
 	}
 
 	public function testParseScopeWithAbsoluteAndPrefixedAttachment() {
-		$request = new Request([
+		$request = new Request(array(
 			'host' => 'www.amiga.com',
 			'scheme' => 'http',
 			'url' => '/web'
-		]);
-		Router::attach('app', [
+		));
+		Router::attach('app', array(
 			'absolute' => true,
 			'host' => 'www.atari.com',
 			'scheme' => 'http',
 			'prefix' => '/web'
-		]);
-		$result = Router::invokeMethod('_parseScope', ['app', $request]);
+		));
+		$result = Router::invokeMethod('_parseScope', array('app', $request));
 		$this->assertFalse($result);
 
-		Router::attach('app', [
+		Router::attach('app', array(
 			'absolute' => true,
 			'host' => 'www.amiga.com',
 			'scheme' => 'http',
 			'prefix' => '/web'
-		]);
-		$result = Router::invokeMethod('_parseScope', ['app', $request]);
+		));
+		$result = Router::invokeMethod('_parseScope', array('app', $request));
 		$this->assertIdentical('/', $result);
 	}
 
 	public function testParseScopeWithAbsoluteAndPrefixAttachment() {
-		$request = new Request([
+		$request = new Request(array(
 			'host' => 'www.amiga.com',
 			'scheme' => 'http',
 			'url' => '/web'
-		]);
+		));
 
-		Router::attach('app', [
+		Router::attach('app', array(
 			'absolute' => true,
 			'host' => 'www.amiga.com',
 			'scheme' => 'http',
 			'prefix' => '/web'
-		]);
-		$result = Router::invokeMethod('_parseScope', ['app', $request]);
+		));
+		$result = Router::invokeMethod('_parseScope', array('app', $request));
 		$this->assertIdentical('/', $result);
 
-		Router::attach('app', [
+		Router::attach('app', array(
 			'absolute' => true,
 			'host' => 'www.amiga.com',
 			'scheme' => 'http',
 			'prefix' => '/web2'
-		]);
-		$result = Router::invokeMethod('_parseScope', ['app', $request]);
+		));
+		$result = Router::invokeMethod('_parseScope', array('app', $request));
 		$this->assertFalse($result);
 	}
 
 	public function testParseScopeWithRelativeAndPrefixAttachmentUsingEnvRequest() {
-		$request = new Request([
-			'env' => [
+		$request = new Request(array(
+			'env' => array(
 				'HTTP_HOST' => 'www.amiga.com',
 				'DOCUMENT_ROOT' => '/var/www',
 				'PHP_SELF' => '/var/www/index.php',
 				'REQUEST_URI' => '/',
 				'HTTPS' => false
-			]
-		]);
+			)
+		));
 
-		Router::attach('app', [
+		Router::attach('app', array(
 			'absolute' => false,
 			'host' => 'www.atari.com',
 			'scheme' => 'http',
 			'prefix' => '/web'
-		]);
-		$result = Router::invokeMethod('_parseScope', ['app', $request]);
+		));
+		$result = Router::invokeMethod('_parseScope', array('app', $request));
 		$this->assertFalse($result);
 
-		$request = new Request([
-			'env' => [
+		$request = new Request(array(
+			'env' => array(
 				'HTTP_HOST' => 'www.amiga.com',
 				'DOCUMENT_ROOT' => '/var/www',
 				'PHP_SELF' => '/var/www/index.php',
 				'REQUEST_URI' => '/web',
 				'HTTPS' => false
-			]
-		]);
+			)
+		));
 
-		Router::attach('app', [
+		Router::attach('app', array(
 			'absolute' => false,
 			'host' => 'www.atari.com',
 			'scheme' => 'http',
 			'prefix' => '/web'
-		]);
-		$result = Router::invokeMethod('_parseScope', ['app', $request]);
+		));
+		$result = Router::invokeMethod('_parseScope', array('app', $request));
 		$this->assertIdentical('/', $result);
 	}
 
 	public function testParseScopeWithAbsoluteAndPrefixAttachmentUsingEnvRequest() {
-		$request = new Request([
-			'env' => [
+		$request = new Request(array(
+			'env' => array(
 				'HTTP_HOST' => 'www.amiga.com',
 				'DOCUMENT_ROOT' => '/var/www',
 				'PHP_SELF' => '/var/www/index.php',
 				'REQUEST_URI' => '/web',
 				'HTTPS' => false
-			]
-		]);
+			)
+		));
 
-		Router::attach('app', [
+		Router::attach('app', array(
 			'absolute' => true,
 			'host' => 'www.atari.com',
 			'scheme' => 'http',
 			'prefix' => '/web'
-		]);
-		$result = Router::invokeMethod('_parseScope', ['app', $request]);
+		));
+		$result = Router::invokeMethod('_parseScope', array('app', $request));
 		$this->assertFalse($result);
 
-		Router::attach('app', [
+		Router::attach('app', array(
 			'absolute' => true,
 			'host' => 'www.amiga.com',
 			'scheme' => 'http',
 			'prefix' => '/web'
-		]);
-		$result = Router::invokeMethod('_parseScope', ['app', $request]);
+		));
+		$result = Router::invokeMethod('_parseScope', array('app', $request));
 		$this->assertIdentical('/', $result);
 
-		Router::attach('app', [
+		Router::attach('app', array(
 			'absolute' => true,
 			'host' => 'www.amiga.com',
 			'scheme' => 'http',
 			'prefix' => '/web2'
-		]);
-		$result = Router::invokeMethod('_parseScope', ['app', $request]);
+		));
+		$result = Router::invokeMethod('_parseScope', array('app', $request));
 		$this->assertFalse($result);
 	}
 
 	public function testParseScopeWithAbsoluteAttachmentUsingVariables() {
-		$request = new Request([
-			'env' => [
+		$request = new Request(array(
+			'env' => array(
 				'HTTP_HOST' => 'www.amiga.com',
 				'HTTPS' => false,
 				'DOCUMENT_ROOT' => '/var/www',
 				'PHP_SELF' => '/var/www/index.php',
 				'REQUEST_URI' => '/'
-			]
-		]);
+			)
+		));
 
-		Router::attach('app', [
+		Router::attach('app', array(
 			'absolute' => true,
 			'host' => '{:subdomain}.atari.{:tld}',
 			'scheme' => 'http',
 			'prefix' => ''
-		]);
-		$result = Router::invokeMethod('_parseScope', ['app', $request]);
+		));
+		$result = Router::invokeMethod('_parseScope', array('app', $request));
 		$this->assertFalse($result);
 
-		$request = new Request([
-			'env' => [
+		$request = new Request(array(
+			'env' => array(
 				'HTTP_HOST' => 'www.amiga.com',
 				'HTTPS' => false,
 				'DOCUMENT_ROOT' => '/var/www',
 				'PHP_SELF' => '/var/www/index.php',
 				'REQUEST_URI' => '/'
-			]
-		]);
+			)
+		));
 
-		Router::attach('app', [
+		Router::attach('app', array(
 			'absolute' => true,
 			'host' => '{:subdomain}.amiga.{:tld}',
 			'scheme' => 'http',
 			'prefix' => ''
-		]);
+		));
 
-		$result = Router::invokeMethod('_parseScope', ['app', $request]);
+		$result = Router::invokeMethod('_parseScope', array('app', $request));
 		$this->assertIdentical('/', $result);
 	}
 
 	public function testMatchWithRelativeAndPrefixedAttachment() {
-		Router::attach('tests', [
+		Router::attach('tests', array(
 			'absolute' => false,
 			'host' => 'tests.mysite.com',
 			'scheme' => 'http',
 			'prefix' => '/prefix'
-		]);
+		));
 
 		Router::scope('tests');
 		$result = Router::match('/controller/action/hello');
@@ -1232,12 +1173,12 @@ class RouterTest extends \lithium\test\Unit {
 	}
 
 	public function testMatchWithAbsoluteAndPrefixedAttachment() {
-		Router::attach('tests', [
+		Router::attach('tests', array(
 			'absolute' => true,
 			'host' => 'tests.mysite.com',
 			'scheme' => 'http',
 			'prefix' => '/prefix'
-		]);
+		));
 
 		Router::scope('tests');
 		$result = Router::match('/controller/action/hello');
@@ -1245,21 +1186,21 @@ class RouterTest extends \lithium\test\Unit {
 	}
 
 	public function testMatchWithAbsoluteAndNoSchemeAttachment() {
-		Router::attach('tests', [
+		Router::attach('tests', array(
 			'absolute' => true,
 			'host' => 'tests.mysite.com',
 			'scheme' => null
-		]);
+		));
 
 		Router::scope('tests');
 		$result = Router::match('/controller/action/hello');
 		$this->assertIdentical('http://tests.mysite.com/controller/action/hello', $result);
 
-		Router::attach('tests', [
+		Router::attach('tests', array(
 			'absolute' => true,
 			'host' => 'tests.mysite.com',
 			'scheme' => false
-		]);
+		));
 
 		Router::scope('tests');
 		$result = Router::match('/controller/action/hello');
@@ -1267,13 +1208,13 @@ class RouterTest extends \lithium\test\Unit {
 	}
 
 	public function testMatchWithRelativeAndPrefixedAttachmentUsingBasedRequest() {
-		$request = new Request(['base' => '/request/base']);
-		Router::attach('tests', [
+		$request = new Request(array('base' => '/request/base'));
+		Router::attach('tests', array(
 			'absolute' => false,
 			'host' => 'tests.mysite.com',
 			'scheme' => 'http://',
 			'prefix' => 'prefix'
-		]);
+		));
 
 		Router::scope('tests');
 		$result = Router::match('/controller/action/hello', $request);
@@ -1281,74 +1222,74 @@ class RouterTest extends \lithium\test\Unit {
 	}
 
 	public function testMatchWithAbsoluteAndPrefixedAttachmentUsingBasedRequest() {
-		$request = new Request(['base' => '/requestbase']);
-		Router::attach('app', [
+		$request = new Request(array('base' => '/requestbase'));
+		Router::attach('app', array(
 			'absolute' => true,
 			'host' => 'app.mysite.com',
 			'scheme' => 'http',
 			'prefix' => 'prefix'
-		]);
+		));
 
-		$result = Router::match('/controller/action/hello', $request, ['scope' => 'app']);
+		$result = Router::match('/controller/action/hello', $request, array('scope' => 'app'));
 		$expected = 'http://app.mysite.com/requestbase/prefix/controller/action/hello';
 		$this->assertIdentical($expected, $result);
 	}
 
 	public function testMatchWithAbsoluteAttachmentUsingDoubleColonNotation() {
-		Router::attach('tests', [
+		Router::attach('tests', array(
 			'absolute' => true,
 			'host' => 'tests.mysite.com',
 			'scheme' => 'http',
 			'prefix' => 'prefix'
-		]);
+		));
 
 		Router::scope('tests', function() {
-			Router::connect('/user/view/{:args}', ['User::view']);
+			Router::connect('/user/view/{:args}', array('User::view'));
 		});
 
 		Router::scope('tests');
-		$result = Router::match([
+		$result = Router::match(array(
 			'User::view', 'args' => 'bob'
-		], null, ['scope' => 'tests']);
+		), null, array('scope' => 'tests'));
 		$this->assertIdentical('http://tests.mysite.com/prefix/user/view/bob', $result);
 
 		Router::reset();
 
-		Router::attach('tests', [
+		Router::attach('tests', array(
 			'absolute' => true,
 			'host' => 'tests.mysite.com',
 			'scheme' => 'http',
 			'prefix' => 'prefix',
 			'namespace' => 'app\controllers'
-		]);
+		));
 
 		Router::scope('tests', function() {
-			Router::connect('/users/view/{:args}', ['Users::view']);
+			Router::connect('/users/view/{:args}', array('Users::view'));
 		});
 
 		Router::scope('tests');
-		$result = Router::match([
+		$result = Router::match(array(
 			'Users::view', 'args' => 'bob'
-		], null, ['scope' => 'tests']);
+		), null, array('scope' => 'tests'));
 		$this->assertIdentical('http://tests.mysite.com/prefix/users/view/bob', $result);
 	}
 
 	public function testMatchWithAbsoluteAttachmentAndVariables() {
-		$request = new Request([
+		$request = new Request(array(
 			'url' => '/home/index',
 			'host' => 'bob.amiga.com',
 			'base' => ''
-		]);
+		));
 
-		Router::attach('app', [
+		Router::attach('app', array(
 			'absolute' => true,
 			'host' => '{:subdomain}.amiga.{:tld}',
 			'scheme' => 'http',
 			'prefix' => ''
-		]);
+		));
 
 		Router::scope('app', function() {
-			Router::connect('/home/index', ['Home::index']);
+			Router::connect('/home/index', array('Home::index'));
 		});
 
 		Router::process($request);
@@ -1358,42 +1299,42 @@ class RouterTest extends \lithium\test\Unit {
 		$this->assertIdentical($expected, $result);
 
 		$expected = 'http://bob.amiga.com/home/index';
-		$result = Router::match('/home/index', $request, ['scope' => 'app']);
+		$result = Router::match('/home/index', $request, array('scope' => 'app'));
 		$this->assertIdentical($expected, $result);
 
 		$expected = 'http://max.amiga.com/home/index';
-		$result = Router::match('/home/index', $request, [
-			'scope' => [
+		$result = Router::match('/home/index', $request, array(
+			'scope' => array(
 				'subdomain' => 'max'
-			]
-		]);
+			)
+		));
 		$this->assertIdentical($expected, $result);
 
 		Router::scope(false);
-		$result = Router::match('/home/index', $request, [
-			'scope' => [
-				'app' => [
+		$result = Router::match('/home/index', $request, array(
+			'scope' => array(
+				'app' => array(
 					'subdomain' => 'max'
-				]
-			]
-		]);
+				)
+			)
+		));
 		$this->assertIdentical($expected, $result);
 
-		$result = Router::match('/home/index', $request, [
-			'scope' => [
+		$result = Router::match('/home/index', $request, array(
+			'scope' => array(
 				'subdomain' => 'max'
-			]
-		]);
+			)
+		));
 		$this->assertNotEqual($expected, $result);
 	}
 
 	public function testMatchWithAttachementPopulatedFromRequest() {
-		$request = new Request([
+		$request = new Request(array(
 			'host' => 'request.mysite.com',
 			'scheme' => 'https',
 			'base' => 'request/base'
-		]);
-		Router::attach('app', ['absolute' => true]);
+		));
+		Router::attach('app', array('absolute' => true));
 		Router::scope('app');
 		$result = Router::match('/controller/action/hello', $request);
 		$expected = 'https://request.mysite.com/request/base/controller/action/hello';
@@ -1406,291 +1347,291 @@ class RouterTest extends \lithium\test\Unit {
 
 	public function testUnexistingScopedRoute() {
 		Router::scope('tests', function() {
-			Router::connect('/user/view/{:args}', ['User::view']);
+			Router::connect('/user/view/{:args}', array('User::view'));
 		});
 		Router::scope('tests');
 
 		$ex = "No parameter match found for URL `('controller' => 'User', ";
 		$ex .= "'action' => 'view', 'args' => 'bob')` in `app` scope.";
-		$this->assertException($ex, function() {
-			Router::match([
-				'User::view', 'args' => 'bob'
-			], null, ['scope' => 'app']);
-		});
+		$this->expectException($ex);
+
+		$result = Router::match(array(
+			'User::view', 'args' => 'bob'
+		), null, array('scope' => 'app'));
 	}
 
 	public function testMatchWithNoRouteDefined() {
 		$ex = "No parameter match found for URL `('controller' => 'User', ";
 		$ex .= "'action' => 'view', 'args' => 'bob')` in `app` scope.";
-		$this->assertException($ex, function() {
-			Router::match([
-				'User::view', 'args' => 'bob'
-			], null, ['scope' => 'app']);
-		});
+		$this->expectException($ex);
+
+		$result = Router::match(array(
+			'User::view', 'args' => 'bob'
+		), null, array('scope' => 'app'));
 	}
 
 	public function testProcessWithAbsoluteAttachment() {
-		Router::connect('/home/welcome', ['Home::app'], ['scope' => 'app']);
-		Router::connect('/home/welcome', ['Home::tests'], ['scope' => 'tests']);
-		Router::connect('/home/welcome', ['Home::default']);
+		Router::connect('/home/welcome', array('Home::app'), array('scope' => 'app'));
+		Router::connect('/home/welcome', array('Home::tests'), array('scope' => 'tests'));
+		Router::connect('/home/welcome', array('Home::default'));
 
-		Router::attach('tests', [
+		Router::attach('tests', array(
 			'absolute' => true,
 			'host' => 'tests.mysite.com'
-		]);
+		));
 
-		Router::attach('app', [
+		Router::attach('app', array(
 			'absolute' => true,
 			'host' => 'app.mysite.com'
-		]);
+		));
 
-		$request = new Request([
+		$request = new Request(array(
 			'url' => '/home/welcome',
 			'host' => 'www.mysite.com'
-		]);
+		));
 		$result = Router::process($request);
-		$expected = [
+		$expected = array(
 			'controller' => 'Home',
 			'action' => 'default'
-		];
+		);
 		$this->assertEqual($expected, $result->params);
 
 		$request->host = 'tests.mysite.com';
 		$result = Router::process($request);
-		$expected = [
+		$expected = array(
 			'library' => 'tests',
 			'controller' => 'Home',
 			'action' => 'tests'
-		];
+		);
 		$this->assertEqual($expected, $result->params);
 
 		$request->host = 'app.mysite.com';
 		$result = Router::process($request);
-		$expected = [
+		$expected = array(
 			'library' => 'app',
 			'controller' => 'Home',
 			'action' => 'app'
-		];
+		);
 		$this->assertEqual($expected, $result->params);
 	}
 
 	public function testProcessWithRelativeAndPrefixedAttachment() {
 		Router::scope('app', function() {
-			Router::connect('/home/welcome', ['Home::app']);
+			Router::connect('/home/welcome', array('Home::app'));
 		});
 
 		Router::scope('tests', function() {
-			Router::connect('/home/welcome', ['Home::tests']);
+			Router::connect('/home/welcome', array('Home::tests'));
 		});
 
-		Router::connect('/home/welcome', ['Home::default']);
+		Router::connect('/home/welcome', array('Home::default'));
 
-		Router::attach('tests', [
+		Router::attach('tests', array(
 			'absolute' => false,
 			'host' => 'tests.mysite.com',
 			'scheme' => 'http://',
 			'prefix' => '/prefix'
-		]);
+		));
 
-		Router::attach('app', [
+		Router::attach('app', array(
 			'absolute' => false,
 			'host' => 'app.mysite.com',
 			'scheme' => 'http://',
 			'prefix' => '/prefix'
-		]);
+		));
 
-		$request = new Request(['url' => '/home/welcome']);
+		$request = new Request(array('url' => '/home/welcome'));
 		$result = Router::process($request);
-		$expected = [
+		$expected = array(
 			'controller' => 'Home',
 			'action' => 'default'
-		];
+		);
 		$this->assertEqual($expected, $result->params);
 		$this->assertIdentical(false, Router::scope());
 
 		Router::reset();
 
 		Router::scope('tests', function() {
-			Router::connect('/home/welcome', ['Home::tests']);
+			Router::connect('/home/welcome', array('Home::tests'));
 		});
 
 		Router::scope('app', function() {
-			Router::connect('/home/welcome', ['Home::app']);
+			Router::connect('/home/welcome', array('Home::app'));
 		});
 
-		Router::connect('/home/welcome', ['Home::default']);
+		Router::connect('/home/welcome', array('Home::default'));
 
-		Router::attach('tests', [
+		Router::attach('tests', array(
 			'absolute' => false,
 			'host' => 'tests.mysite.com',
 			'scheme' => 'http://',
 			'prefix' => '/prefix1'
-		]);
+		));
 
-		Router::attach('app', [
+		Router::attach('app', array(
 			'absolute' => false,
 			'host' => 'app.mysite.com',
 			'scheme' => 'http://',
 			'prefix' => '/prefix2'
-		]);
+		));
 
-		$request = new Request(['url' => '/prefix1/home/welcome']);
+		$request = new Request(array('url' => '/prefix1/home/welcome'));
 		$result = Router::process($request);
-		$expected = [
+		$expected = array(
 			'library' => 'tests',
 			'controller' => 'Home',
 			'action' => 'tests'
-		];
+		);
 		$this->assertEqual($expected, $result->params);
 		$this->assertEqual('tests', Router::scope());
 	}
 
 	public function testProcessWithAbsoluteAndPrefixedAttachment() {
 		Router::scope('app', function() {
-			Router::connect('/home/welcome', ['Home::app']);
+			Router::connect('/home/welcome', array('Home::app'));
 		});
 
 		Router::scope('tests', function() {
-			Router::connect('/home/welcome', ['Home::tests']);
+			Router::connect('/home/welcome', array('Home::tests'));
 		});
 
-		Router::connect('/home/welcome', ['Home::default']);
+		Router::connect('/home/welcome', array('Home::default'));
 
-		Router::attach('tests', [
+		Router::attach('tests', array(
 			'absolute' => true,
 			'host' => 'app.mysite.com',
 			'scheme' => 'http',
 			'prefix' => '/prefix1'
-		]);
+		));
 
-		Router::attach('app', [
+		Router::attach('app', array(
 			'absolute' => true,
 			'host' => 'app.mysite.com',
 			'scheme' => 'http',
 			'prefix' => '/prefix2'
-		]);
+		));
 
-		$request = new Request([
+		$request = new Request(array(
 			'host' => 'app.mysite.com',
 			'url' => '/home/welcome'
-		]);
+		));
 
 		$result = Router::process($request);
-		$expected = [
+		$expected = array(
 			'controller' => 'Home',
 			'action' => 'default'
-		];
+		);
 		$this->assertEqual($expected, $result->params);
 		$this->assertIdentical(false, Router::scope());
 
-		$request = new Request([
+		$request = new Request(array(
 			'host' => 'app.mysite.com',
 			'url' => '/prefix2/home/welcome'
-		]);
+		));
 
 		$result = Router::process($request);
-		$expected = [
+		$expected = array(
 			'library' => 'app',
 			'controller' => 'Home',
 			'action' => 'app'
-		];
+		);
 		$this->assertEqual($expected, $result->params);
 		$this->assertIdentical('app', Router::scope());
 
-		$request = new Request([
+		$request = new Request(array(
 			'host' => 'app.mysite.com',
 			'url' => '/prefix1/home/welcome'
-		]);
+		));
 
 		$result = Router::process($request);
-		$expected = [
+		$expected = array(
 			'library' => 'tests',
 			'controller' => 'Home',
 			'action' => 'tests'
-		];
+		);
 		$this->assertEqual($expected, $result->params);
 		$this->assertIdentical('tests', Router::scope());
 	}
 
 	public function testProcessWithAbsoluteHttpsAttachment() {
 		Router::scope('app', function() {
-			Router::connect('/home/welcome', ['Home::app']);
+			Router::connect('/home/welcome', array('Home::app'));
 		});
 
 		Router::scope('tests', function() {
-			Router::connect('/home/welcome', ['Home::tests']);
+			Router::connect('/home/welcome', array('Home::tests'));
 		});
 
-		Router::connect('/home/welcome', ['Home::default']);
+		Router::connect('/home/welcome', array('Home::default'));
 
-		Router::attach('tests', [
+		Router::attach('tests', array(
 			'absolute' => true,
 			'host' => 'app.mysite.com',
 			'scheme' => 'http'
-		]);
+		));
 
-		Router::attach('app', [
+		Router::attach('app', array(
 			'absolute' => true,
 			'host' => 'app.mysite.com',
 			'scheme' => 'http'
-		]);
+		));
 
-		$request = new Request([
+		$request = new Request(array(
 			'host' => 'app.mysite.com',
 			'scheme' => 'https',
 			'url' => '/home/welcome'
-		]);
+		));
 
 		$result = Router::process($request);
-		$expected = [
+		$expected = array(
 			'controller' => 'Home',
 			'action' => 'default'
-		];
+		);
 		$this->assertEqual($expected, $result->params);
 
-		Router::attach('app', [
+		Router::attach('app', array(
 			'absolute' => true,
 			'host' => 'app.mysite.com',
 			'scheme' => 'https'
-		]);
+		));
 
 		$result = Router::process($request);
-		$expected = [
+		$expected = array(
 			'library' => 'app',
 			'controller' => 'Home',
 			'action' => 'app'
-		];
+		);
 		$this->assertEqual($expected, $result->params);
 	}
 
 	public function testProcessWithAbsoluteAttachmentAndVariables() {
-		$request = new Request([
+		$request = new Request(array(
 			'url' => '/home/index',
 			'prefix' => '',
-			'env' => [
+			'env' => array(
 				'HTTP_HOST' => 'bob.amiga.com',
 				'HTTPS' => false
-			]
-		]);
-		Router::attach('app', [
+			)
+		));
+		Router::attach('app', array(
 			'absolute' => true,
 			'host' => '{:subdomain}.amiga.{:tld}',
 			'scheme' => 'http',
 			'prefix' => ''
-		]);
+		));
 
 		Router::scope('app', function() {
-			Router::connect('/home/index', ['Home::index']);
+			Router::connect('/home/index', array('Home::index'));
 		});
 
 		Router::process($request);
-		$expected = [
+		$expected = array(
 			'library' => 'app',
 			'controller' => 'Home',
 			'action' => 'index',
 			'subdomain' => 'bob',
 			'tld' => 'com'
-		];
+		);
 		$this->assertEqual($expected, $request->params);
 
 		$result = Router::attached('app');
@@ -1698,54 +1639,54 @@ class RouterTest extends \lithium\test\Unit {
 	}
 
 	public function testProcessWithAbsoluteAttachmentAndLibrary() {
-		$request = new Request([
+		$request = new Request(array(
 			'url' => '/hello_world/index',
-			'env' => [
+			'env' => array(
 				'HTTP_HOST' => 'bob.amiga.com',
 				'HTTPS' => false
-			]
-		]);
-		Router::attach('app', [
+			)
+		));
+		Router::attach('app', array(
 			'absolute' => true,
 			'host' => '{:subdomain}.amiga.{:tld}',
 			'scheme' => 'http',
 			'library' => 'other'
-		]);
+		));
 
 		Router::scope('app', function() {
-			Router::connect('/hello_world/index', ['HelloWorld::index']);
+			Router::connect('/hello_world/index', array('HelloWorld::index'));
 			Router::connect('/{:controller}/{:action}');
 		});
 
 		Router::process($request);
-		$expected = [
+		$expected = array(
 			'library' => 'other',
 			'controller' => 'HelloWorld',
 			'action' => 'index',
 			'subdomain' => 'bob',
 			'tld' => 'com'
-		];
+		);
 		$this->assertEqual($expected, $request->params);
 
 		$result = Router::attached('app');
 		$this->assertEqual($expected, $result['values']);
 
-		$request = new Request([
+		$request = new Request(array(
 			'url' => '/posts/index',
-			'env' => [
+			'env' => array(
 				'HTTP_HOST' => 'bob.amiga.com',
 				'HTTPS' => false
-			]
-		]);
+			)
+		));
 
 		Router::process($request);
-		$expected = [
+		$expected = array(
 			'library' => 'other',
 			'controller' => 'Posts',
 			'action' => 'index',
 			'subdomain' => 'bob',
 			'tld' => 'com'
-		];
+		);
 		$this->assertEqual($expected, $request->params);
 
 		$result = Router::attached('app');
@@ -1753,21 +1694,21 @@ class RouterTest extends \lithium\test\Unit {
 	}
 
 	public function testParseWithNotValidSchemeVariable() {
-		Router::attach('app', [
+		Router::attach('app', array(
 			'absolute' => true,
 			'host' => '{:subdomain:[a-z]+}.{:domain}.{:tld}',
 			'scheme' => '{:scheme:https}',
 			'prefix' => ''
-		]);
+		));
 
-		$result = Router::attached('app', [
+		$result = Router::attached('app', array(
 			'scheme' => 'http',
 			'subdomain' => 'admin',
 			'domain' => 'myserver',
 			'tld' => 'co.uk'
-		]);
+		));
 
-		$expected = [
+		$expected = array(
 			'absolute' => true,
 			'host' => 'admin.myserver.co.uk',
 			'scheme' => '{:scheme:https}',
@@ -1776,18 +1717,18 @@ class RouterTest extends \lithium\test\Unit {
 			'pattern' => '@^(?P<scheme>https)://(?P<subdomain>[a-z]+)\\.' .
 			             '(?P<domain>[^/]+?)\\.(?P<tld>[^/]+?)/@',
 			'library' => 'app',
-			'params' => ['scheme', 'subdomain', 'domain', 'tld'],
-			'values' => []
-		];
+			'params' => array('scheme', 'subdomain', 'domain', 'tld'),
+			'values' => array()
+		);
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testRouteRetrievalWithScope() {
 		Router::scope('loc1', function() use (&$expected){
-			$expected = Router::connect('/hello', [
+			$expected = Router::connect('/hello', array(
 				'controller' => 'Posts',
 				'action' => 'index'
-			]);
+			));
 		});
 
 		$result = Router::get(0, true);
@@ -1797,17 +1738,17 @@ class RouterTest extends \lithium\test\Unit {
 		$this->assertIdentical($expected, $result);
 
 		Router::scope('loc1', function() {
-			Router::connect('/helloworld', [
+			Router::connect('/helloworld', array(
 				'controller' => 'Posts',
 				'action' => 'index'
-			]);
+			));
 		});
 
 		Router::scope('loc2', function() {
-			Router::connect('/hello', [
+			Router::connect('/hello', array(
 				'controller' => 'Posts',
 				'action' => 'index'
-			]);
+			));
 		});
 
 		$this->assertCount(0, Router::get(null, true));
@@ -1824,12 +1765,12 @@ class RouterTest extends \lithium\test\Unit {
 	}
 
 	public function testListAttached() {
-		Router::attach('scope1', ['prefix' => 'scope1', 'absolute' => true]);
-		Router::attach('scope2', ['prefix' => 'scope2', 'library' => 'app']);
-		Router::attach('scope3', ['prefix' => 'scope3']);
+		Router::attach('scope1', array('prefix' => 'scope1', 'absolute' => true));
+		Router::attach('scope2', array('prefix' => 'scope2', 'library' => 'app'));
+		Router::attach('scope3', array('prefix' => 'scope3'));
 
-		$expected = [
-			'scope1' => [
+		$expected = array(
+			'scope1' => array (
 				'prefix' => 'scope1',
 				'absolute' => true,
 				'host' => null,
@@ -1837,10 +1778,10 @@ class RouterTest extends \lithium\test\Unit {
 				'base' => null,
 				'pattern' => '@^(.*?)//localhost/scope1/@',
 				'library' => 'scope1',
-				'values' => [],
-				'params' => []
-			],
-			'scope2' => [
+				'values' => array (),
+				'params' => array ()
+			),
+			'scope2' => array (
 				'prefix' => 'scope2',
 				'library' => 'app',
 				'absolute' => false,
@@ -1848,10 +1789,10 @@ class RouterTest extends \lithium\test\Unit {
 				'scheme' => null,
 				'base' => null,
 				'pattern' => '@^/scope2/@',
-				'values' => [],
-				'params' => []
-			],
-			'scope3' => [
+				'values' => array (),
+				'params' => array ()
+			),
+			'scope3' => array (
 				'prefix' => 'scope3',
 				'absolute' => false,
 				'host' => null,
@@ -1859,110 +1800,28 @@ class RouterTest extends \lithium\test\Unit {
 				'base' => null,
 				'pattern' => '@^/scope3/@',
 				'library' => 'scope3',
-				'values' => [],
-				'params' => []
-			]
-		];
+				'values' => array (),
+				'params' => array ()
+			)
+		);
 		$this->assertEqual($expected, Router::attached());
 	}
 
 	public function testScopeBase() {
-		$request = new Request(['base' => 'lithium/app']);
-		$url = ['controller' => 'HelloWorld'];
-
-		Router::scope('app', function(){
-			Router::connect('/{:controller}/{:action}');
-		});
-		Router::scope('app');
+		$request = new Request(array('base' => 'lithium/app'));
+		Router::connect('/{:controller}/{:action}');
+		$url = array('controller' => 'HelloWorld');
 
 		$expected = '/lithium/app/hello_world';
 		$this->assertEqual($expected, Router::match($url, $request));
 
-		Router::attach('app', ['base' => 'lithium']);
+		Router::attach(false, array('base' => 'lithium'));
 		$expected = '/lithium/hello_world';
 		$this->assertEqual($expected, Router::match($url, $request));
 
-		Router::attach('app', ['base' => '']);
+		Router::attach(false, array('base' => ''));
 		$expected = '/hello_world';
 		$this->assertEqual($expected, Router::match($url, $request));
-	}
-
-	public function testMatchOverRequestParamsWithScope() {
-		Router::scope('app1', function(){
-			Router::connect('/hello/world1', 'HelloApp1::index');
-		});
-		Router::scope('app2', function(){
-			Router::connect('/hello/world2', 'HelloApp2::index');
-		});
-
-		$request = new Request(['url' => '/hello/world1']);
-		$result = Router::process($request);
-
-		$expected = ['controller' => 'HelloApp1', 'action' => 'index', 'library' => 'app1'];
-		$this->assertEqual($expected, $result->params);
-
-		$result = Router::match($result->params);
-		$this->assertEqual('/hello/world1', $result);
-
-		$request = new Request(['url' => '/hello/world2']);
-		$result = Router::process($request);
-
-		$expected = ['controller' => 'HelloApp2', 'action' => 'index', 'library' => 'app2'];
-		$this->assertEqual($expected, $result->params);
-
-		$result = Router::match($result->params);
-		$this->assertEqual('/hello/world2', $result);
-	}
-
-	public function testLibraryBasedRoute() {
-		$route = Router::connect('/{:library}/{:controller}/{:action}',
-			['library' => 'app'],
-			['persist' => ['library']]
-		);
-
-		$expected = '/app/hello/world';
-		$result = Router::match(['controller' => 'hello', 'action' => 'world']);
-		$this->assertEqual($expected, $result);
-
-		$expected = '/myapp/hello/world';
-		$result = Router::match([
-			'library' => 'myapp', 'controller' => 'hello', 'action' => 'world'
-		]);
-		$this->assertEqual($expected, $result);
-	}
-
-	public function testMatchWithAbsoluteScope() {
-		Router::attach('app', [
-			'absolute' => true,
-			'host' => '{:domain}',
-		]);
-
-		Router::scope('app', function(){
-			Router::connect('/hello', 'Posts::index');
-		});
-
-		$request = new Request(['url' => '/hello', 'base' => '']);
-		$result = Router::process($request);
-
-		$expected = 'http://' . $result->params['domain'] . '/hello';
-		$result = Router::match($result->params, $request);
-
-		$this->assertEqual($expected, $result);
-	}
-
-	public function testMatchWithScopeAndWithoutController() {
-		Router::scope('app', function() {
-			Router::connect('/{:id}', 'Posts::index');
-		});
-
-		$request = new Request(['url' => '/1', 'base' => '']);
-		MockDispatcher::run($request);
-
-		$result = Router::match([
-			'id' => 2
-		], $request);
-
-		$this->assertEqual('/2', $result);
 	}
 }
 

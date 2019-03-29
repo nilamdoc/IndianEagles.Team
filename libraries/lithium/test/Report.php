@@ -1,19 +1,16 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\test;
 
-use lithium\aop\Filters;
 use lithium\core\Libraries;
 use lithium\util\Inflector;
 use lithium\core\ClassNotFoundException;
-use lithium\template\TemplateException;
 
 /**
  * This `Report` object aggregates tests in a group and allows you to run said tests to
@@ -26,12 +23,12 @@ use lithium\template\TemplateException;
  *
  * Example usage, for built-in HTML format:
  *
- * ```
- * $report = new Report([
+ * {{{
+ * $report = new Report(array(
  *     'title' => 'Test Report Title',
- *     'group' => new Group(['data' => ['lithium\tests\cases\net\http\MediaTest']]),
+ *     'group' => new Group(array('data' => array('lithium\tests\cases\net\http\MediaTest'))),
  *     'format' => 'html'
- * ]);
+ * ));
  *
  * $report->run();
  *
@@ -40,23 +37,23 @@ use lithium\template\TemplateException;
  *
  * // Get test results:
  * $report->results
- * ```
+ * }}}
  *
  * You may also choose to filter the results of the test runs to obtain additional information.
  * For example, say you wish to calculate the cyclomatic complexity of the classes you are testing:
  *
- * ```
- * $report = new Report([
+ * {{{
+ * $report = new Report(array(
  *     'title' => 'Test Report Title',
- *     'group' => new Group(['data' => ['lithium\tests\cases\net\http\MediaTest']]),
- *     'filters' => ['Complexity']
- * ]);
+ *     'group' => new Group(array('data' => array('lithium\tests\cases\net\http\MediaTest'))),
+ *     'filters' => array('Complexity')
+ * ));
  *
  * $report->run();
  *
  * // Get test results, including filter results:
  * $report->results
- * ```
+ * }}}
  *
  * @see lithium\test\Group
  * @see lithium\test\filter
@@ -85,14 +82,14 @@ class Report extends \lithium\core\Object {
 	 *
 	 * @var array
 	 */
-	public $results = ['group' => [], 'filters' => []];
+	public $results = array('group' => array(), 'filters' => array());
 
 	/**
 	 * Start and end timers.
 	 *
 	 * @var array
 	 */
-	public $timer = ['start' => null, 'end' => null];
+	public $timer = array('start' => null, 'end' => null);
 
 	/**
 	 * An array key on fully-namespaced class names of the filter with options to be
@@ -100,7 +97,7 @@ class Report extends \lithium\core\Object {
 	 *
 	 * @var array
 	 */
-	protected $_filters = [];
+	protected $_filters = array();
 
 	/**
 	 * Constructor.
@@ -110,16 +107,15 @@ class Report extends \lithium\core\Object {
 	 *        - `'filters'`: An array of filters that the test output should be run through.
 	 *        - `'format'`: The format of the template to use, defaults to `'txt'`.
 	 *        - `'reporter'`: The reporter to use.
-	 * @return void
 	 */
-	public function __construct(array $config = []) {
-		$defaults = [
+	public function __construct(array $config = array()) {
+		$defaults = array(
 			'title' => null,
 			'group' => null,
-			'filters' => [],
+			'filters' => array(),
 			'format' => 'txt',
 			'reporter' => null
-		];
+		);
 		parent::__construct($config + $defaults);
 	}
 
@@ -131,7 +127,6 @@ class Report extends \lithium\core\Object {
 	protected function _init() {
 		$this->group = $this->_config['group'];
 		$this->title = $this->_config['title'] ?: $this->_config['title'];
-		$this->_filters = $this->filters($this->_config['filters']);
 	}
 
 	/**
@@ -143,12 +138,12 @@ class Report extends \lithium\core\Object {
 		$tests = $this->group->tests();
 
 		foreach ($this->filters() as $filter => $options) {
-			$this->results['filters'][$filter] = [];
+			$this->results['filters'][$filter] = array();
 			$tests = $filter::apply($this, $tests, $options['apply']) ?: $tests;
 		}
-		$this->results['group'] = $tests->run([
+		$this->results['group'] = $tests->run(array(
 			'reporter' => $this->_config['reporter']
-		]);
+		));
 
 		foreach ($this->filters() as $filter => $options) {
 			$this->results['filters'][$filter] = $filter::analyze($this, $options['analyze']);
@@ -174,35 +169,35 @@ class Report extends \lithium\core\Object {
 	 */
 	public function stats() {
 		$results = (array) $this->results['group'];
-		$defaults = [
+		$defaults = array(
 			'asserts' => 0,
-			'passes' => [],
-			'fails' => [],
-			'exceptions' => [],
-			'errors' => [],
-			'skips' => []
-		];
+			'passes' => array(),
+			'fails' => array(),
+			'exceptions' => array(),
+			'errors' => array(),
+			'skips' => array()
+		);
 		$stats = array_reduce($results, function($stats, $result) use ($defaults) {
 			$stats = (array) $stats + $defaults;
-			$result = empty($result[0]) ? [$result] : $result;
+			$result = empty($result[0]) ? array($result) : $result;
 			foreach ($result as $response) {
 				if (empty($response['result'])) {
 					continue;
 				}
 				$result = $response['result'];
 
-				if (in_array($result, ['fail', 'exception'])) {
+				if (in_array($result, array('fail', 'exception'))) {
 					$response = array_merge(
-						['class' => 'unknown', 'method' => 'unknown'], $response
+						array('class' => 'unknown', 'method' => 'unknown'), $response
 					);
 					$stats['errors'][] = $response;
 				}
 				unset($response['file'], $response['result']);
 
-				if (in_array($result, ['pass', 'fail'])) {
+				if (in_array($result, array('pass', 'fail'))) {
 					$stats['asserts']++;
 				}
-				if (in_array($result, ['pass', 'fail', 'exception', 'skip'])) {
+				if (in_array($result, array('pass', 'fail', 'exception', 'skip'))) {
 					$stats[Inflector::pluralize($result)][] = $response;
 				}
 			}
@@ -224,23 +219,18 @@ class Report extends \lithium\core\Object {
 	 * @return string
 	 * @filter
 	 */
-	public function render($template, $data = []) {
+	public function render($template, $data = array()) {
 		$config = $this->_config;
 
-		if ($template === 'stats' && !$data) {
+		if ($template === "stats" && !$data) {
 			$data = $this->stats();
 		}
-		$template = Libraries::locate('test.templates', $template, [
+		$template = Libraries::locate('test.templates', $template, array(
 			'filter' => false, 'type' => 'file', 'suffix' => ".{$config['format']}.php"
-		]);
-
-		if ($template === null) {
-			$message = "Templates for format `{$config['format']}` not found in `test/templates`.";
-			throw new TemplateException($message);
-		}
+		));
 		$params = compact('template', 'data', 'config');
 
-		return Filters::run(__CLASS__, __FUNCTION__, $params, function($params) {
+		return $this->_filter(__METHOD__, $params, function($self, $params, $chain) {
 			extract($params['data']);
 			ob_start();
 			include $params['template'];
@@ -248,26 +238,21 @@ class Report extends \lithium\core\Object {
 		});
 	}
 
-	/**
-	 * Getter/setter for report test filters.
-	 *
-	 * @param array $filters A set of filters, mapping the filter class names, to their
-	 *        corresponding array of options. When not provided, simply returns current
-	 *        set of filters.
-	 * @return array The current set of filters.
-	 */
-	public function filters(array $filters = []) {
+	public function filters(array $filters = array()) {
+		if ($this->_filters && !$filters) {
+			return $this->_filters;
+		}
+		$filters += (array) $this->_config['filters'];
+		$results = array();
+
 		foreach ($filters as $filter => $options) {
 			if (!$class = Libraries::locate('test.filter', $filter)) {
 				throw new ClassNotFoundException("`{$class}` is not a valid test filter.");
 			}
-			$this->_filters[$class] = $options + [
-				'name' => strtolower(join('', array_slice(explode("\\", $class), -1))),
-				'apply' => [],
-				'analyze' => []
-			];
+			$options['name'] = strtolower(join('', array_slice(explode("\\", $class), -1)));
+			$results[$class] = $options + array('apply' => array(), 'analyze' => array());
 		}
-		return $this->_filters;
+		return $this->_filters = $results;
 	}
 }
 

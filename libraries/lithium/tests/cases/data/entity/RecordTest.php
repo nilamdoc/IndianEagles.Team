@@ -1,77 +1,76 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\cases\data\entity;
 
-use lithium\data\Connections;
 use lithium\data\entity\Record;
 use lithium\data\Schema;
-use lithium\tests\mocks\data\MockSource;
-use lithium\tests\mocks\data\MockPost;
 
 class RecordTest extends \lithium\test\Unit {
 
-	protected $_record = null;
+	protected $_database = 'lithium\tests\mocks\data\MockSource';
+
+	protected $_model = 'lithium\tests\mocks\data\MockPost';
 
 	public function setUp() {
-		Connections::add('mockconn', ['object' => new MockSource()]);
+		$database = $this->_database;
+		$model = $this->_model;
 
-		$schema = new Schema([
-			'fields' => [
+		$schema = new Schema(array(
+			'fields' => array(
 				'id' => 'int', 'title' => 'string', 'body' => 'text'
-			]
-		]);
-		MockPost::config([
-			'meta' => ['connection' => 'mockconn', 'key' => 'id', 'locked' => true],
+			)
+		));
+		$model::config(array(
+			'meta' => array('connection' => false, 'key' => 'id', 'locked' => true),
 			'schema' => $schema
-		]);
-		$this->_record = new Record(['model' => 'lithium\tests\mocks\data\MockPost']);
-	}
-
-	public function tearDown() {
-		Connections::remove('mockconn');
-		MockPost::reset();
+		));
+		$model::$connection = new $database();
+		$this->record = new Record(compact('model'));
 	}
 
 	/**
 	 * Tests that a record's fields are accessible as object properties.
+	 *
+	 * @return void
 	 */
 	public function testDataPropertyAccess() {
-		$data = ['title' => 'Test record', 'body' => 'Some test record data'];
-		$this->_record = new Record(compact('data'));
+		$data = array('title' => 'Test record', 'body' => 'Some test record data');
+		$this->record = new Record(compact('data'));
 
-		$this->assertEqual('Test record', $this->_record->title);
-		$this->assertTrue(isset($this->_record->title));
+		$this->assertEqual('Test record', $this->record->title);
+		$this->assertTrue(isset($this->record->title));
 
-		$this->assertEqual('Some test record data', $this->_record->body);
-		$this->assertTrue(isset($this->_record->body));
+		$this->assertEqual('Some test record data', $this->record->body);
+		$this->assertTrue(isset($this->record->body));
 
-		$this->assertNull($this->_record->foo);
-		$this->assertFalse(isset($this->_record->foo));
+		$this->assertNull($this->record->foo);
+		$this->assertFalse(isset($this->record->foo));
 	}
 
 	/**
 	 * Tests that a record can be exported to a given series of formats.
+	 *
+	 * @return void
 	 */
 	public function testRecordFormatExport() {
-		$data = ['foo' => 'bar'];
-		$this->_record = new Record(compact('data'));
+		$data = array('foo' => 'bar');
+		$this->record = new Record(compact('data'));
 
-		$this->assertEqual($data, $this->_record->to('array'));
-		$this->assertEqual($this->_record, $this->_record->to('foo'));
+		$this->assertEqual($data, $this->record->to('array'));
+		$this->assertEqual($this->record, $this->record->to('foo'));
 	}
 
 	public function testErrorsPropertyAccess() {
-		$errors = [
+		$errors = array(
 			'title' => 'please enter a title',
-			'email' => ['email is empty', 'email is not valid']
-		];
+			'email' => array('email is empty', 'email is not valid')
+		);
 
 		$record = new Record();
 		$result = $record->errors($errors);
@@ -84,7 +83,7 @@ class RecordTest extends \lithium\test\Unit {
 		$result = $record->errors('title');
 		$this->assertEqual($expected, $result);
 
-		$expected = ['email is empty', 'email is not valid'];
+		$expected = array('email is empty', 'email is not valid');
 		$result = $record->errors('email');
 		$this->assertEqual($expected, $result);
 
@@ -99,33 +98,31 @@ class RecordTest extends \lithium\test\Unit {
 	 * Test the ability to set multiple field's values, and that they can be read back.
 	 */
 	public function testSetData() {
-		$this->assertEmpty($this->_record->data());
-		$expected = ['id' => 1, 'name' => 'Joe Bloggs', 'address' => 'The Park'];
-		$this->_record->set($expected);
-		$this->assertEqual($expected, $this->_record->data());
-		$this->assertEqual($expected, $this->_record->to('array'));
-		$this->assertEqual($expected['name'], $this->_record->data('name'));
+		$this->assertEmpty($this->record->data());
+		$expected = array('id' => 1, 'name' => 'Joe Bloggs', 'address' => 'The Park');
+		$this->record->set($expected);
+		$this->assertEqual($expected, $this->record->data());
+		$this->assertEqual($expected, $this->record->to('array'));
+		$this->assertEqual($expected['name'], $this->record->data('name'));
 	}
 
 	public function testRecordExists() {
-		$this->assertFalse($this->_record->exists());
-		$this->_record->sync(313);
-		$this->assertIdentical(313, $this->_record->id);
-		$this->assertTrue($this->_record->exists());
+		$this->assertFalse($this->record->exists());
+		$this->record->sync(313);
+		$this->assertIdentical(313, $this->record->id);
+		$this->assertTrue($this->record->exists());
 
-		$this->_record = new Record(['exists' => true]);
-		$this->assertTrue($this->_record->exists());
+		$this->record = new Record(array('exists' => true));
+		$this->assertTrue($this->record->exists());
 	}
 
 	public function testMethodDispatch() {
-		$result = $this->_record->save(['title' => 'foo']);
+		$result = $this->record->save(array('title' => 'foo'));
 		$this->assertEqual('create', $result['query']->type());
-		$this->assertEqual(['title' => 'foo'], $result['query']->data());
+		$this->assertEqual(array('title' => 'foo'), $result['query']->data());
 
-		$record = $this->_record;
-		$this->assertException("Unhandled method call `invalid`.", function() use ($record) {
-			$record->invalid();
-		});
+		$this->expectException("Unhandled method call `invalid`.");
+		$this->assertNull($this->record->invalid());
 	}
 }
 

@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\cases\analysis;
@@ -15,44 +14,44 @@ use lithium\analysis\Inspector;
 class DocblockTest extends \lithium\test\Unit {
 
 	public function testComment() {
-		$expected = [
+		$expected = array(
 			'description' => '',
 			'text' => null,
-			'tags' => []
-		];
+			'tags' => array()
+		);
 		$result = Docblock::comment('');
 		$this->assertEqual($expected, $result);
 
 		$comment = "/**\n * Lithium is cool\n * @foo bar\n * @baz qux\n */";
-		$expected = ['description' => 'Lithium is cool', 'text' => '', 'tags' => []];
+		$expected = array('description' => 'Lithium is cool', 'text' => '', 'tags' => array());
 		$result = Docblock::comment($comment);
 		$this->assertEqual($expected, $result);
 
 		Docblock::$tags[] = 'foo';
 		Docblock::$tags[] = 'baz';
-		$expected['tags'] = ['foo' => 'bar', 'baz' => 'qux'];
+		$expected['tags'] = array('foo' => 'bar', 'baz' => 'qux');
 		$result = Docblock::comment($comment);
 		$this->assertEqual($expected, $result);
 
 		$comment = "/**\n * Lithium is cool\n *\n * Very cool\n * @foo bar\n * @baz qux\n */";
-		$expected = [
+		$expected = array(
 			'description' => 'Lithium is cool',
 			'text' => 'Very cool',
-			'tags' => ['foo' => 'bar', 'baz' => 'qux']
-		];
+			'tags' => array('foo' => 'bar', 'baz' => 'qux')
+		);
 		$result = Docblock::comment($comment);
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testParamTag() {
 		$comment = "/**\n * Lithium is cool\n * @param string \$str Some string\n */";
-		$expected = [
+		$expected = array(
 			'description' => 'Lithium is cool',
 			'text' => '',
-			'tags' => ['params' => [
-				'$str' => ['type' => 'string', 'text' => 'Some string']
-			]]
-		];
+			'tags' => array('params' => array(
+				'$str' => array('type' => 'string', 'text' => 'Some string')
+			))
+		);
 		$result = Docblock::comment($comment);
 		$this->assertEqual($expected, $result);
 	}
@@ -64,7 +63,6 @@ class DocblockTest extends \lithium\test\Unit {
 	 * That contains
 	 * multiple lines
 	 *
-	 * @deprecated
 	 * @important This is a tag that spans a single line.
 	 * @discuss This is a tag that
 	 *          spans
@@ -84,7 +82,7 @@ class DocblockTest extends \lithium\test\Unit {
 		$this->assertEqual($expected, $result['text']);
 
 		$tags = $result['tags'];
-		$expected = ['deprecated', 'important', 'discuss', 'link', 'see', 'return'];
+		$expected = array('important', 'discuss', 'link', 'see', 'return');
 		$this->assertEqual($expected, array_keys($tags));
 
 		$result = "This is a tag that\n         spans\n         several\n         lines.";
@@ -92,9 +90,9 @@ class DocblockTest extends \lithium\test\Unit {
 		$this->assertEqual("The second discussion item", $tags['discuss'][1]);
 
 		$this->assertEqual('void This tag contains a email@address.com.', $tags['return']);
-		$this->assertEqual([], Docblock::tags(null));
+		$this->assertEqual(array(), Docblock::tags(null));
 
-		$this->assertEqual(['params' => []], Docblock::tags("Foobar\n\n@param string"));
+		$this->assertEqual(array('params' => array()), Docblock::tags("Foobar\n\n@param string"));
 	}
 
 	public function testDocblockNewlineHandling() {

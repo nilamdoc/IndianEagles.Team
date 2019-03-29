@@ -1,16 +1,15 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2012, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\console\command\create;
 
 use lithium\util\Inflector;
-use lithium\util\Text;
+use lithium\util\String;
 
 /**
  * Generate a View file in the `--library` namespace
@@ -57,12 +56,12 @@ class View extends \lithium\console\command\Create {
 	 * @param array $params
 	 * @return mixed
 	 */
-	protected function _save(array $params = []) {
+	protected function _save(array $params = array()) {
 		$params['path'] = Inflector::underscore($this->request->action);
 		$params['file'] = $this->request->args(0);
 
 		$contents = $this->_template();
-		$result = Text::insert($contents, $params);
+		$result = String::insert($contents, $params);
 
 		if (!empty($this->_library['path'])) {
 			$path = $this->_library['path'] . "/views/{$params['path']}/{$params['file']}";
@@ -77,7 +76,7 @@ class View extends \lithium\console\command\Create {
 			$directory = str_replace($this->_library['path'] . '/', '', $directory);
 			if (file_exists($file)) {
 				$prompt = "{$file} already exists. Overwrite?";
-				$choices = ['y', 'n'];
+				$choices = array('y', 'n');
 				if ($this->in($prompt, compact('choices')) !== 'y') {
 					return "{$params['file']} skipped.";
 				}

@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\data;
@@ -32,18 +31,18 @@ abstract class Source extends \lithium\core\Object {
 	 *
 	 * @var array
 	 */
-	protected $_autoConfig = ['classes' => 'merge'];
+	protected $_autoConfig = array('classes' => 'merge');
 
 	/**
 	 * Default entity and set classes used by subclasses of `Source`.
 	 *
 	 * @var array
 	 */
-	protected $_classes = [
+	protected $_classes = array(
 		'entity' => 'lithium\data\Entity',
 		'set' => 'lithium\data\Collection',
 		'relationship' => 'lithium\data\model\Relationship'
-	];
+	);
 
 	/**
 	 * Stores a connection to a remote resource. Usually a database connection (`resource` type),
@@ -62,40 +61,21 @@ abstract class Source extends \lithium\core\Object {
 	protected $_isConnected = false;
 
 	/**
-	 * Holds cached methods.
+	 * Constructor. Sets defaults and returns object.
 	 *
-	 * @see lithium\data\Source::methods()
-	 * @var array
-	 */
-	protected $_cachedMethods = [];
-
-	/**
-	 * With no parameter, checks a specific supported feature.
+	 * Options defined:
+	 * - 'autoConnect' `boolean` If true, a connection is made on initialization. Defaults to true.
 	 *
-	 * @param string $feature Test for support for a specific feature, i.e. `"transactions"` or
-	 *        `"arrays"`.
-	 * @return boolean Returns `true` if the particular feature (or if MongoDB) support is enabled,
-	 *         otherwise `false`.
+	 * @param array $config
+	 * @return Source object
 	 */
-	public static function enabled($feature = null) {
-		return false;
-	}
-
-	/**
-	 * Constructor.
-	 *
-	 * @param array $config Available options are:
-	 *        - `'autoConnect'` _boolean_: If `true`, a connection is made on
-	 *           initialization. Defaults to `true`.
-	 * @return void
-	 */
-	public function __construct(array $config = []) {
-		$defaults = ['autoConnect' => true];
+	public function __construct(array $config = array()) {
+		$defaults = array('autoConnect' => true);
 		parent::__construct($config + $defaults);
 	}
 
 	/**
-	 * Destructor. Ensures the connection is closed, before the object is destroyed.
+	 * Ensures the connection is closed, before the object is destroyed.
 	 *
 	 * @return void
 	 */
@@ -125,8 +105,8 @@ abstract class Source extends \lithium\core\Object {
 	 *         as the connection could have timed out or otherwise been dropped by the remote
 	 *         resource during the course of the request.
 	 */
-	public function isConnected(array $options = []) {
-		$defaults = ['autoConnect' => false];
+	public function isConnected(array $options = array()) {
+		$defaults = array('autoConnect' => false);
 		$options += $defaults;
 
 		if (!$this->_isConnected && $options['autoConnect']) {
@@ -182,7 +162,7 @@ abstract class Source extends \lithium\core\Object {
 	 *         field, containing the following keys:
 	 *         - `'type'`: The field type name
 	 */
-	abstract public function describe($entity, $schema = [], array $meta = []);
+	abstract public function describe($entity, $schema = array(), array $meta = array());
 
 	/**
 	 * Defines or modifies the default settings of a relationship between two models.
@@ -193,7 +173,7 @@ abstract class Source extends \lithium\core\Object {
 	 * @param array $options relationship options
 	 * @return array Returns an array containing the configuration for a model relationship.
 	 */
-	abstract public function relationship($class, $type, $name, array $options = []);
+	abstract public function relationship($class, $type, $name, array $options = array());
 
 	/**
 	 * Create a record. This is the abstract method that is implemented by specific data sources.
@@ -211,7 +191,7 @@ abstract class Source extends \lithium\core\Object {
 	 *              - `locked` _boolean_ default: true
 	 * @return boolean Returns true if the operation was a success, otherwise false.
 	 */
-	abstract public function create($query, array $options = []);
+	abstract public function create($query, array $options = array());
 
 	/**
 	 * Abstract. Must be defined by child classes.
@@ -220,7 +200,7 @@ abstract class Source extends \lithium\core\Object {
 	 * @param array $options
 	 * @return boolean Returns true if the operation was a success, otherwise false.
 	 */
-	abstract public function read($query, array $options = []);
+	abstract public function read($query, array $options = array());
 
 	/**
 	 * Updates a set of records in a concrete data store.
@@ -232,7 +212,7 @@ abstract class Source extends \lithium\core\Object {
 	 * @param array $options Options to execute, which are defined by the concrete implementation.
 	 * @return boolean Returns true if the update operation was a success, otherwise false.
 	 */
-	abstract public function update($query, array $options = []);
+	abstract public function update($query, array $options = array());
 
 	/**
 	 * Abstract. Must be defined by child classes.
@@ -241,7 +221,7 @@ abstract class Source extends \lithium\core\Object {
 	 * @param array $options
 	 * @return boolean Returns true if the operation was a success, otherwise false.
 	 */
-	abstract public function delete($query, array $options = []);
+	abstract public function delete($query, array $options = array());
 
 	/**
 	 * Returns the list of methods which format values imported from `Query` objects. Should be
@@ -251,7 +231,7 @@ abstract class Source extends \lithium\core\Object {
 	 * @return array
 	 */
 	public function methods() {
-		return $this->_cachedMethods ?: ($this->_cachedMethods = get_class_methods($this));
+		return get_class_methods($this);
 	}
 
 	/**
@@ -267,10 +247,27 @@ abstract class Source extends \lithium\core\Object {
 	 *         dependencies.
 	 */
 	public function configureClass($class) {
-		return [
-			'classes' => $this->_classes,
-			'meta' => ['key' => 'id', 'locked' => true]
-		];
+		return array('meta' => array('key' => 'id', 'locked' => true));
+	}
+
+	/**
+	 * This method is responsible for factorying a new instance of a single entity object of correct
+	 * type, matching the current data source class.
+	 *
+	 * @param string $model A fully-namespaced class name representing the model class to which the
+	 *               `Entity` object will be bound.
+	 * @param array $data The default data with which the new `Entity` should be populated.
+	 * @param array $options Any additional options to pass to the `Entity`'s constructor
+	 * @return object Returns a new, un-saved `Entity` object bound to the model class specified
+	 *         in `$model`.
+	 */
+	public function item($model, array $data = array(), array $options = array()) {
+		$defaults = array('class' => 'entity');
+		$options += $defaults;
+
+		$class = $options['class'];
+		unset($options['class']);
+		return $this->_instance($class, compact('model', 'data') + $options);
 	}
 
 	/**
@@ -280,6 +277,18 @@ abstract class Source extends \lithium\core\Object {
 	 * @param object $context A query object to configure
 	 */
 	public function applyStrategy($options, $context) {}
+
+	/**
+	 * With no parameter, checks a specific supported feature.
+	 *
+	 * @param string $feature Test for support for a specific feature, i.e. `"transactions"` or
+	 *        `"arrays"`.
+	 * @return boolean Returns `true` if the particular feature (or if MongoDB) support is enabled,
+	 *         otherwise `false`.
+	 */
+	public static function enabled($feature = null) {
+		return false;
+	}
 
 	/**
 	 * Returns the field name of a relation name (underscore).

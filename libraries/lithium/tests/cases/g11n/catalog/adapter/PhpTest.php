@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\cases\g11n\catalog\adapter;
@@ -25,7 +24,7 @@ class PhpTest extends \lithium\test\Unit {
 	}
 
 	public function setUp() {
-		$this->adapter = new Php(['path' => $this->_path]);
+		$this->adapter = new Php(array('path' => $this->_path));
 	}
 
 	public function tearDown() {
@@ -34,7 +33,7 @@ class PhpTest extends \lithium\test\Unit {
 
 	public function testPathMustExist() {
 		try {
-			new Php(['path' => $this->_path]);
+			new Php(array('path' => $this->_path));
 			$result = true;
 		} catch (Exception $e) {
 			$result = false;
@@ -42,7 +41,7 @@ class PhpTest extends \lithium\test\Unit {
 		$this->assert($result);
 
 		try {
-			new Php(['path' => "{$this->_path}/i_do_not_exist"]);
+			new Php(array('path' => "{$this->_path}/i_do_not_exist"));
 			$result = false;
 		} catch (Exception $e) {
 			$result = true;
@@ -55,66 +54,66 @@ class PhpTest extends \lithium\test\Unit {
 
 		$data = <<<EOD
 <?php
-return [
+return array(
 	'politics' => 'politique',
-	'house' => ['maison', 'maisons']
-];
+	'house' => array('maison', 'maisons')
+);
 ?>
 EOD;
 		file_put_contents("{$this->_path}/fr/message/default.php", $data);
 
 		$result = $this->adapter->read('message', 'fr', null);
-		$expected = [
-			'politics' => [
+		$expected = array(
+			'politics' => array(
 				'id' => 'politics',
-				'ids' => [],
+				'ids' => array(),
 				'translated' => 'politique',
-				'flags' => [],
-				'comments' => [],
-				'occurrences' => []
-			],
-			'house' => [
+				'flags' => array(),
+				'comments' => array(),
+				'occurrences' => array()
+			),
+			'house' => array(
 				'id' => 'house',
-				'ids' => [],
-				'translated' => ['maison', 'maisons'],
-				'flags' => [],
-				'comments' => [],
-				'occurrences' => []
-			]
-		];
+				'ids' => array(),
+				'translated' => array('maison', 'maisons'),
+				'flags' => array(),
+				'comments' => array(),
+				'occurrences' => array()
+			)
+		);
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testReadTemplate() {
 		$data = <<<EOD
 <?php
-return [
+return array(
 	'politics' => 'politique',
-	'house' => ['maison', 'maisons']
-];
+	'house' => array('maison', 'maisons')
+);
 ?>
 EOD;
 		file_put_contents("{$this->_path}/message_default.php", $data);
 
 		$result = $this->adapter->read('messageTemplate', 'root', null);
-		$expected = [
-			'politics' => [
+		$expected = array(
+			'politics' => array(
 				'id' => 'politics',
-				'ids' => [],
+				'ids' => array(),
 				'translated' => 'politique',
-				'flags' => [],
-				'comments' => [],
-				'occurrences' => []
-			],
-			'house' => [
+				'flags' => array(),
+				'comments' => array(),
+				'occurrences' => array()
+			),
+			'house' => array(
 				'id' => 'house',
-				'ids' => [],
-				'translated' => ['maison', 'maisons'],
-				'flags' => [],
-				'comments' => [],
-				'occurrences' => []
-			]
-		];
+				'ids' => array(),
+				'translated' => array('maison', 'maisons'),
+				'flags' => array(),
+				'comments' => array(),
+				'occurrences' => array()
+			)
+		);
 		$this->assertEqual($expected, $result);
 	}
 
@@ -123,9 +122,9 @@ EOD;
 
 		$data = <<<EOD
 <?php
-return [
+return array(
 	'politics' => 'politique'
-];
+);
 ?>
 EOD;
 		file_put_contents("{$this->_path}/fr/message/li3_docs.php", $data);
@@ -134,62 +133,16 @@ EOD;
 		$this->assertEmpty($result);
 
 		$result = $this->adapter->read('message', 'fr', 'li3_docs');
-		$expected = [
-			'politics' => [
+		$expected = array(
+			'politics' => array(
 				'id' => 'politics',
-				'ids' => [],
+				'ids' => array(),
 				'translated' => 'politique',
-				'flags' => [],
-				'comments' => [],
-				'occurrences' => []
-			]
-		];
-		$this->assertEqual($expected, $result);
-	}
-
-	public function testReadWithContext() {
-		mkdir("{$this->_path}/fr/message", 0755, true);
-
-		$data = <<<EOD
-<?php
-return [
-	'green' => 'vert',
-	'fast|speed' => 'rapide',
-	'fast|go without food' => 'jeûner'
-];
-?>
-EOD;
-		file_put_contents("{$this->_path}/fr/message/default.php", $data);
-
-		$result = $this->adapter->read('message', 'fr', null);
-		$expected = [
-			'green' => [
-				'id' => 'green',
-				'ids' => [],
-				'translated' => 'vert',
-				'flags' => [],
-				'comments' => [],
-				'occurrences' => []
-			],
-			'fast|speed' => [
-				'id' => 'fast',
-				'ids' => [],
-				'translated' => 'rapide',
-				'flags' => [],
-				'comments' => [],
-				'occurrences' => [],
-				'context' => 'speed'
-			],
-			'fast|go without food' => [
-				'id' => 'fast',
-				'ids' => [],
-				'translated' => 'jeûner',
-				'flags' => [],
-				'comments' => [],
-				'occurrences' => [],
-				'context' => 'go without food'
-			]
-		];
+				'flags' => array(),
+				'comments' => array(),
+				'occurrences' => array()
+			)
+		);
 		$this->assertEqual($expected, $result);
 	}
 
@@ -198,24 +151,24 @@ EOD;
 
 		$data = <<<EOD
 <?php
-return [
+return array(
 	'phone' => '/[0-9].*/i'
-];
+);
 ?>
 EOD;
 		file_put_contents("{$this->_path}/fr/validation/default.php", $data);
 
 		$result = $this->adapter->read('validation', 'fr', null);
-		$expected = [
-			'phone' => [
+		$expected = array(
+			'phone' => array(
 				'id' => 'phone',
-				'ids' => [],
+				'ids' => array(),
 				'translated' => '/[0-9].*/i',
-				'flags' => [],
-				'comments' => [],
-				'occurrences' => []
-			]
-		];
+				'flags' => array(),
+				'comments' => array(),
+				'occurrences' => array()
+			)
+		);
 		$this->assertEqual($expected, $result);
 
 	}
@@ -225,23 +178,23 @@ EOD;
 
 		$data = <<<EOD
 <?php
-return [
+return array(
 	'plural' => function() { return 123; },
 	'politics' => 'politique',
-];
+);
 ?>
 EOD;
 		file_put_contents("{$this->_path}/fr/message/default.php", $data);
 
 		$result = $this->adapter->read('message', 'fr', null);
-		$expected = [
+		$expected = array(
 			'id' => 'politics',
-			'ids' => [],
+			'ids' => array(),
 			'translated' => 'politique',
-			'flags' => [],
-			'comments' => [],
-			'occurrences' => []
-		];
+			'flags' => array(),
+			'comments' => array(),
+			'occurrences' => array()
+		);
 		$this->assertEqual($expected, $result['politics']);
 
 		$this->assertInternalType('callable', $result['plural']['translated']);

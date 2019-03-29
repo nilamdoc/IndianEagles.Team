@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\cases\util;
@@ -15,121 +14,121 @@ use lithium\util\Set;
 class SetTest extends \lithium\test\Unit {
 
 	public function testDepthWithEmptyData() {
-		$data = [];
+		$data = array();
 		$result = Set::depth($data);
 		$this->assertEqual(0, $result);
 	}
 
 	public function testDepthOneLevelWithDefaults() {
-		$data = [];
+		$data = array();
 		$result = Set::depth($data);
 		$this->assertEqual(0, $result);
 
-		$data = ['one', '2', 'three'];
+		$data = array('one', '2', 'three');
 		$result = Set::depth($data);
 		$this->assertEqual(1, $result);
 
-		$data = ['1' => '1.1', '2', '3'];
+		$data = array('1' => '1.1', '2', '3');
 		$result = Set::depth($data);
 		$this->assertEqual(1, $result);
 
-		$data = ['1' => '1.1', '2', '3' => ['3.1' => '3.1.1']];
-		$result = Set::depth($data, ['all' => false]);
+		$data = array('1' => '1.1', '2', '3' => array('3.1' => '3.1.1'));
+		$result = Set::depth($data, array('all' => false));
 		$this->assertEqual(1, $result);
 	}
 
 	public function testDepthTwoLevelsWithDefaults() {
-		$data = ['1' => ['1.1' => '1.1.1'], '2', '3' => ['3.1' => '3.1.1']];
+		$data = array('1' => array('1.1' => '1.1.1'), '2', '3' => array('3.1' => '3.1.1'));
 		$result = Set::depth($data);
 		$this->assertEqual(2, $result);
 
-		$data = ['1' => ['1.1' => '1.1.1'], '2', '3' => ['3.1' => [
+		$data = array('1' => array('1.1' => '1.1.1'), '2', '3' => array('3.1' => array(
 			'3.1.1' => '3.1.1.1'
-		]]];
+		)));
 		$result = Set::depth($data);
 		$this->assertEqual($result, 2);
 
-		$data = [
-			'1' => ['1.1' => '1.1.1'],
-			['2' => [
-				'2.1' => ['2.1.1' => ['2.1.1.1' => '2.1.1.1.1']]
-			]],
-			'3' => ['3.1' => ['3.1.1' => '3.1.1.1']]
-		];
-		$result = Set::depth($data, ['all' => false]);
+		$data = array(
+			'1' => array('1.1' => '1.1.1'),
+			array('2' => array(
+				'2.1' => array('2.1.1' => array('2.1.1.1' => '2.1.1.1.1'))
+			)),
+			'3' => array('3.1' => array('3.1.1' => '3.1.1.1'))
+		);
+		$result = Set::depth($data, array('all' => false));
 		$this->assertEqual($result, 2);
 	}
 
 	public function testDepthTwoLevelsWithAll() {
-		$data = ['1' => '1.1', '2', '3' => ['3.1' => '3.1.1']];
-		$result = Set::depth($data, ['all' => true]);
+		$data = array('1' => '1.1', '2', '3' => array('3.1' => '3.1.1'));
+		$result = Set::depth($data, array('all' => true));
 		$this->assertEqual(2, $result);
 	}
 
 	public function testDepthThreeLevelsWithAll() {
-		$data = [
-			'1' => ['1.1' => '1.1.1'], '2', '3' => ['3.1' => ['3.1.1' => '3.1.1.1']]
-		];
-		$result = Set::depth($data, ['all' => true]);
+		$data = array(
+			'1' => array('1.1' => '1.1.1'), '2', '3' => array('3.1' => array('3.1.1' => '3.1.1.1'))
+		);
+		$result = Set::depth($data, array('all' => true));
 		$this->assertEqual(3, $result);
 
-		$data = [
-			'1' => ['1.1' => '1.1.1'],
-			['2' => ['2.1' => ['2.1.1' => '2.1.1.1']]],
-			'3' => ['3.1' => ['3.1.1' => '3.1.1.1']]
-		];
-		$result = Set::depth($data, ['all' => true]);
+		$data = array(
+			'1' => array('1.1' => '1.1.1'),
+			array('2' => array('2.1' => array('2.1.1' => '2.1.1.1'))),
+			'3' => array('3.1' => array('3.1.1' => '3.1.1.1'))
+		);
+		$result = Set::depth($data, array('all' => true));
 		$this->assertEqual(4, $result);
 
-		$data = [
-			'1' => ['1.1' => '1.1.1'],
-			['2' => ['2.1' => ['2.1.1' => ['2.1.1.1']]]],
-			'3' => ['3.1' => ['3.1.1' => '3.1.1.1']]
-		];
-		$result = Set::depth($data, ['all' => true]);
+		$data = array(
+			'1' => array('1.1' => '1.1.1'),
+			array('2' => array('2.1' => array('2.1.1' => array('2.1.1.1')))),
+			'3' => array('3.1' => array('3.1.1' => '3.1.1.1'))
+		);
+		$result = Set::depth($data, array('all' => true));
 		$this->assertEqual(5, $result);
 
-		$data = [
-			'1' => ['1.1' => '1.1.1'], [
-				'2' => ['2.1' => ['2.1.1' => ['2.1.1.1' => '2.1.1.1.1']]]
-			],
-			'3' => ['3.1' => ['3.1.1' => '3.1.1.1']]
-		];
-		$result = Set::depth($data, ['all' => true]);
+		$data = array(
+			'1' => array('1.1' => '1.1.1'), array(
+				'2' => array('2.1' => array('2.1.1' => array('2.1.1.1' => '2.1.1.1.1')))
+			),
+			'3' => array('3.1' => array('3.1.1' => '3.1.1.1'))
+		);
+		$result = Set::depth($data, array('all' => true));
 		$this->assertEqual(5, $result);
 	}
 
 	public function testDepthFourLevelsWithAll() {
-		$data = [
-			'1' => ['1.1' => '1.1.1'], [
-				'2' => ['2.1' => ['2.1.1' => '2.1.1.1']],
-			],
-			'3' => ['3.1' => ['3.1.1' => '3.1.1.1']]
-		];
-		$result = Set::depth($data, ['all' => true]);
+		$data = array(
+			'1' => array('1.1' => '1.1.1'), array(
+				'2' => array('2.1' => array('2.1.1' => '2.1.1.1')),
+			),
+			'3' => array('3.1' => array('3.1.1' => '3.1.1.1'))
+		);
+		$result = Set::depth($data, array('all' => true));
 		$this->assertEqual(4, $result);
 	}
 
 	public function testDepthFiveLevelsWithAll() {
-		$data = [
-			'1' => ['1.1' => '1.1.1'], [
-				'2' => ['2.1' => ['2.1.1' => ['2.1.1.1']]]
-			],
-			'3' => ['3.1' => ['3.1.1' => '3.1.1.1']]
-		];
-		$result = Set::depth($data, ['all' => true]);
+		$data = array(
+			'1' => array('1.1' => '1.1.1'), array(
+				'2' => array('2.1' => array('2.1.1' => array('2.1.1.1')))
+			),
+			'3' => array('3.1' => array('3.1.1' => '3.1.1.1'))
+		);
+		$result = Set::depth($data, array('all' => true));
 		$this->assertEqual(5, $result);
 
-		$data = ['1' => ['1.1' => '1.1.1'], [
-			'2' => ['2.1' => ['2.1.1' => ['2.1.1.1' => '2.1.1.1.1']]]],
-			'3' => ['3.1' => ['3.1.1' => '3.1.1.1']]
-		];
-		$result = Set::depth($data, ['all' => true]);
+		$data = array('1' => array('1.1' => '1.1.1'), array(
+			'2' => array('2.1' => array('2.1.1' => array('2.1.1.1' => '2.1.1.1.1')))),
+			'3' => array('3.1' => array('3.1.1' => '3.1.1.1'))
+		);
+		$result = Set::depth($data, array('all' => true));
 		$this->assertEqual(5, $result);
 	}
 
 	public function testFlattenOneLevel() {
-		$data = ['Larry', 'Curly', 'Moe'];
+		$data = array('Larry', 'Curly', 'Moe');
 		$result = Set::flatten($data);
 		$this->assertEqual($result, $data);
 
@@ -139,178 +138,178 @@ class SetTest extends \lithium\test\Unit {
 	}
 
 	public function testFlattenTwoLevels() {
-		$data = [
-			[
-				'Post' => ['id' => '1', 'author_id' => '1', 'title' => 'First Post'],
-				'Author' => ['id' => '1', 'user' => 'nate', 'password' => 'foo']
-			],
-			[
-				'Post' => [
+		$data = array(
+			array(
+				'Post' => array('id' => '1', 'author_id' => '1', 'title' => 'First Post'),
+				'Author' => array('id' => '1', 'user' => 'nate', 'password' => 'foo')
+			),
+			array(
+				'Post' => array(
 					'id' => '2',
 					'author_id' => '3',
 					'title' => 'Second Post',
 					'body' => 'Second Post Body'
-				],
-				'Author' => ['id' => '3', 'user' => 'joel', 'password' => null]
-			]
-		];
+				),
+				'Author' => array('id' => '3', 'user' => 'joel', 'password' => null)
+			)
+		);
 
-		$expected = [
+		$expected = array(
 			'0.Post.id' => '1', '0.Post.author_id' => '1', '0.Post.title' => 'First Post',
 			'0.Author.id' => '1', '0.Author.user' => 'nate', '0.Author.password' => 'foo',
 			'1.Post.id' => '2', '1.Post.author_id' => '3', '1.Post.title' => 'Second Post',
 			'1.Post.body' => 'Second Post Body', '1.Author.id' => '3',
 			'1.Author.user' => 'joel', '1.Author.password' => null
-		];
+		);
 		$result = Set::flatten($data);
 		$this->assertEqual($expected, $result);
 
 		$result = Set::expand($result);
 		$this->assertEqual($data, $result);
 
-		$result = Set::flatten($data[0], ['separator' => '/']);
-		$expected = [
+		$result = Set::flatten($data[0], array('separator' => '/'));
+		$expected = array(
 			'Post/id' => '1', 'Post/author_id' => '1', 'Post/title' => 'First Post',
 			'Author/id' => '1', 'Author/user' => 'nate', 'Author/password' => 'foo'
-		];
+		);
 		$this->assertEqual($expected, $result);
 
-		$result = Set::expand($expected, ['separator' => '/']);
+		$result = Set::expand($expected, array('separator' => '/'));
 		$this->assertEqual($data[0], $result);
 	}
 
 	public function testExpand() {
-		$data = [
+		$data = array(
 			'Gallery.Image' => null,
 			'Gallery.Image.Tag' => null,
 			'Gallery.Image.Tag.Author' => null
-		];
-		$expected = ['Gallery' => ['Image' => ['Tag' => ['Author' => null]]]];
+		);
+		$expected = array('Gallery' => array('Image' => array('Tag' => array('Author' => null))));
 		$this->assertEqual($expected, Set::expand($data));
 
-		$data = [
+		$data = array(
 			'Gallery.Image.Tag' => null,
 			'Gallery.Image' => null,
 			'Gallery.Image.Tag.Author' => null
-		];
-		$expected = ['Gallery' => ['Image' => ['Tag' => ['Author' => null]]]];
+		);
+		$expected = array('Gallery' => array('Image' => array('Tag' => array('Author' => null))));
 		$this->assertEqual($expected, Set::expand($data));
 
-		$data = [
+		$data = array(
 			'Gallery.Image.Tag.Author' => null,
 			'Gallery.Image.Tag' => null,
 			'Gallery.Image' => null
-		];
-		$expected = ['Gallery' => ['Image' => ['Tag' => ['Author' => null]]]];
+		);
+		$expected = array('Gallery' => array('Image' => array('Tag' => array('Author' => null))));
 		$this->assertEqual($expected, Set::expand($data));
 	}
 
 	public function testFormat() {
-		$data = [
-			['Person' => [
+		$data = array(
+			array('Person' => array(
 				'first_name' => 'Nate', 'last_name' => 'Abele',
 				'city' => 'Queens', 'state' => 'NY', 'something' => '42'
-			]],
-			['Person' => [
+			)),
+			array('Person' => array(
 				'first_name' => 'Joel', 'last_name' => 'Perras',
 				'city' => 'Montreal', 'state' => 'Quebec', 'something' => '{0}'
-			]],
-			['Person' => [
+			)),
+			array('Person' => array(
 				'first_name' => 'Garrett', 'last_name' => 'Woodworth',
 				'city' => 'Venice Beach', 'state' => 'CA', 'something' => '{1}'
-			]]
-		];
+			))
+		);
 
-		$result = Set::format($data, '{1}, {0}', ['/Person/first_name', '/Person/last_name']);
-		$expected = ['Abele, Nate', 'Perras, Joel', 'Woodworth, Garrett'];
+		$result = Set::format($data, '{1}, {0}', array('/Person/first_name', '/Person/last_name'));
+		$expected = array('Abele, Nate', 'Perras, Joel', 'Woodworth, Garrett');
 		$this->assertEqual($expected, $result);
 
-		$result = Set::format($data, '{0}, {1}', ['/Person/last_name', '/Person/first_name']);
+		$result = Set::format($data, '{0}, {1}', array('/Person/last_name', '/Person/first_name'));
 		$this->assertEqual($expected, $result);
 
-		$result = Set::format($data, '{0}, {1}', ['/Person/city', '/Person/state']);
-		$expected = ['Queens, NY', 'Montreal, Quebec', 'Venice Beach, CA'];
+		$result = Set::format($data, '{0}, {1}', array('/Person/city', '/Person/state'));
+		$expected = array('Queens, NY', 'Montreal, Quebec', 'Venice Beach, CA');
 		$this->assertEqual($expected, $result);
 
-		$result = Set::format($data, '{{0}, {1}}', ['/Person/city', '/Person/state']);
-		$expected = ['{Queens, NY}', '{Montreal, Quebec}', '{Venice Beach, CA}'];
+		$result = Set::format($data, '{{0}, {1}}', array('/Person/city', '/Person/state'));
+		$expected = array('{Queens, NY}', '{Montreal, Quebec}', '{Venice Beach, CA}');
 		$this->assertEqual($expected, $result);
 
-		$result = Set::format($data, '{{0}, {1}}', [
+		$result = Set::format($data, '{{0}, {1}}', array(
 			'/Person/something', '/Person/something'
-		]);
-		$expected = ['{42, 42}', '{{0}, {0}}', '{{1}, {1}}'];
+		));
+		$expected = array('{42, 42}', '{{0}, {0}}', '{{1}, {1}}');
 		$this->assertEqual($expected, $result);
 
-		$result = Set::format($data, '{%2$d, %1$s}', [
+		$result = Set::format($data, '{%2$d, %1$s}', array(
 			'/Person/something', '/Person/something'
-		]);
-		$expected = ['{42, 42}', '{0, {0}}', '{0, {1}}'];
+		));
+		$expected = array('{42, 42}', '{0, {0}}', '{0, {1}}');
 		$this->assertEqual($expected, $result);
 
-		$result = Set::format($data, '{%1$s, %1$s}', [
+		$result = Set::format($data, '{%1$s, %1$s}', array(
 			'/Person/something', '/Person/something'
-		]);
-		$expected = ['{42, 42}', '{{0}, {0}}', '{{1}, {1}}'];
+		));
+		$expected = array('{42, 42}', '{{0}, {0}}', '{{1}, {1}}');
 		$this->assertEqual($expected, $result);
 
-		$result = Set::format($data, '%2$d, %1$s', [
+		$result = Set::format($data, '%2$d, %1$s', array(
 			'/Person/first_name', '/Person/something'
-		]);
-		$expected = ['42, Nate', '0, Joel', '0, Garrett'];
+		));
+		$expected = array('42, Nate', '0, Joel', '0, Garrett');
 		$this->assertEqual($expected, $result);
 
-		$result = Set::format($data, '%1$s, %2$d', [
+		$result = Set::format($data, '%1$s, %2$d', array(
 			'/Person/first_name', '/Person/something'
-		]);
-		$expected = ['Nate, 42', 'Joel, 0', 'Garrett, 0'];
+		));
+		$expected = array('Nate, 42', 'Joel, 0', 'Garrett, 0');
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testMatchesBasic() {
-		$a = [
-			['Article' => ['id' => 1, 'title' => 'Article 1']],
-			['Article' => ['id' => 2, 'title' => 'Article 2']],
-			['Article' => ['id' => 3, 'title' => 'Article 3']]
-		];
+		$a = array(
+			array('Article' => array('id' => 1, 'title' => 'Article 1')),
+			array('Article' => array('id' => 2, 'title' => 'Article 2')),
+			array('Article' => array('id' => 3, 'title' => 'Article 3'))
+		);
 
-		$this->assertTrue(Set::matches($a[1]['Article'], ['id=2']));
-		$this->assertFalse(Set::matches($a[1]['Article'], ['id>2']));
-		$this->assertTrue(Set::matches($a[1]['Article'], ['id>=2']));
-		$this->assertFalse(Set::matches($a[1]['Article'], ['id>=3']));
-		$this->assertTrue(Set::matches($a[1]['Article'], ['id<=2']));
-		$this->assertFalse(Set::matches($a[1]['Article'], ['id<2']));
-		$this->assertTrue(Set::matches($a[1]['Article'], ['id>1']));
-		$this->assertTrue(Set::matches($a[1]['Article'], ['id>1', 'id<3', 'id!=0']));
+		$this->assertTrue(Set::matches($a[1]['Article'], array('id=2')));
+		$this->assertFalse(Set::matches($a[1]['Article'], array('id>2')));
+		$this->assertTrue(Set::matches($a[1]['Article'], array('id>=2')));
+		$this->assertFalse(Set::matches($a[1]['Article'], array('id>=3')));
+		$this->assertTrue(Set::matches($a[1]['Article'], array('id<=2')));
+		$this->assertFalse(Set::matches($a[1]['Article'], array('id<2')));
+		$this->assertTrue(Set::matches($a[1]['Article'], array('id>1')));
+		$this->assertTrue(Set::matches($a[1]['Article'], array('id>1', 'id<3', 'id!=0')));
 
-		$this->assertTrue(Set::matches([], ['3'], 3));
-		$this->assertTrue(Set::matches([], ['5'], 5));
+		$this->assertTrue(Set::matches(array(), array('3'), 3));
+		$this->assertTrue(Set::matches(array(), array('5'), 5));
 
-		$this->assertTrue(Set::matches($a[1]['Article'], ['id']));
-		$this->assertTrue(Set::matches($a[1]['Article'], ['id', 'title']));
-		$this->assertFalse(Set::matches($a[1]['Article'], ['non-existant']));
+		$this->assertTrue(Set::matches($a[1]['Article'], array('id')));
+		$this->assertTrue(Set::matches($a[1]['Article'], array('id', 'title')));
+		$this->assertFalse(Set::matches($a[1]['Article'], array('non-existant')));
 
 		$this->assertTrue(Set::matches($a, '/Article[id=2]'));
 		$this->assertFalse(Set::matches($a, '/Article[id=4]'));
-		$this->assertTrue(Set::matches($a, []));
+		$this->assertTrue(Set::matches($a, array()));
 	}
 
 	public function testMatchesMultipleLevels() {
-		$result = [
-			'Attachment' => [
-				'keep' => []
-			],
-			'Comment' => [
-				'keep' => ['Attachment' => ['fields' => ['attachment']]]
-			],
-			'User' => ['keep' => []],
-			'Article' => [
-				'keep' => [
-					'Comment' => ['fields' => ['comment', 'published']],
-					'User' => ['fields' => ['user']]
-				]
-			]
-		];
+		$result = array(
+			'Attachment' => array(
+				'keep' => array()
+			),
+			'Comment' => array(
+				'keep' => array('Attachment' => array('fields' => array('attachment')))
+			),
+			'User' => array('keep' => array()),
+			'Article' => array(
+				'keep' => array(
+					'Comment' => array('fields' => array('comment', 'published')),
+					'User' => array('fields' => array('user'))
+				)
+			)
+		);
 		$this->assertTrue(Set::matches($result, '/Article/keep/Comment'));
 
 		$result = Set::matches($result, '/Article/keep/Comment/fields/user');
@@ -318,367 +317,367 @@ class SetTest extends \lithium\test\Unit {
 	}
 
 	public function testExtractReturnsEmptyArray() {
-		$expected = [];
-		$result = Set::extract([], '/Post/id');
+		$expected = array();
+		$result = Set::extract(array(), '/Post/id');
 		$this->assertIdentical($expected, $result);
 
-		$result = Set::extract([
-			['Post' => ['name' => 'bob']],
-			['Post' => ['name' => 'jim']]
-		], '/Post/id');
+		$result = Set::extract(array(
+			array('Post' => array('name' => 'bob')),
+			array('Post' => array('name' => 'jim'))
+		), '/Post/id');
 		$this->assertIdentical($expected, $result);
 
-		$result = Set::extract([], 'Message.flash');
+		$result = Set::extract(array(), 'Message.flash');
 		$this->assertIdentical($expected, $result);
 	}
 
 	public function testExtractionOfNotNull() {
-		$data = [
+		$data = array(
 			'plugin' => null, 'admin' => false, 'controller' => 'posts',
 			'action' => 'index', 1, 'whatever'
-		];
+		);
 
-		$expected = ['controller' => 'posts', 'action' => 'index', 1, 'whatever'];
+		$expected = array('controller' => 'posts', 'action' => 'index', 1, 'whatever');
 		$result = Set::extract($data, '/');
 		$this->assertIdentical($expected, $result);
 	}
 
 	public function testExtractOfNumericKeys() {
-		$data = [1, 'whatever'];
+		$data = array(1, 'whatever');
 
-		$expected = [1, 'whatever'];
+		$expected = array(1, 'whatever');
 		$result = Set::extract($data, '/');
 		$this->assertIdentical($expected, $result);
 	}
 
 	public function testExtract() {
-		$a = [
-			[
-				'Article' => [
+		$a = array(
+			array(
+				'Article' => array(
 					'id' => '1', 'user_id' => '1', 'title' => 'First Article',
 					'body' => 'First Article Body', 'published' => 'Y',
 					'created' => '2007-03-18 10:39:23', 'updated' => '2007-03-18 10:41:31'
-				],
-				'User' => [
+				),
+				'User' => array(
 					'id' => '1', 'user' => 'mariano',
 					'password' => '5f4dcc3b5aa765d61d8327deb882cf99',
 					'created' => '2007-03-17 01:16:23',
 					'updated' => '2007-03-17 01:18:31'
-				],
-				'Comment' => [
-					[
+				),
+				'Comment' => array(
+					array(
 						'id' => '1', 'article_id' => '1', 'user_id' => '2',
 						'comment' => 'First Comment for First Article',
 						'published' => 'Y', 'created' => '2007-03-18 10:45:23',
 						'updated' => '2007-03-18 10:47:31'
-					],
-					[
+					),
+					array(
 						'id' => '2', 'article_id' => '1', 'user_id' => '4',
 						'comment' => 'Second Comment for First Article', 'published' => 'Y',
 						'created' => '2007-03-18 10:47:23',
 						'updated' => '2007-03-18 10:49:31'
-					]
-				],
-				'Tag' => [
-					[
+					)
+				),
+				'Tag' => array(
+					array(
 						'id' => '1', 'tag' => 'tag1', 'created' => '2007-03-18 12:22:23',
 						'updated' => '2007-03-18 12:24:31'
-					],
-					[
+					),
+					array(
 						'id' => '2', 'tag' => 'tag2', 'created' => '2007-03-18 12:24:23',
 						'updated' => '2007-03-18 12:26:31'
-					]
-				],
-				'Deep' => [
-					'Nesting' => [
-						'test' => [1 => 'foo', 2 => ['and' => ['more' => 'stuff']]]
-					]
-				]
-			],
-			[
-				'Article' => [
+					)
+				),
+				'Deep' => array(
+					'Nesting' => array(
+						'test' => array(1 => 'foo', 2 => array('and' => array('more' => 'stuff')))
+					)
+				)
+			),
+			array(
+				'Article' => array(
 					'id' => '3', 'user_id' => '1', 'title' => 'Third Article',
 					'body' => 'Third Article Body', 'published' => 'Y',
 					'created' => '2007-03-18 10:43:23', 'updated' => '2007-03-18 10:45:31'
-				],
-				'User' => [
+				),
+				'User' => array(
 					'id' => '2', 'user' => 'mariano',
 					'password' => '5f4dcc3b5aa765d61d8327deb882cf99',
 					'created' => '2007-03-17 01:16:23', 'updated' => '2007-03-17 01:18:31'
-				],
-				'Comment' => [],
-				'Tag' => []
-			],
-			[
-				'Article' => [
+				),
+				'Comment' => array(),
+				'Tag' => array()
+			),
+			array(
+				'Article' => array(
 					'id' => '3', 'user_id' => '1', 'title' => 'Third Article',
 					'body' => 'Third Article Body', 'published' => 'Y',
 					'created' => '2007-03-18 10:43:23', 'updated' => '2007-03-18 10:45:31'
-				],
-				'User' => [
+				),
+				'User' => array(
 					'id' => '3', 'user' => 'mariano',
 					'password' => '5f4dcc3b5aa765d61d8327deb882cf99',
 					'created' => '2007-03-17 01:16:23', 'updated' => '2007-03-17 01:18:31'
-				],
-				'Comment' => [],
-				'Tag' => []
-			],
-			[
-				'Article' => [
+				),
+				'Comment' => array(),
+				'Tag' => array()
+			),
+			array(
+				'Article' => array(
 					'id' => '3', 'user_id' => '1', 'title' => 'Third Article',
 					'body' => 'Third Article Body', 'published' => 'Y',
 					'created' => '2007-03-18 10:43:23', 'updated' => '2007-03-18 10:45:31'
-				],
-				'User' => [
+				),
+				'User' => array(
 					'id' => '4', 'user' => 'mariano',
 					'password' => '5f4dcc3b5aa765d61d8327deb882cf99',
 					'created' => '2007-03-17 01:16:23', 'updated' => '2007-03-17 01:18:31'
-				],
-				'Comment' => [],
-				'Tag' => []
-			],
-			[
-				'Article' => [
+				),
+				'Comment' => array(),
+				'Tag' => array()
+			),
+			array(
+				'Article' => array(
 					'id' => '3', 'user_id' => '1', 'title' => 'Third Article',
 					'body' => 'Third Article Body', 'published' => 'Y',
 					'created' => '2007-03-18 10:43:23', 'updated' => '2007-03-18 10:45:31'
-				],
-				'User' => [
+				),
+				'User' => array(
 					'id' => '5', 'user' => 'mariano',
 					'password' => '5f4dcc3b5aa765d61d8327deb882cf99',
 					'created' => '2007-03-17 01:16:23', 'updated' => '2007-03-17 01:18:31'
-				],
-				'Comment' => [],
-				'Tag' => []
-			]
-		];
+				),
+				'Comment' => array(),
+				'Tag' => array()
+			)
+		);
 
-		$b = ['Deep' => $a[0]['Deep']];
+		$b = array('Deep' => $a[0]['Deep']);
 
-		$c = [
-			['a' => ['I' => ['a' => 1]]],
-			['a' => [2]],
-			['a' => ['II' => ['a' => 3, 'III' => ['a' => ['foo' => 4]]]]]
-		];
+		$c = array(
+			array('a' => array('I' => array('a' => 1))),
+			array('a' => array(2)),
+			array('a' => array('II' => array('a' => 3, 'III' => array('a' => array('foo' => 4)))))
+		);
 
-		$expected = [['a' => $c[2]['a']]];
+		$expected = array(array('a' => $c[2]['a']));
 		$result = Set::extract($c, '/a/II[a=3]/..');
 		$this->assertEqual($expected, $result);
 
-		$expected = [1, 2, 3, 4, 5];
+		$expected = array(1, 2, 3, 4, 5);
 		$result = Set::extract($a, '/User/id');
 		$this->assertEqual($expected, $result);
 
-		$expected = [1, 2, 3, 4, 5];
+		$expected = array(1, 2, 3, 4, 5);
 		$result = Set::extract($a, '/User/id');
 		$this->assertEqual($expected, $result);
 
-		$expected = [
-			['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]
-		];
-		$result = Set::extract($a, '/User/id', ['flatten' => false]);
+		$expected = array(
+			array('id' => 1), array('id' => 2), array('id' => 3), array('id' => 4), array('id' => 5)
+		);
+		$result = Set::extract($a, '/User/id', array('flatten' => false));
 		$this->assertEqual($expected, $result);
 
-		$expected = [['test' => $a[0]['Deep']['Nesting']['test']]];
+		$expected = array(array('test' => $a[0]['Deep']['Nesting']['test']));
 		$this->assertEqual(Set::extract($a, '/Deep/Nesting/test'), $expected);
 		$this->assertEqual(Set::extract($b, '/Deep/Nesting/test'), $expected);
 
-		$expected = [['test' => $a[0]['Deep']['Nesting']['test']]];
+		$expected = array(array('test' => $a[0]['Deep']['Nesting']['test']));
 		$result = Set::extract($a, '/Deep/Nesting/test/1/..');
 		$this->assertEqual($expected, $result);
 
-		$expected = [['test' => $a[0]['Deep']['Nesting']['test']]];
+		$expected = array(array('test' => $a[0]['Deep']['Nesting']['test']));
 		$result = Set::extract($a, '/Deep/Nesting/test/2/and/../..');
 		$this->assertEqual($expected, $result);
 
-		$expected = [['test' => $a[0]['Deep']['Nesting']['test']]];
+		$expected = array(array('test' => $a[0]['Deep']['Nesting']['test']));
 		$result = Set::extract($a, '/Deep/Nesting/test/2/../../../Nesting/test/2/..');
 		$this->assertEqual($expected, $result);
 
-		$expected = [2];
+		$expected = array(2);
 		$result = Set::extract($a, '/User[2]/id');
 		$this->assertEqual($expected, $result);
 
-		$expected = [4, 5];
+		$expected = array(4, 5);
 		$result = Set::extract($a, '/User[id>3]/id');
 		$this->assertEqual($expected, $result);
 
-		$expected = [2, 3];
+		$expected = array(2, 3);
 		$result = Set::extract($a, '/User[id>1][id<=3]/id');
 		$this->assertEqual($expected, $result);
 
-		$expected = [['I'], ['II']];
+		$expected = array(array('I'), array('II'));
 		$result = Set::extract($c, '/a/@*');
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testExtractWithNonSequentialKeys() {
-		$nonSequential = [
-			'User' => [
-				0  => ['id' => 1],
-				2  => ['id' => 2],
-				6  => ['id' => 3],
-				9  => ['id' => 4],
-				3  => ['id' => 5]
-			]
-		];
+		$nonSequential = array(
+			'User' => array(
+				0  => array('id' => 1),
+				2  => array('id' => 2),
+				6  => array('id' => 3),
+				9  => array('id' => 4),
+				3  => array('id' => 5)
+			)
+		);
 
-		$expected = [1, 2, 3, 4, 5];
+		$expected = array(1, 2, 3, 4, 5);
 		$result = Set::extract($nonSequential, '/User/id');
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testExtractWithNoZeroKey() {
-		$noZero = [
-			'User' => [
-				2  => ['id' => 1],
-				4  => ['id' => 2],
-				6  => ['id' => 3],
-				9  => ['id' => 4],
-				3  => ['id' => 5]
-			]
-		];
+		$noZero = array(
+			'User' => array(
+				2  => array('id' => 1),
+				4  => array('id' => 2),
+				6  => array('id' => 3),
+				9  => array('id' => 4),
+				3  => array('id' => 5)
+			)
+		);
 
-		$expected = [1, 2, 3, 4, 5];
+		$expected = array(1, 2, 3, 4, 5);
 		$result = Set::extract($noZero, '/User/id');
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testExtractSingle() {
 
-		$single = ['User' => ['id' => 4, 'name' => 'Neo']];
+		$single = array('User' => array('id' => 4, 'name' => 'Neo'));
 
-		$expected = [4];
+		$expected = array(4);
 		$result = Set::extract($single, '/User/id');
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testExtractHasMany() {
-		$tricky = [
-			0 => ['User' => ['id' => 1, 'name' => 'John']],
-			1 => ['User' => ['id' => 2, 'name' => 'Bob']],
-			2 => ['User' => ['id' => 3, 'name' => 'Tony']],
-			'User' => ['id' => 4, 'name' => 'Neo']
-		];
+		$tricky = array(
+			0 => array('User' => array('id' => 1, 'name' => 'John')),
+			1 => array('User' => array('id' => 2, 'name' => 'Bob')),
+			2 => array('User' => array('id' => 3, 'name' => 'Tony')),
+			'User' => array('id' => 4, 'name' => 'Neo')
+		);
 
-		$expected = [1, 2, 3, 4];
+		$expected = array(1, 2, 3, 4);
 		$result = Set::extract($tricky, '/User/id');
 		$this->assertEqual($expected, $result);
 
-		$expected = [1, 3];
+		$expected = array(1, 3);
 		$result = Set::extract($tricky, '/User[name=/n/]/id');
 		$this->assertEqual($expected, $result);
 
-		$expected = [4];
+		$expected = array(4);
 		$result = Set::extract($tricky, '/User[name=/N/]/id');
 		$this->assertEqual($expected, $result);
 
-		$expected = [1, 3, 4];
+		$expected = array(1, 3, 4);
 		$result = Set::extract($tricky, '/User[name=/N/i]/id');
 		$this->assertEqual($expected, $result);
 
-		$expected = [
-			['id', 'name'], ['id', 'name'], ['id', 'name'], ['id', 'name']
-		];
+		$expected = array(
+			array('id', 'name'), array('id', 'name'), array('id', 'name'), array('id', 'name')
+		);
 		$result = Set::extract($tricky, '/User/@*');
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testExtractAssociatedHasMany() {
-		$common = [
-			[
-				'Article' => ['id' => 1, 'name' => 'Article 1'],
-				'Comment' => [
-					['id' => 1, 'user_id' => 5, 'article_id' => 1, 'text' => 'Comment 1'],
-					['id' => 2, 'user_id' => 23, 'article_id' => 1, 'text' => 'Comment 2'],
-					['id' => 3, 'user_id' => 17, 'article_id' => 1, 'text' => 'Comment 3']
-				]
-			],
-			[
-				'Article' => ['id' => 2, 'name' => 'Article 2'],
-				'Comment' => [
-					[
+		$common = array(
+			array(
+				'Article' => array('id' => 1, 'name' => 'Article 1'),
+				'Comment' => array(
+					array('id' => 1, 'user_id' => 5, 'article_id' => 1, 'text' => 'Comment 1'),
+					array('id' => 2, 'user_id' => 23, 'article_id' => 1, 'text' => 'Comment 2'),
+					array('id' => 3, 'user_id' => 17, 'article_id' => 1, 'text' => 'Comment 3')
+				)
+			),
+			array(
+				'Article' => array('id' => 2, 'name' => 'Article 2'),
+				'Comment' => array(
+					array(
 						'id' => 4,
 						'user_id' => 2,
 						'article_id' => 2,
 						'text' => 'Comment 4',
 						'addition' => ''
-					],
-					[
+					),
+					array(
 						'id' => 5,
 						'user_id' => 23,
 						'article_id' => 2,
 						'text' => 'Comment 5',
 						'addition' => 'foo'
-					]
-				]
-			],
-			[
-				'Article' => ['id' => 3, 'name' => 'Article 3'],
-				'Comment' => []
-			]
-		];
+					)
+				)
+			),
+			array(
+				'Article' => array('id' => 3, 'name' => 'Article 3'),
+				'Comment' => array()
+			)
+		);
 		$result = Set::extract($common, '/');
 		$this->assertEqual($result, $common);
 
-		$expected = [1];
+		$expected = array(1);
 		$result = Set::extract($common, '/Comment/id[:first]');
 		$this->assertEqual($expected, $result);
 
-		$expected = [5];
+		$expected = array(5);
 		$result = Set::extract($common, '/Comment/id[:last]');
 		$this->assertEqual($expected, $result);
 
 		$result = Set::extract($common, '/Comment/id');
-		$expected = [1, 2, 3, 4, 5];
+		$expected = array(1, 2, 3, 4, 5);
 		$this->assertEqual($expected, $result);
 
-		$expected = [1, 2, 4, 5];
+		$expected = array(1, 2, 4, 5);
 		$result = Set::extract($common, '/Comment[id!=3]/id');
 		$this->assertEqual($expected, $result);
 
-		$expected = [$common[0]['Comment'][2]];
+		$expected = array($common[0]['Comment'][2]);
 		$result = Set::extract($common, '/Comment/2');
 		$this->assertEqual($expected, $result);
 
-		$expected = [$common[0]['Comment'][0]];
+		$expected = array($common[0]['Comment'][0]);
 		$result = Set::extract($common, '/Comment[1]/.[id=1]');
 		$this->assertEqual($expected, $result);
 
-		$expected = [$common[1]['Comment'][1]];
+		$expected = array($common[1]['Comment'][1]);
 		$result = Set::extract($common, '/1/Comment/.[2]');
 		$this->assertEqual($expected, $result);
 
-		$expected = [['Comment' => $common[1]['Comment'][0]]];
+		$expected = array(array('Comment' => $common[1]['Comment'][0]));
 		$result = Set::extract($common, '/Comment[addition=]');
 		$this->assertEqual($expected, $result);
 
-		$expected = [3];
+		$expected = array(3);
 		$result = Set::extract($common, '/Article[:last]/id');
 		$this->assertEqual($expected, $result);
 
-		$expected = [];
-		$result = Set::extract([], '/User/id');
+		$expected = array();
+		$result = Set::extract(array(), '/User/id');
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testExtractHabtm() {
-		$habtm = [
-			[
-				'Post' => ['id' => 1, 'title' => 'great post'],
-				'Comment' => [
-					['id' => 1, 'text' => 'foo', 'User' => ['id' => 1, 'name' => 'bob']],
-					['id' => 2, 'text' => 'bar', 'User' => ['id' => 2, 'name' => 'tod']]
-				]
-			],
-			[
-				'Post' => ['id' => 2, 'title' => 'fun post'],
-				'Comment' => [
-					['id' => 3, 'text' => '123', 'User' => ['id' => 3, 'name' => 'dan']],
-					['id' => 4, 'text' => '987', 'User' => ['id' => 4, 'name' => 'jim']]
-				]
-			]
-		];
+		$habtm = array(
+			array(
+				'Post' => array('id' => 1, 'title' => 'great post'),
+				'Comment' => array(
+					array('id' => 1, 'text' => 'foo', 'User' => array('id' => 1, 'name' => 'bob')),
+					array('id' => 2, 'text' => 'bar', 'User' => array('id' => 2, 'name' => 'tod'))
+				)
+			),
+			array(
+				'Post' => array('id' => 2, 'title' => 'fun post'),
+				'Comment' => array(
+					array('id' => 3, 'text' => '123', 'User' => array('id' => 3, 'name' => 'dan')),
+					array('id' => 4, 'text' => '987', 'User' => array('id' => 4, 'name' => 'jim'))
+				)
+			)
+		);
 
 		$result = Set::extract($habtm, '/Comment/User[name=/\w+/]/..');
 		$this->assertEqual(count($result), 4);
@@ -706,218 +705,218 @@ class SetTest extends \lithium\test\Unit {
 	}
 
 	public function testExtractFromTree() {
-		$tree = [
-			[
-				'Category' => ['name' => 'Category 1'],
-				'children' => [['Category' => ['name' => 'Category 1.1']]]
-			],
-			[
-				'Category' => ['name' => 'Category 2'],
-				'children' => [
-					['Category' => ['name' => 'Category 2.1']],
-					['Category' => ['name' => 'Category 2.2']]
-				]
-			],
-			[
-				'Category' => ['name' => 'Category 3'],
-				'children' => [['Category' => ['name' => 'Category 3.1']]]
-			]
-		];
+		$tree = array(
+			array(
+				'Category' => array('name' => 'Category 1'),
+				'children' => array(array('Category' => array('name' => 'Category 1.1')))
+			),
+			array(
+				'Category' => array('name' => 'Category 2'),
+				'children' => array(
+					array('Category' => array('name' => 'Category 2.1')),
+					array('Category' => array('name' => 'Category 2.2'))
+				)
+			),
+			array(
+				'Category' => array('name' => 'Category 3'),
+				'children' => array(array('Category' => array('name' => 'Category 3.1')))
+			)
+		);
 
-		$expected = [['Category' => $tree[1]['Category']]];
+		$expected = array(array('Category' => $tree[1]['Category']));
 		$result = Set::extract($tree, '/Category[name=Category 2]');
 		$this->assertEqual($expected, $result);
 
-		$expected = [[
+		$expected = array(array(
 			'Category' => $tree[1]['Category'], 'children' => $tree[1]['children']
-		]];
+		));
 		$result = Set::extract($tree, '/Category[name=Category 2]/..');
 		$this->assertEqual($expected, $result);
 
-		$expected = [
-			['children' => $tree[1]['children'][0]],
-			['children' => $tree[1]['children'][1]]
-		];
+		$expected = array(
+			array('children' => $tree[1]['children'][0]),
+			array('children' => $tree[1]['children'][1])
+		);
 		$result = Set::extract($tree, '/Category[name=Category 2]/../children');
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testExtractOnMixedKeys() {
-		$mixedKeys = [
-			'User' => [
-				0 => ['id' => 4, 'name' => 'Neo'],
-				1 => ['id' => 5, 'name' => 'Morpheus'],
-				'stringKey' => []
-			]
-		];
+		$mixedKeys = array(
+			'User' => array(
+				0 => array('id' => 4, 'name' => 'Neo'),
+				1 => array('id' => 5, 'name' => 'Morpheus'),
+				'stringKey' => array()
+			)
+		);
 
-		$expected = ['Neo', 'Morpheus'];
+		$expected = array('Neo', 'Morpheus');
 		$result = Set::extract($mixedKeys, '/User/name');
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testExtractSingleWithNameCondition() {
-		$single = [
-			['CallType' => ['name' => 'Internal Voice'], 'x' => ['hour' => 7]]
-		];
+		$single = array(
+			array('CallType' => array('name' => 'Internal Voice'), 'x' => array('hour' => 7))
+		);
 
-		$expected = [7];
+		$expected = array(7);
 		$result = Set::extract($single, '/CallType[name=Internal Voice]/../x/hour');
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testExtractWithNameCondition() {
-		$multiple = [
-			['CallType' => ['name' => 'Internal Voice'], 'x' => ['hour' => 7]],
-			['CallType' => ['name' => 'Internal Voice'], 'x' => ['hour' => 2]],
-			['CallType' => ['name' => 'Internal Voice'], 'x' => ['hour' => 1]]
-		];
+		$multiple = array(
+			array('CallType' => array('name' => 'Internal Voice'), 'x' => array('hour' => 7)),
+			array('CallType' => array('name' => 'Internal Voice'), 'x' => array('hour' => 2)),
+			array('CallType' => array('name' => 'Internal Voice'), 'x' => array('hour' => 1))
+		);
 
-		$expected = [7, 2, 1];
+		$expected = array(7, 2, 1);
 		$result = Set::extract($multiple, '/CallType[name=Internal Voice]/../x/hour');
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testExtractWithTypeCondition() {
-		$f = [
-			[
-				'file' => [
+		$f = array(
+			array(
+				'file' => array(
 					'name' => 'zipfile.zip',
 					'type' => 'application/zip',
 					'tmp_name' => '/tmp/php178.tmp',
 					'error' => 0,
 					'size' => '564647'
-				]
-			],
-			[
-				'file' => [
+				)
+			),
+			array(
+				'file' => array(
 					'name' => 'zipfile2.zip',
 					'type' => 'application/x-zip-compressed',
 					'tmp_name' => '/tmp/php179.tmp',
 					'error' => 0,
 					'size' => '354784'
-				]
-			],
-			[
-				'file' => [
+				)
+			),
+			array(
+				'file' => array(
 					'name' => 'picture.jpg',
 					'type' => 'image/jpeg',
 					'tmp_name' => '/tmp/php180.tmp',
 					'error' => 0,
 					'size' => '21324'
-				]
-			]
-		];
-		$expected = [[
+				)
+			)
+		);
+		$expected = array(array(
 			'name' => 'zipfile2.zip', 'type' => 'application/x-zip-compressed',
 			'tmp_name' => '/tmp/php179.tmp', 'error' => 0, 'size' => '354784'
-		]];
+		));
 		$result = Set::extract($f, '/file/.[type=application/x-zip-compressed]');
 		$this->assertEqual($expected, $result);
 
-		$expected = [[
+		$expected = array(array(
 			'name' => 'zipfile.zip', 'type' => 'application/zip',
 			'tmp_name' => '/tmp/php178.tmp', 'error' => 0, 'size' => '564647'
-		]];
+		));
 		$result = Set::extract($f, '/file/.[type=application/zip]');
 		$this->assertEqual($expected, $result);
 
 	}
 
 	public function testIsNumericArrayCheck() {
-		$data = ['one'];
+		$data = array('one');
 		$this->assertTrue(Set::isNumeric(array_keys($data)));
 
-		$data = [1 => 'one'];
+		$data = array(1 => 'one');
 		$this->assertFalse(Set::isNumeric($data));
 
-		$data = ['one'];
+		$data = array('one');
 		$this->assertFalse(Set::isNumeric($data));
 
-		$data = ['one' => 'two'];
+		$data = array('one' => 'two');
 		$this->assertFalse(Set::isNumeric($data));
 
-		$data = ['one' => 1];
+		$data = array('one' => 1);
 		$this->assertTrue(Set::isNumeric($data));
 
-		$data = [0];
+		$data = array(0);
 		$this->assertTrue(Set::isNumeric($data));
 
-		$data = ['one', 'two', 'three', 'four', 'five'];
+		$data = array('one', 'two', 'three', 'four', 'five');
 		$this->assertTrue(Set::isNumeric(array_keys($data)));
 
-		$data = [1 => 'one', 2 => 'two', 3 => 'three', 4 => 'four', 5 => 'five'];
+		$data = array(1 => 'one', 2 => 'two', 3 => 'three', 4 => 'four', 5 => 'five');
 		$this->assertTrue(Set::isNumeric(array_keys($data)));
 
-		$data = ['1' => 'one', 2 => 'two', 3 => 'three', 4 => 'four', 5 => 'five'];
+		$data = array('1' => 'one', 2 => 'two', 3 => 'three', 4 => 'four', 5 => 'five');
 		$this->assertTrue(Set::isNumeric(array_keys($data)));
 
-		$data = ['one', 2 => 'two', 3 => 'three', 4 => 'four', 'a' => 'five'];
+		$data = array('one', 2 => 'two', 3 => 'three', 4 => 'four', 'a' => 'five');
 		$this->assertFalse(Set::isNumeric(array_keys($data)));
 
-		$data = [];
+		$data = array();
 		$this->assertNull(Set::isNumeric($data));
 	}
 
 	public function testCheckKeys() {
-		$data = ['Multi' => ['dimensonal' => ['array']]];
+		$data = array('Multi' => array('dimensonal' => array('array')));
 		$this->assertTrue(Set::check($data, 'Multi.dimensonal'));
 		$this->assertFalse(Set::check($data, 'Multi.dimensonal.array'));
 
-		$data = [
-			[
-				'Article' => [
+		$data = array(
+			array(
+				'Article' => array(
 					'id' => '1', 'user_id' => '1', 'title' => 'First Article',
 					'body' => 'First Article Body', 'published' => 'Y',
 					'created' => '2007-03-18 10:39:23',
 					'updated' => '2007-03-18 10:41:31'
-				],
-				'User' => [
+				),
+				'User' => array(
 					'id' => '1', 'user' => 'mariano',
 					'password' => '5f4dcc3b5aa765d61d8327deb882cf99',
 					'created' => '2007-03-17 01:16:23',
 					'updated' => '2007-03-17 01:18:31'
-				],
-				'Comment' => [
-					[
+				),
+				'Comment' => array(
+					array(
 						'id' => '1', 'article_id' => '1', 'user_id' => '2',
 						'comment' => 'First Comment for First Article',
 						'published' => 'Y', 'created' => '2007-03-18 10:45:23',
 						'updated' => '2007-03-18 10:47:31'
-					],
-					[
+					),
+					array(
 						'id' => '2', 'article_id' => '1', 'user_id' => '4',
 						'comment' => 'Second Comment for First Article',
 						'published' => 'Y', 'created' => '2007-03-18 10:47:23',
 						'updated' => '2007-03-18 10:49:31'
-					]
-				],
-				'Tag' => [
-					[
+					)
+				),
+				'Tag' => array(
+					array(
 						'id' => '1', 'tag' => 'tag1', 'created' => '2007-03-18 12:22:23',
 						'updated' => '2007-03-18 12:24:31'
-					],
-					[
+					),
+					array(
 						'id' => '2', 'tag' => 'tag2', 'created' => '2007-03-18 12:24:23',
 						'updated' => '2007-03-18 12:26:31'
-					]
-				]
-			],
-			[
-				'Article' => [
+					)
+				)
+			),
+			array(
+				'Article' => array(
 					'id' => '3', 'user_id' => '1', 'title' => 'Third Article',
 					'body' => 'Third Article Body', 'published' => 'Y',
 					'created' => '2007-03-18 10:43:23', 'updated' => '2007-03-18 10:45:31'
-				],
-				'User' => [
+				),
+				'User' => array(
 					'id' => '1', 'user' => 'mariano',
 					'password' => '5f4dcc3b5aa765d61d8327deb882cf99',
 					'created' => '2007-03-17 01:16:23', 'updated' => '2007-03-17 01:18:31'
-				],
-				'Comment' => [],
-				'Tag' => []
-			]
-		];
+				),
+				'Comment' => array(),
+				'Tag' => array()
+			)
+		);
 		$this->assertTrue(Set::check($data, '0.Article.user_id'));
 		$this->assertTrue(Set::check($data, '0.Comment.0.id'));
 		$this->assertFalse(Set::check($data, '0.Comment.0.id.0'));
@@ -926,231 +925,231 @@ class SetTest extends \lithium\test\Unit {
 	}
 
 	public function testMerge() {
-		$result = Set::merge(['foo'], []);
-		$this->assertIdentical($result, ['foo']);
+		$result = Set::merge(array('foo'), array());
+		$this->assertIdentical($result, array('foo'));
 
 		$result = Set::merge((array) 'foo', (array) 'bar');
-		$this->assertIdentical($result, ['foo', 'bar']);
+		$this->assertIdentical($result, array('foo', 'bar'));
 
-		$result = Set::merge((array) 'foo', ['user' => 'bob', 'no-bar']);
-		$this->assertIdentical($result, ['foo', 'user' => 'bob', 'no-bar']);
+		$result = Set::merge((array) 'foo', array('user' => 'bob', 'no-bar'));
+		$this->assertIdentical($result, array('foo', 'user' => 'bob', 'no-bar'));
 
-		$a = ['foo', 'foo2'];
-		$b = ['bar', 'bar2'];
-		$this->assertIdentical(Set::merge($a, $b), ['foo', 'foo2', 'bar', 'bar2']);
+		$a = array('foo', 'foo2');
+		$b = array('bar', 'bar2');
+		$this->assertIdentical(Set::merge($a, $b), array('foo', 'foo2', 'bar', 'bar2'));
 
-		$a = ['foo' => 'bar', 'bar' => 'foo'];
-		$b = ['foo' => 'no-bar', 'bar' => 'no-foo'];
-		$this->assertIdentical(Set::merge($a, $b), ['foo' => 'no-bar', 'bar' => 'no-foo']);
+		$a = array('foo' => 'bar', 'bar' => 'foo');
+		$b = array('foo' => 'no-bar', 'bar' => 'no-foo');
+		$this->assertIdentical(Set::merge($a, $b), array('foo' => 'no-bar', 'bar' => 'no-foo'));
 
-		$a = ['users' => ['bob', 'jim']];
-		$b = ['users' => ['lisa', 'tina']];
+		$a = array('users' => array('bob', 'jim'));
+		$b = array('users' => array('lisa', 'tina'));
 		$this->assertIdentical(
-			Set::merge($a, $b), ['users' => ['bob', 'jim', 'lisa', 'tina']]
+			Set::merge($a, $b), array('users' => array('bob', 'jim', 'lisa', 'tina'))
 		);
 
-		$a = ['users' => ['jim', 'bob']];
-		$b = ['users' => 'none'];
-		$this->assertIdentical(Set::merge($a, $b), ['users' => 'none']);
+		$a = array('users' => array('jim', 'bob'));
+		$b = array('users' => 'none');
+		$this->assertIdentical(Set::merge($a, $b), array('users' => 'none'));
 
-		$a = ['users' => ['lisa' => ['id' => 5, 'pw' => 'secret']], 'lithium'];
-		$b = ['users' => ['lisa' => ['pw' => 'new-pass', 'age' => 23]], 'ice-cream'];
+		$a = array('users' => array('lisa' => array('id' => 5, 'pw' => 'secret')), 'lithium');
+		$b = array('users' => array('lisa' => array('pw' => 'new-pass', 'age' => 23)), 'ice-cream');
 		$this->assertIdentical(
 			Set::merge($a, $b),
-			[
-				'users' => ['lisa' => ['id' => 5, 'pw' => 'new-pass', 'age' => 23]],
+			array(
+				'users' => array('lisa' => array('id' => 5, 'pw' => 'new-pass', 'age' => 23)),
 				'lithium',
 				'ice-cream'
-			]
+			)
 		);
 
-		$c = [
-			'users' => [
-				'lisa' => ['pw' => 'you-will-never-guess', 'age' => 25, 'pet' => 'dog']
-			],
+		$c = array(
+			'users' => array(
+				'lisa' => array('pw' => 'you-will-never-guess', 'age' => 25, 'pet' => 'dog')
+			),
 			'chocolate'
-		];
-		$expected = [
-			'users' => [
-				'lisa' => [
+		);
+		$expected = array(
+			'users' => array(
+				'lisa' => array(
 					'id' => 5, 'pw' => 'you-will-never-guess', 'age' => 25, 'pet' => 'dog'
-				]
-			],
+				)
+			),
 			'lithium',
 			'ice-cream',
 			'chocolate'
-		];
+		);
 		$this->assertIdentical($expected, Set::merge(Set::merge($a, $b), $c));
 
-		$this->assertIdentical($expected, Set::merge(Set::merge($a, $b), Set::merge([], $c)));
+		$this->assertIdentical($expected, Set::merge(Set::merge($a, $b), Set::merge(array(), $c)));
 
 		$result = Set::merge($a, Set::merge($b, $c));
 		$this->assertIdentical($expected, $result);
 
-		$a = ['Tree', 'CounterCache', 'Upload' => [
-			'folder' => 'products', 'fields' => [
+		$a = array('Tree', 'CounterCache', 'Upload' => array(
+			'folder' => 'products', 'fields' => array(
 				'image_1_id', 'image_2_id', 'image_3_id', 'image_4_id', 'image_5_id'
-			]
-		]];
-		$b =  [
-			'Cacheable' => ['enabled' => false],
+			)
+		));
+		$b =  array(
+			'Cacheable' => array('enabled' => false),
 			'Limit', 'Bindable', 'Validator', 'Transactional'
-		];
+		);
 
-		$expected = ['Tree', 'CounterCache', 'Upload' => [
-			'folder' => 'products', 'fields' => [
+		$expected = array('Tree', 'CounterCache', 'Upload' => array(
+			'folder' => 'products', 'fields' => array(
 				'image_1_id', 'image_2_id', 'image_3_id', 'image_4_id', 'image_5_id'
-			]],
-			'Cacheable' => ['enabled' => false],
+			)),
+			'Cacheable' => array('enabled' => false),
 			'Limit',
 			'Bindable',
 			'Validator',
 			'Transactional'
-		];
+		);
 		$this->assertIdentical(Set::merge($a, $b), $expected);
 
-		$expected = ['Tree' => null, 'CounterCache' => null, 'Upload' => [
-			'folder' => 'products', 'fields' => [
+		$expected = array('Tree' => null, 'CounterCache' => null, 'Upload' => array(
+			'folder' => 'products', 'fields' => array(
 				'image_1_id', 'image_2_id', 'image_3_id', 'image_4_id', 'image_5_id'
-			]],
-			'Cacheable' => ['enabled' => false],
+			)),
+			'Cacheable' => array('enabled' => false),
 			'Limit' => null,
 			'Bindable' => null,
 			'Validator' => null,
 			'Transactional' => null
-		];
+		);
 		$this->assertIdentical(Set::normalize(Set::merge($a, $b)), $expected);
 	}
 
 	public function testSort() {
-		$a = [
-			['Person' => ['name' => 'Jeff'], 'Friend' => [['name' => 'Nate']]],
-			['Person' => ['name' => 'Tracy'], 'Friend' => [
-				['name' => 'Lindsay']
-			]]
-		];
-		$b = [
-			['Person' => ['name' => 'Tracy'],'Friend' => [
-				['name' => 'Lindsay']
-			]],
-			['Person' => ['name' => 'Jeff'], 'Friend' => [['name' => 'Nate']]]
-		];
+		$a = array(
+			array('Person' => array('name' => 'Jeff'), 'Friend' => array(array('name' => 'Nate'))),
+			array('Person' => array('name' => 'Tracy'), 'Friend' => array(
+				array('name' => 'Lindsay')
+			))
+		);
+		$b = array(
+			array('Person' => array('name' => 'Tracy'),'Friend' => array(
+				array('name' => 'Lindsay')
+			)),
+			array('Person' => array('name' => 'Jeff'), 'Friend' => array(array('name' => 'Nate')))
+		);
 		$a = Set::sort($a, '/Friend/name', 'asc');
 		$this->assertIdentical($a, $b);
 
-		$b = [
-			['Person' => ['name' => 'Jeff'], 'Friend' => [['name' => 'Nate']]],
-			['Person' => ['name' => 'Tracy'], 'Friend' => [
-				['name' => 'Lindsay']
-			]]
-		];
-		$a = [
-			['Person' => ['name' => 'Tracy'], 'Friend' => [
-				['name' => 'Lindsay']
-			]],
-			['Person' => ['name' => 'Jeff'], 'Friend' => [['name' => 'Nate']]]
-		];
+		$b = array(
+			array('Person' => array('name' => 'Jeff'), 'Friend' => array(array('name' => 'Nate'))),
+			array('Person' => array('name' => 'Tracy'), 'Friend' => array(
+				array('name' => 'Lindsay')
+			))
+		);
+		$a = array(
+			array('Person' => array('name' => 'Tracy'), 'Friend' => array(
+				array('name' => 'Lindsay')
+			)),
+			array('Person' => array('name' => 'Jeff'), 'Friend' => array(array('name' => 'Nate')))
+		);
 		$a = Set::sort($a, '/Friend/name', 'desc');
 		$this->assertIdentical($a, $b);
 
-		$a = [
-			['Person' => ['name' => 'Jeff'], 'Friend' => [['name' => 'Nate']]],
-			['Person' => ['name' => 'Tracy'], 'Friend' => [
-				['name' => 'Lindsay']
-			]],
-			['Person' => ['name' => 'Adam'], 'Friend' => [['name' => 'Bob']]]
-		];
-		$b = [
-			['Person' => ['name' => 'Adam'],'Friend' => [['name' => 'Bob']]],
-			['Person' => ['name' => 'Jeff'], 'Friend' => [['name' => 'Nate']]],
-			['Person' => ['name' => 'Tracy'], 'Friend' => [
-				['name' => 'Lindsay']
-			]]
-		];
+		$a = array(
+			array('Person' => array('name' => 'Jeff'), 'Friend' => array(array('name' => 'Nate'))),
+			array('Person' => array('name' => 'Tracy'), 'Friend' => array(
+				array('name' => 'Lindsay')
+			)),
+			array('Person' => array('name' => 'Adam'), 'Friend' => array(array('name' => 'Bob')))
+		);
+		$b = array(
+			array('Person' => array('name' => 'Adam'),'Friend' => array(array('name' => 'Bob'))),
+			array('Person' => array('name' => 'Jeff'), 'Friend' => array(array('name' => 'Nate'))),
+			array('Person' => array('name' => 'Tracy'), 'Friend' => array(
+				array('name' => 'Lindsay')
+			))
+		);
 		$a = Set::sort($a, '/Person/name', 'asc');
 		$this->assertIdentical($a, $b);
 
-		$a = [[7, 6, 4], [3, 4, 5], [3, 2, 1]];
-		$b = [[3, 2, 1], [3, 4, 5], [7, 6, 4]];
+		$a = array(array(7, 6, 4), array(3, 4, 5), array(3, 2, 1));
+		$b = array(array(3, 2, 1), array(3, 4, 5), array(7, 6, 4));
 
 		$a = Set::sort($a, '/', 'asc');
 		$this->assertIdentical($a, $b);
 
-		$a = [[7, 6, 4], [3, 4, 5], [3, 2, [1, 1, 1]]];
-		$b = [[3, 2, [1, 1, 1]], [3, 4, 5], [7, 6, 4]];
+		$a = array(array(7, 6, 4), array(3, 4, 5), array(3, 2, array(1, 1, 1)));
+		$b = array(array(3, 2, array(1, 1, 1)), array(3, 4, 5), array(7, 6, 4));
 
 		$a = Set::sort($a, '/.', 'asc');
 		$this->assertIdentical($a, $b);
 
-		$a = [
-			['Person' => ['name' => 'Jeff']],
-			['Shirt' => ['color' => 'black']]
-		];
-		$b = [['Person' => ['name' => 'Jeff']]];
+		$a = array(
+			array('Person' => array('name' => 'Jeff')),
+			array('Shirt' => array('color' => 'black'))
+		);
+		$b = array(array('Person' => array('name' => 'Jeff')));
 		$a = Set::sort($a, '/Person/name', 'asc');
 		$this->assertIdentical($a, $b);
 	}
 
 	public function testInsert() {
-		$a = ['pages' => ['name' => 'page']];
+		$a = array('pages' => array('name' => 'page'));
 
-		$result = Set::insert($a, 'files', ['name' => 'files']);
-		$expected = ['pages' => ['name' => 'page'], 'files' => ['name' => 'files']];
+		$result = Set::insert($a, 'files', array('name' => 'files'));
+		$expected = array('pages' => array('name' => 'page'), 'files' => array('name' => 'files'));
 		$this->assertIdentical($expected, $result);
 
-		$a = ['pages' => ['name' => 'page']];
-		$result = Set::insert($a, 'pages.name', []);
-		$expected = ['pages' => ['name' => []]];
+		$a = array('pages' => array('name' => 'page'));
+		$result = Set::insert($a, 'pages.name', array());
+		$expected = array('pages' => array('name' => array()));
 		$this->assertIdentical($expected, $result);
 
-		$a = ['pages' => [['name' => 'main'], ['name' => 'about']]];
+		$a = array('pages' => array(array('name' => 'main'), array('name' => 'about')));
 
-		$result = Set::insert($a, 'pages.1.vars', ['title' => 'page title']);
-		$expected = [
-			'pages' => [
-				['name' => 'main'],
-				['name' => 'about', 'vars' => ['title' => 'page title']]
-			]
-		];
+		$result = Set::insert($a, 'pages.1.vars', array('title' => 'page title'));
+		$expected = array(
+			'pages' => array(
+				array('name' => 'main'),
+				array('name' => 'about', 'vars' => array('title' => 'page title'))
+			)
+		);
 		$this->assertIdentical($expected, $result);
 	}
 
 	public function testRemove() {
-		$a = ['pages' => ['name' => 'page'], 'files' => ['name' => 'files']];
+		$a = array('pages' => array('name' => 'page'), 'files' => array('name' => 'files'));
 
-		$result = Set::remove($a, 'files', ['name' => 'files']);
-		$expected = ['pages' => ['name' => 'page']];
+		$result = Set::remove($a, 'files', array('name' => 'files'));
+		$expected = array('pages' => array('name' => 'page'));
 		$this->assertIdentical($expected, $result);
 
-		$a = [
-			'pages' => [
-				['name' => 'main'],
-				['name' => 'about', 'vars' => ['title' => 'page title']]
-			]
-		];
+		$a = array(
+			'pages' => array(
+				array('name' => 'main'),
+				array('name' => 'about', 'vars' => array('title' => 'page title'))
+			)
+		);
 
-		$result = Set::remove($a, 'pages.1.vars', ['title' => 'page title']);
-		$expected = ['pages' => [['name' => 'main'], ['name' => 'about']]];
+		$result = Set::remove($a, 'pages.1.vars', array('title' => 'page title'));
+		$expected = array('pages' => array(array('name' => 'main'), array('name' => 'about')));
 		$this->assertIdentical($expected, $result);
 
-		$result = Set::remove($a, 'pages.2.vars', ['title' => 'page title']);
+		$result = Set::remove($a, 'pages.2.vars', array('title' => 'page title'));
 		$expected = $a;
 		$this->assertIdentical($expected, $result);
 	}
 
 	public function testCheck() {
-		$set = ['My Index 1' => [
+		$set = array('My Index 1' => array(
 			'First' => 'The first item'
-		]];
+		));
 		$result = Set::check($set, 'My Index 1.First');
 		$this->assertTrue($result);
 
 		$this->assertTrue(Set::check($set, 'My Index 1'));
-		$this->assertNotEmpty(Set::check($set, []));
+		$this->assertNotEmpty(Set::check($set, array()));
 
-		$set = ['My Index 1' => ['First' => ['Second' => ['Third' => [
+		$set = array('My Index 1' => array('First' => array('Second' => array('Third' => array(
 			'Fourth' => 'Heavy. Nesting.'
-		]]]]];
+		)))));
 		$this->assertTrue(Set::check($set, 'My Index 1.First.Second'));
 		$this->assertTrue(Set::check($set, 'My Index 1.First.Second.Third'));
 		$this->assertTrue(Set::check($set, 'My Index 1.First.Second.Third.Fourth'));
@@ -1158,51 +1157,51 @@ class SetTest extends \lithium\test\Unit {
 	}
 
 	public function testInsertAndRemoveWithFunkyKeys() {
-		$set = Set::insert([], 'Session Test', "test");
+		$set = Set::insert(array(), 'Session Test', "test");
 		$result = Set::extract($set, '/Session Test');
-		$this->assertEqual($result, ['test']);
+		$this->assertEqual($result, array('test'));
 
 		$set = Set::remove($set, 'Session Test');
 		$this->assertFalse(Set::check($set, 'Session Test'));
 
-		$this->assertNotEmpty($set = Set::insert([], 'Session Test.Test Case', "test"));
+		$this->assertNotEmpty($set = Set::insert(array(), 'Session Test.Test Case', "test"));
 		$this->assertTrue(Set::check($set, 'Session Test.Test Case'));
 	}
 
 	public function testDiff() {
-		$a = [['name' => 'main'], ['name' => 'about']];
-		$b = [['name' => 'main'], ['name' => 'about'], ['name' => 'contact']];
+		$a = array(array('name' => 'main'), array('name' => 'about'));
+		$b = array(array('name' => 'main'), array('name' => 'about'), array('name' => 'contact'));
 
 		$result = Set::diff($a, $b);
-		$expected = [2 => ['name' => 'contact']];
+		$expected = array(2 => array('name' => 'contact'));
 		$this->assertIdentical($expected, $result);
 
-		$result = Set::diff($a, []);
+		$result = Set::diff($a, array());
 		$expected = $a;
 		$this->assertIdentical($expected, $result);
 
-		$result = Set::diff([], $b);
+		$result = Set::diff(array(), $b);
 		$expected = $b;
 		$this->assertIdentical($expected, $result);
 
-		$b = [['name' => 'me'], ['name' => 'about']];
+		$b = array(array('name' => 'me'), array('name' => 'about'));
 
 		$result = Set::diff($a, $b);
-		$expected = [['name' => 'main']];
+		$expected = array(array('name' => 'main'));
 		$this->assertIdentical($expected, $result);
 	}
 
 	public function testContains() {
-		$a = [
-			0 => ['name' => 'main'],
-			1 => ['name' => 'about']
-		];
-		$b = [
-			0 => ['name' => 'main'],
-			1 => ['name' => 'about'],
-			2 => ['name' => 'contact'],
+		$a = array(
+			0 => array('name' => 'main'),
+			1 => array('name' => 'about')
+		);
+		$b = array(
+			0 => array('name' => 'main'),
+			1 => array('name' => 'about'),
+			2 => array('name' => 'contact'),
 			'a' => 'b'
-		];
+		);
 
 		$this->assertTrue(Set::contains($a, $a));
 		$this->assertFalse(Set::contains($a, $b));
@@ -1210,300 +1209,300 @@ class SetTest extends \lithium\test\Unit {
 	}
 
 	public function testCombine() {
-		$result = Set::combine([], '/User/id', '/User/Data');
+		$result = Set::combine(array(), '/User/id', '/User/Data');
 		$this->assertEmpty($result);
 		$result = Set::combine('', '/User/id', '/User/Data');
 		$this->assertEmpty($result);
 
-		$a = [
-			['User' => ['id' => 2, 'group_id' => 1,
-				'Data' => ['user' => 'mariano.iglesias','name' => 'Mariano Iglesias']
-			]],
-			['User' => ['id' => 14, 'group_id' => 2,
-				'Data' => ['user' => 'jperras', 'name' => 'Joel Perras']
-			]],
-			['User' => ['id' => 25, 'group_id' => 1,
-				'Data' => ['user' => 'gwoo','name' => 'The Gwoo']
-			]]
-		];
+		$a = array(
+			array('User' => array('id' => 2, 'group_id' => 1,
+				'Data' => array('user' => 'mariano.iglesias','name' => 'Mariano Iglesias')
+			)),
+			array('User' => array('id' => 14, 'group_id' => 2,
+				'Data' => array('user' => 'jperras', 'name' => 'Joel Perras')
+			)),
+			array('User' => array('id' => 25, 'group_id' => 1,
+				'Data' => array('user' => 'gwoo','name' => 'The Gwoo')
+			))
+		);
 		$result = Set::combine($a, '/User/id');
-		$expected = [2 => null, 14 => null, 25 => null];
+		$expected = array(2 => null, 14 => null, 25 => null);
 		$this->assertIdentical($expected, $result);
 
 		$result = Set::combine($a, '/User/id', '/User/non-existant');
-		$expected = [2 => null, 14 => null, 25 => null];
+		$expected = array(2 => null, 14 => null, 25 => null);
 		$this->assertIdentical($expected, $result);
 
 		$result = Set::combine($a, '/User/id', '/User/Data/.');
-		$expected = [
-			2 => ['user' => 'mariano.iglesias', 'name' => 'Mariano Iglesias'],
-			14 => ['user' => 'jperras', 'name' => 'Joel Perras'],
-			25 => ['user' => 'gwoo', 'name' => 'The Gwoo']
-		];
+		$expected = array(
+			2 => array('user' => 'mariano.iglesias', 'name' => 'Mariano Iglesias'),
+			14 => array('user' => 'jperras', 'name' => 'Joel Perras'),
+			25 => array('user' => 'gwoo', 'name' => 'The Gwoo')
+		);
 		$this->assertIdentical($expected, $result);
 
 		$result = Set::combine($a, '/User/id', '/User/Data/name/.');
-		$expected = [
+		$expected = array(
 			2 => 'Mariano Iglesias',
 			14 => 'Joel Perras',
 			25 => 'The Gwoo'
-		];
+		);
 		$this->assertIdentical($expected, $result);
 
 		$result = Set::combine($a, '/User/id', '/User/Data/.', '/User/group_id');
-		$expected = [
-			1 => [
-				2 => ['user' => 'mariano.iglesias', 'name' => 'Mariano Iglesias'],
-				25 => ['user' => 'gwoo', 'name' => 'The Gwoo']
-			],
-			2 => [
-				14 => ['user' => 'jperras', 'name' => 'Joel Perras']
-			]
-		];
+		$expected = array(
+			1 => array(
+				2 => array('user' => 'mariano.iglesias', 'name' => 'Mariano Iglesias'),
+				25 => array('user' => 'gwoo', 'name' => 'The Gwoo')
+			),
+			2 => array(
+				14 => array('user' => 'jperras', 'name' => 'Joel Perras')
+			)
+		);
 		$this->assertIdentical($expected, $result);
 
 		$result = Set::combine($a, '/User/id', '/User/Data/name/.', '/User/group_id');
-		$expected = [
-			1 => [
+		$expected = array(
+			1 => array(
 				2 => 'Mariano Iglesias',
 				25 => 'The Gwoo'
-			],
-			2 => [
+			),
+			2 => array(
 				14 => 'Joel Perras'
-			]
-		];
+			)
+		);
 		$this->assertIdentical($expected, $result);
 
 		$result = Set::combine(
 			$a,
 			'/User/id',
-			['{0}: {1}', '/User/Data/user', '/User/Data/name'],
+			array('{0}: {1}', '/User/Data/user', '/User/Data/name'),
 			'/User/group_id'
 		);
-		$expected = [
-			1 => [2 => 'mariano.iglesias: Mariano Iglesias', 25 => 'gwoo: The Gwoo'],
-			2 => [14 => 'jperras: Joel Perras']
-		];
+		$expected = array(
+			1 => array(2 => 'mariano.iglesias: Mariano Iglesias', 25 => 'gwoo: The Gwoo'),
+			2 => array(14 => 'jperras: Joel Perras')
+		);
 		$this->assertIdentical($expected, $result);
 
 		$result = Set::combine(
 			$a,
-			['{0}: {1}', '/User/Data/user', '/User/Data/name'],
+			array('{0}: {1}', '/User/Data/user', '/User/Data/name'),
 			'/User/id'
 		);
-		$expected = [
+		$expected = array(
 			'mariano.iglesias: Mariano Iglesias' => 2,
 			'jperras: Joel Perras' => 14,
 			'gwoo: The Gwoo' => 25
-		];
+		);
 		$this->assertIdentical($expected, $result);
 
 		$result = Set::combine(
 			$a,
-			['{1}: {0}', '/User/Data/user', '/User/Data/name'],
+			array('{1}: {0}', '/User/Data/user', '/User/Data/name'),
 			'/User/id'
 		);
-		$expected = [
+		$expected = array(
 			'Mariano Iglesias: mariano.iglesias' => 2,
 			'Joel Perras: jperras' => 14,
 			'The Gwoo: gwoo' => 25
-		];
+		);
 		$this->assertIdentical($expected, $result);
 
-		$result = Set::combine($a, [
-			'%1$s: %2$d', '/User/Data/user', '/User/id'], '/User/Data/name'
+		$result = Set::combine($a, array(
+			'%1$s: %2$d', '/User/Data/user', '/User/id'), '/User/Data/name'
 		);
-		$expected = [
+		$expected = array(
 			'mariano.iglesias: 2' => 'Mariano Iglesias',
 			'jperras: 14' => 'Joel Perras',
 			'gwoo: 25' => 'The Gwoo'
-		];
+		);
 		$this->assertIdentical($expected, $result);
 
-		$result = Set::combine($a, [
-			'%2$d: %1$s', '/User/Data/user', '/User/id'], '/User/Data/name'
+		$result = Set::combine($a, array(
+			'%2$d: %1$s', '/User/Data/user', '/User/id'), '/User/Data/name'
 		);
-		$expected = [
+		$expected = array(
 			'2: mariano.iglesias' => 'Mariano Iglesias',
 			'14: jperras' => 'Joel Perras',
 			'25: gwoo' => 'The Gwoo'
-		];
+		);
 		$this->assertIdentical($expected, $result);
 
 		$b = new stdClass();
-		$b->users = [
-			['User' => [
-				'id' => 2, 'group_id' => 1, 'Data' => [
+		$b->users = array(
+			array('User' => array(
+				'id' => 2, 'group_id' => 1, 'Data' => array(
 					'user' => 'mariano.iglesias','name' => 'Mariano Iglesias'
-				]
-			]],
-			['User' => ['id' => 14, 'group_id' => 2, 'Data' => [
+				)
+			)),
+			array('User' => array('id' => 14, 'group_id' => 2, 'Data' => array(
 				'user' => 'jperras', 'name' => 'Joel Perras'
-			]]],
-			['User' => ['id' => 25, 'group_id' => 1, 'Data' => [
+			))),
+			array('User' => array('id' => 25, 'group_id' => 1, 'Data' => array(
 				'user' => 'gwoo','name' => 'The Gwoo'
-			]]]
-		];
+			)))
+		);
 		$result = Set::combine($b, '/users/User/id');
-		$expected = [2 => null, 14 => null, 25 => null];
+		$expected = array(2 => null, 14 => null, 25 => null);
 		$this->assertIdentical($expected, $result);
 
 		$result = Set::combine($b, '/users/User/id', '/users/User/non-existant');
-		$expected = [2 => null, 14 => null, 25 => null];
+		$expected = array(2 => null, 14 => null, 25 => null);
 		$this->assertIdentical($expected, $result);
 	}
 
 	public function testAppend() {
-		$array1 = ['ModelOne' => [
+		$array1 = array('ModelOne' => array(
 			'id' => 1001, 'field_one' => 'a1.m1.f1', 'field_two' => 'a1.m1.f2'
-		]];
-		$array2 = ['ModelTwo' => [
+		));
+		$array2 = array('ModelTwo' => array(
 			'id' => 1002, 'field_one' => 'a2.m2.f1', 'field_two' => 'a2.m2.f2'
-		]];
+		));
 
 		$result = Set::append($array1, $array2);
 
 		$this->assertIdentical($result, $array1 + $array2);
 
-		$array3 = ['ModelOne' => [
+		$array3 = array('ModelOne' => array(
 			'id' => 1003, 'field_one' => 'a3.m1.f1',
 			'field_two' => 'a3.m1.f2', 'field_three' => 'a3.m1.f3'
-		]];
+		));
 		$result = Set::append($array1, $array3);
 
-		$expected = ['ModelOne' => [
+		$expected = array('ModelOne' => array(
 			'id' => 1001, 'field_one' => 'a1.m1.f1',
 			'field_two' => 'a1.m1.f2', 'field_three' => 'a3.m1.f3'
-		]];
+		));
 		$this->assertIdentical($expected, $result);
 
-		$array1 = [
-			['ModelOne' => [
+		$array1 = array(
+			array('ModelOne' => array(
 				'id' => 1001, 'field_one' => 's1.0.m1.f1', 'field_two' => 's1.0.m1.f2'
-			]],
-			['ModelTwo' => [
+			)),
+			array('ModelTwo' => array(
 				'id' => 1002, 'field_one' => 's1.1.m2.f2', 'field_two' => 's1.1.m2.f2'
-			]]
-		];
-		$array2 = [
-			['ModelOne' => [
+			))
+		);
+		$array2 = array(
+			array('ModelOne' => array(
 				'id' => 1001, 'field_one' => 's2.0.m1.f1', 'field_two' => 's2.0.m1.f2'
-			]],
-			['ModelTwo' => [
+			)),
+			array('ModelTwo' => array(
 				'id' => 1002, 'field_one' => 's2.1.m2.f2', 'field_two' => 's2.1.m2.f2'
-			]]
-		];
+			))
+		);
 
 		$result = Set::append($array1, $array2);
 		$this->assertIdentical($result, $array1);
 
-		$array3 = [['ModelThree' => [
+		$array3 = array(array('ModelThree' => array(
 			'id' => 1003, 'field_one' => 's3.0.m3.f1', 'field_two' => 's3.0.m3.f2'
-		]]];
+		)));
 
 		$result = Set::append($array1, $array3);
-		$expected = [
-			[
-				'ModelOne' => [
+		$expected = array(
+			array(
+				'ModelOne' => array(
 					'id' => 1001, 'field_one' => 's1.0.m1.f1', 'field_two' => 's1.0.m1.f2'
-				],
-				'ModelThree' => [
+				),
+				'ModelThree' => array(
 					'id' => 1003, 'field_one' => 's3.0.m3.f1', 'field_two' => 's3.0.m3.f2'
-				]
-			],
-			['ModelTwo' => [
+				)
+			),
+			array('ModelTwo' => array(
 				'id' => 1002, 'field_one' => 's1.1.m2.f2', 'field_two' => 's1.1.m2.f2'
-			]]
-		];
+			))
+		);
 		$this->assertIdentical($expected, $result);
 
-		$result = Set::append($array1, []);
+		$result = Set::append($array1, array());
 		$this->assertIdentical($result, $array1);
 
 		$result = Set::append($array1, $array2);
 		$this->assertIdentical($result, $array1 + $array2);
 
-		$result = Set::append([], ['2']);
-		$this->assertIdentical(['2'], $result);
+		$result = Set::append(array(), array('2'));
+		$this->assertIdentical(array('2'), $result);
 
-		$array1 = [
-			'ModelOne' => [
+		$array1 = array(
+			'ModelOne' => array(
 				'id' => 1001, 'field_one' => 's1.0.m1.f1', 'field_two' => 's1.0.m1.f2'
-			],
-			'ModelTwo' => [
+			),
+			'ModelTwo' => array(
 				'id' => 1002, 'field_one' => 's1.0.m2.f1', 'field_two' => 's1.0.m2.f2'
-			]
-		];
-		$array2 = [
-			'ModelTwo' => [
+			)
+		);
+		$array2 = array(
+			'ModelTwo' => array(
 				'field_three' => 's1.0.m2.f3'
-			]
-		];
-		$array3 = [
-			'ModelOne' => [
+			)
+		);
+		$array3 = array(
+			'ModelOne' => array(
 				'field_three' => 's1.0.m1.f3'
-			]
-		];
+			)
+		);
 
 		$result = Set::append($array1, $array2, $array3);
 
-		$expected = [
-			'ModelOne' => [
+		$expected = array(
+			'ModelOne' => array(
 				'id' => 1001,
 				'field_one' => 's1.0.m1.f1',
 				'field_two' => 's1.0.m1.f2',
 				'field_three' => 's1.0.m1.f3'
-			],
-			'ModelTwo' => [
+			),
+			'ModelTwo' => array(
 				'id' => 1002,
 				'field_one' => 's1.0.m2.f1',
 				'field_two' => 's1.0.m2.f2',
 				'field_three' => 's1.0.m2.f3'
-			]
-		];
+			)
+		);
 		$this->assertIdentical($expected, $result);
 	}
 
 	public function testStrictKeyCheck() {
-		$set = ['a' => 'hi'];
+		$set = array('a' => 'hi');
 		$this->assertFalse(Set::check($set, 'a.b'));
 		$this->assertTrue(Set::check($set, 'a'));
 	}
 
 	public function testMixedKeyNormalization() {
-		$input = ['"string"' => ['before' => '=>'], 1 => ['before' => '=>']];
+		$input = array('"string"' => array('before' => '=>'), 1 => array('before' => '=>'));
 		$result = Set::normalize($input);
 		$this->assertEqual($input, $result);
 
 		$input = 'Foo,Bar,Baz';
 		$result = Set::normalize($input);
-		$this->assertEqual(['Foo' => null, 'Bar' => null, 'Baz' => null], $result);
+		$this->assertEqual(array('Foo' => null, 'Bar' => null, 'Baz' => null), $result);
 
-		$input = ['baz' => 'foo', 'bar'];
+		$input = array('baz' => 'foo', 'bar');
 		$result = Set::normalize($input, false);
-		$this->assertEqual(['baz' => 'foo', 'bar' => null], $result);
+		$this->assertEqual(array('baz' => 'foo', 'bar' => null), $result);
 	}
 
 	public function testSetSlice() {
-		$data = ['key1' => 'val1', 'key2' => 'val2', 'key3' => 'val3'];
-		list($kept, $removed) = Set::slice($data, ['key3']);
-		$this->assertEqual(['key3' => 'val3'], $removed);
-		$this->assertEqual(['key1' => 'val1', 'key2' => 'val2'], $kept);
+		$data = array('key1' => 'val1', 'key2' => 'val2', 'key3' => 'val3');
+		list($kept, $removed) = Set::slice($data, array('key3'));
+		$this->assertEqual(array('key3' => 'val3'), $removed);
+		$this->assertEqual(array('key1' => 'val1', 'key2' => 'val2'), $kept);
 
-		$data = ['key1' => 'val1', 'key2' => 'val2', 'key3' => 'val3'];
-		list($kept, $removed) = Set::slice($data, ['key1', 'key3']);
-		$this->assertEqual(['key1' => 'val1', 'key3' => 'val3'], $removed);
-		$this->assertEqual(['key2' => 'val2'], $kept);
+		$data = array('key1' => 'val1', 'key2' => 'val2', 'key3' => 'val3');
+		list($kept, $removed) = Set::slice($data, array('key1', 'key3'));
+		$this->assertEqual(array('key1' => 'val1', 'key3' => 'val3'), $removed);
+		$this->assertEqual(array('key2' => 'val2'), $kept);
 
-		$data = ['key1' => 'val1', 'key2' => 'val2', 'key3' => 'val3'];
+		$data = array('key1' => 'val1', 'key2' => 'val2', 'key3' => 'val3');
 		list($kept, $removed) = Set::slice($data, 'key2');
-		$this->assertEqual(['key2' => 'val2'], $removed);
-		$this->assertEqual(['key1' => 'val1', 'key3' => 'val3'], $kept);
+		$this->assertEqual(array('key2' => 'val2'), $removed);
+		$this->assertEqual(array('key1' => 'val1', 'key3' => 'val3'), $kept);
 
-		$data = ['key1' => 'val1', 'key2' => 'val2', 'key3' => ['foo' => 'bar']];
-		list($kept, $removed) = Set::slice($data, ['key1', 'key3']);
-		$this->assertEqual(['key1' => 'val1', 'key3' => ['foo' => 'bar']], $removed);
-		$this->assertEqual(['key2' => 'val2'], $kept);
+		$data = array('key1' => 'val1', 'key2' => 'val2', 'key3' => array('foo' => 'bar'));
+		list($kept, $removed) = Set::slice($data, array('key1', 'key3'));
+		$this->assertEqual(array('key1' => 'val1', 'key3' => array('foo' => 'bar')), $removed);
+		$this->assertEqual(array('key2' => 'val2'), $kept);
 	}
 }
 

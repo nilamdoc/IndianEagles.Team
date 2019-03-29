@@ -1,25 +1,26 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2009, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\mocks\data\model;
 
-class MockDatabaseTag extends \lithium\data\Model {
+class MockDatabaseTag extends \lithium\tests\mocks\data\MockBase {
 
-	public $hasMany = ['MockDatabaseTagging'];
+	public static $connection = null;
 
-	protected $_meta = ['connection' => false, 'key' => 'id'];
+	public $hasMany = array('MockDatabaseTagging');
 
-	protected $_schema = [
-		'id' => ['type' => 'integer'],
-		'title' => ['type' => 'string'],
-		'created' => ['type' => 'datetime']
-	];
+	protected $_meta = array('connection' => false, 'key' => 'id');
+
+	protected $_schema = array(
+		'id' => array('type' => 'integer'),
+		'title' => array('type' => 'string'),
+		'created' => array('type' => 'datetime')
+	);
 }
 
 ?>

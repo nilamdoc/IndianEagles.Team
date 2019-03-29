@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2009, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\cases\security\auth\adapter;
@@ -15,26 +14,19 @@ use lithium\security\auth\adapter\Form;
 
 class FormTest extends \lithium\test\Unit {
 
-	public static function first(array $options = []) {
+	public static function first(array $options = array()) {
 		if (!$options['conditions']) {
 			return null;
 		}
-		return new Record(['data' => $options['conditions']]);
+		return new Record(array('data' => $options['conditions']));
 	}
 
-	public static function validatorTest(array $options = []) {
-		return new Record(['data' => [
+	public static function validatorTest(array $options = array()) {
+		return new Record(array('data' => array(
 			'username' => 'Bob',
 			'password' => Password::hash('s3cure'),
 			'group' => 'editors'
-		]]);
-	}
-
-	public static function meta($key) {
-		switch ($key) {
-			case 'name':
-				return __CLASS__;
-		}
+		)));
 	}
 
 	/**
@@ -44,27 +36,27 @@ class FormTest extends \lithium\test\Unit {
 	 * @param array $options
 	 * @return object
 	 */
-	public static function validatorFieldMappingTest(array $options = []) {
+	public static function validatorFieldMappingTest(array $options = array()) {
 		if (isset($options['conditions']['user.password'])) {
 			return null;
 		}
-		return new Record(['data' => [
+		return new Record(array('data' => array(
 			'user.name' => 'Foo',
 			'user.password' => 'bar'
-		]]);
+		)));
 	}
 
 	/**
 	 * Tests a check for the model class prior to attempted use.
 	 */
 	public function testModel() {
-		$this->assertException("Model class 'ModelDoesNotExist' not found.", function() {
-			$subject = new Form([
-				'model' => 'ModelDoesNotExist',
-				'fields' => ['username'],
-				'validators' => ['password' => false]
-			]);
-		});
+		$this->expectException("Model class 'ModelDoesNotExist' not found.");
+
+		$subject = new Form(array(
+			'model' => 'ModelDoesNotExist',
+			'fields' => array('username'),
+			'validators' => array('password' => false)
+		));
 	}
 
 	/**
@@ -73,156 +65,152 @@ class FormTest extends \lithium\test\Unit {
 	 * returned by Form::check().
 	 */
 	public function testLogin() {
-		$subject = new Form([
+		$subject = new Form(array(
 			'model' => __CLASS__,
-			'fields' => ['username'],
-			'validators' => ['password' => false]
-		]);
+			'fields' => array('username'),
+			'validators' => array('password' => false)
+		));
 
-		$request = (object) ['data' => [
+		$request = (object) array('data' => array(
 			'username' => 'Person'
-		]];
+		));
 
 		$result = $subject->check($request);
-		$expected = ['username' => 'Person'];
+		$expected = array('username' => 'Person');
 		$this->assertEqual($expected, $result);
 
-		$subject = new Form([
+		$subject = new Form(array(
 			'model' => __CLASS__,
-			'fields' => [],
-			'validators' => ['password' => false]
-		]);
+			'fields' => array(),
+			'validators' => array('password' => false)
+		));
 
-		$request = (object) ['data' => []];
+		$request = (object) array('data' => array());
 		$this->assertFalse($subject->check($request));
 	}
 
 	public function testLoginWithFilters() {
-		$subject = new Form([
+		$subject = new Form(array(
 			'model' => __CLASS__,
-			'fields' => ['username'],
-			'filters' => ['username' => 'sha1'],
-			'validators' => ['password' => false]
-		]);
+			'fields' => array('username'),
+			'filters' => array('username' => 'sha1'),
+			'validators' => array('password' => false)
+		));
 
-		$request = (object) ['data' => ['username' => 'Person']];
+		$request = (object) array('data' => array('username' => 'Person'));
 
-		$expected = ['username' => sha1('Person')];
+		$expected = array('username' => sha1('Person'));
 		$result = $subject->check($request);
 		$this->assertEqual($expected, $result);
 
-		$subject = new Form([
+		$subject = new Form(array(
 			'model' => __CLASS__,
-			'fields' => ['username', 'date'],
-			'filters' => [
+			'fields' => array('username', 'date'),
+			'filters' => array(
 				'username' => false,
 				'date' => function($date) {
 					return "{$date['year']}-{$date['month']}-{$date['day']}";
 				}
-			],
-			'validators' => ['password' => false]
-		]);
+			),
+			'validators' => array('password' => false)
+		));
 
-		$request = (object) ['data' => [
+		$request = (object) array('data' => array(
 			'username' => 'bob',
-			'date' => [
+			'date' => array(
 				'year' => '2012', 'month' => '06', 'day' => '29'
-			]
-		]];
+			)
+		));
 
-		$expected = ['username' => 'bob', 'date' => '2012-06-29'];
+		$expected = array('username' => 'bob', 'date' => '2012-06-29');
 		$result = $subject->check($request);
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testUncallableFilter() {
-		$subject = new Form([
+		$subject = new Form(array(
 			'model' => __CLASS__,
-			'filters' => [
+			'filters' => array(
 				'username' => true
-			]
-		]);
+			)
+		));
 
-		$request = (object) ['data' => ['username' => 'Test']];
-		$expected = 'Authentication filter for `username` is not callable.';
+		$request = (object) array('data' => array('username' => 'Test'));
 
-		$this->assertException($expected, function() use ($subject, $request) {
-			$subject->check($request);
-		});
+		$this->expectException('Authentication filter for `username` is not callable.');
+		$subject->check($request);
 	}
 
 	public function testGenericFilter() {
-		$subject = new Form([
+		$subject = new Form(array(
 			'model' => __CLASS__,
-			'fields' => ['username', 'password', 'group', 'secret'],
-			'filters' => [
+			'fields' => array('username', 'password', 'group', 'secret'),
+			'filters' => array(
 				function($form) {
 					unset($form['secret']);
 					return $form;
 				}
-			],
-			'validators' => ['password' => false]
-		]);
+			),
+			'validators' => array('password' => false)
+		));
 
-		$request = (object) ['data' => [
+		$request = (object) array('data' => array(
 			'username' => 'bob',
 			'group' => 'editors',
 			'secret' => 'value',
 			'password' => 'foo!'
-		]];
+		));
 
 		$result = $subject->check($request);
-		$expected = ['username' => 'bob', 'group' => 'editors', 'password' => 'foo!'];
+		$expected = array('username' => 'bob', 'group' => 'editors', 'password' => 'foo!');
 		$this->assertEqual($expected, $result);
 
-		$subject = new Form([
+		$subject = new Form(array(
 			'model' => __CLASS__,
-			'fields' => ['username', 'password', 'group', 'secret'],
-			'validators' => ['password' => false]
-		]);
+			'fields' => array('username', 'password', 'group', 'secret'),
+			'validators' => array('password' => false)
+		));
 
-		$request = (object) ['data' => [
+		$request = (object) array('data' => array(
 			'username' => 'bob',
 			'group' => 'editors',
 			'secret' => 'value',
 			'password' => 'foo!'
-		]];
+		));
 
 		$result = $subject->check($request);
-		$expected = [
+		$expected = array(
 			'username' => 'bob', 'group' => 'editors', 'password' => 'foo!', 'secret' => 'value'
-		];
+		);
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testUncallableGenericFilter() {
-		$subject = new Form([
+		$subject = new Form(array(
 			'model' => __CLASS__,
-			'filters' => [
+			'filters' => array(
 				true
-			]
-		]);
+			)
+		));
 
-		$request = (object) ['data' => ['username' => 'Test']];
-		$expected = 'Authentication filter is not callable.';
+		$request = (object) array('data' => array('username' => 'Test'));
 
-		$this->assertException($expected, function() use ($subject, $request) {
-			$subject->check($request);
-		});
+		$this->expectException('Authentication filter is not callable.');
+		$subject->check($request);
 	}
 
 	/**
 	 * Tests that attempted exploitation via malformed credential submission is not possible.
 	 */
 	public function testLoginWithArray() {
-		$subject = new Form([
+		$subject = new Form(array(
 			'model' => __CLASS__,
-			'validators' => ['password' => false]
-		]);
+			'validators' => array('password' => false)
+		));
 
-		$request = (object) ['data' => [
-			'username' => ['!=' => ''], 'password' => ''
-		]];
+		$request = (object) array('data' => array(
+			'username' => array('!=' => ''), 'password' => ''
+		));
 
 		$result = $subject->check($request);
 		$this->assertNull($result['username']);
@@ -232,8 +220,8 @@ class FormTest extends \lithium\test\Unit {
 	 * Tests that `Form::set()` passes data through unmodified, even with invalid options.
 	 */
 	public function testSetPassthru() {
-		$subject = new Form(['model' => __CLASS__]);
-		$user = ['id' => 5, 'name' => 'bob'];
+		$subject = new Form(array('model' => __CLASS__));
+		$user = array('id' => 5, 'name' => 'bob');
 
 		$result = $subject->set($user);
 		$this->assertIdentical($user, $result);
@@ -245,33 +233,33 @@ class FormTest extends \lithium\test\Unit {
 	 * `array('form_field' => 'database_field')`) in a single mixed array.
 	 */
 	public function testMixedFieldMapping() {
-		$subject = new Form([
+		$subject = new Form(array(
 			'model' => __CLASS__,
-			'fields' => ['username' => 'name', 'group'],
-			'validators' => []
-		]);
+			'fields' => array('username' => 'name', 'group'),
+			'validators' => array()
+		));
 
-		$request = (object) ['data' => [
+		$request = (object) array('data' => array(
 			'username' => 'Bob', 'group' => 'editors'
-		]];
+		));
 
-		$expected = ['name' => 'Bob', 'group' => 'editors'];
+		$expected = array('name' => 'Bob', 'group' => 'editors');
 		$this->assertEqual($expected, $subject->check($request));
 	}
 
 	public function testDefaultValidator() {
-		$subject = new Form([
+		$subject = new Form(array(
 			'model' => __CLASS__,
-			'fields' => ['username', 'password', 'group'],
-			'validators' => ['password' => false]
-		]);
+			'fields' => array('username', 'password', 'group'),
+			'validators' => array('password' => false)
+		));
 
-		$request = (object) ['data' => [
+		$request = (object) array('data' => array(
 			'username' => 'Bob', 'password' => 's3cure', 'group' => 'editors'
-		]];
+		));
 
 		$result = $subject->check($request);
-		$expected = ['username' => 'Bob', 'group' => 'editors', 'password' => 's3cure'];
+		$expected = array('username' => 'Bob', 'group' => 'editors', 'password' => 's3cure');
 		$this->assertEqual($expected, $result);
 	}
 
@@ -280,22 +268,22 @@ class FormTest extends \lithium\test\Unit {
 	 * query has occurred.
 	 */
 	public function testParameterValidators() {
-		$subject = new Form([
+		$subject = new Form(array(
 			'model' => __CLASS__,
 			'query' => 'validatorTest',
-			'validators' => [
+			'validators' => array(
 				'password' => function($form, $data) {
 					return Password::check($form, $data);
 				},
 				'group' => function($form) {
 					return $form === 'editors';
 				}
-			]
-		]);
+			)
+		));
 
-		$request = (object) ['data' => [
+		$request = (object) array('data' => array(
 			'username' => 'Bob', 'password' => 's3cure', 'group' => 'editors'
-		]];
+		));
 
 		$result = $subject->check($request);
 		$this->assertEqual(array_keys($request->data), array_keys($result));
@@ -309,84 +297,80 @@ class FormTest extends \lithium\test\Unit {
 	 * Tests that parameters with validators are omitted from query conditions.
 	 */
 	public function testOmitValidatedParams() {
-		$subject = new Form([
+		$subject = new Form(array(
 			'model' => __CLASS__,
-			'validators' => [
+			'validators' => array(
 				'password' => function($form, $data) { return true; },
 				'group' => function($form) { return true; }
-			]
-		]);
+			)
+		));
 
-		$request = (object) ['data' => [
+		$request = (object) array('data' => array(
 			'username' => 'Bob', 'password' => 's3cure', 'group' => 'editors'
-		]];
+		));
 
 		$result = $subject->check($request);
-		$this->assertEqual(['username' => 'Bob'], $result);
+		$this->assertEqual(array('username' => 'Bob'), $result);
 	}
 
 	public function testParameterValidatorsFail() {
-		$subject = new Form([
+		$subject = new Form(array(
 			'model' => __CLASS__,
-			'validators' => [
+			'validators' => array(
 				'password' => function($form, $data) { return false; }
-			]
-		]);
+			)
+		));
 
-		$request = (object) ['data' => [
+		$request = (object) array('data' => array(
 			'username' => 'Bob', 'password' => 's3cure', 'group' => 'editors'
-		]];
+		));
 
 		$result = $subject->check($request);
 		$this->assertFalse($result);
 	}
 
 	public function testUncallableValidator() {
-		$subject = new Form([
+		$subject = new Form(array(
 			'model' => __CLASS__,
-			'validators' => ['password' => true]
-		]);
+			'validators' => array('password' => true)
+		));
 
-		$request = (object) ['data' => ['username' => 'Bob']];
-		$expected = 'Authentication validator for `password` is not callable.';
+		$request = (object) array('data' => array('username' => 'Bob'));
 
-		$this->assertException($expected, function() use ($subject, $request) {
-			$subject->check($request);
-		});
+		$this->expectException('Authentication validator for `password` is not callable.');
+		$subject->check($request);
 	}
 
 	public function testGenericValidator() {
 		$self = $this;
-		$subject = new Form([
+		$subject = new Form(array(
 			'model' => __CLASS__,
 			'query' => 'validatorTest',
-			'validators' => [
+			'validators' => array(
 				function($data, $user) use ($self) {
 					return true;
 				}
-			]
-		]);
+			)
+		));
 
-		$request = (object) ['data' => [
+		$request = (object) array('data' => array(
 			'username' => 'Bob', 'password' => 's3cure', 'group' => 'editors'
-		]];
+		));
 
 		$result = $subject->check($request);
 		$this->assertEqual(array_keys($request->data), array_keys($result));
 	}
 
 	public function testUncallableGenericValidator() {
-		$subject = new Form([
+		$subject = new Form(array(
 			'model' => __CLASS__,
-			'validators' => [true, 'password' => false]
-		]);
+			'validators' => array(true, 'password' => false)
+		));
 
-		$request = (object) ['data' => ['username' => 'Bob']];
-		$expected = 'Authentication validator is not callable.';
+		$request = (object) array('data' => array('username' => 'Bob'));
 
-		$this->assertException($expected, function() use ($subject, $request) {
-			$subject->check($request);
-		});
+		$this->expectException('Authentication validator is not callable.');
+		$subject->check($request);
 	}
 
 	/**
@@ -394,36 +378,36 @@ class FormTest extends \lithium\test\Unit {
 	 * authentication.
 	 */
 	public function testHashedPasswordAuth() {
-		$subject = new Form([
+		$subject = new Form(array(
 			'model' => __CLASS__,
-			'filters' => ['password' => 'sha1'],
-			'validators' => ['password' => false]
-		]);
+			'filters' => array('password' => 'sha1'),
+			'validators' => array('password' => false)
+		));
 
-		$request = (object) ['data' => ['username' => 'Bob', 'password' => 's3kr1t']];
-		$expected = [
+		$request = (object) array('data' => array('username' => 'Bob', 'password' => 's3kr1t'));
+		$expected = array(
 			'username' => 'Bob',
 			'password' => 'ff44e879c7e013b38e4b970e8a5d47c7f283eed1'
-		];
+		);
 		$this->assertEqual($expected, $subject->check($request));
 	}
 
 	public function testValidatorWithFieldMapping() {
-		$subject = new Form([
+		$subject = new Form(array(
 			'model' => __CLASS__,
 			'query' => 'validatorFieldMappingTest',
-			'fields' => ['name' => 'user.name', 'password' => 'user.password'],
-			'validators' => [
+			'fields' => array('name' => 'user.name', 'password' => 'user.password'),
+			'validators' => array(
 				'password' => function ($form, $data) {
 					if ($form === $data) {
 						return true;
 					}
 					return false;
 				}
-			]
-		]);
+			)
+		));
 
-		$request = (object) ['data' => ['name' => 'Foo', 'password' => 'bar']];
+		$request = (object) array('data' => array('name' => 'Foo', 'password' => 'bar'));
 		$this->assertNotEmpty($subject->check($request));
 	}
 }

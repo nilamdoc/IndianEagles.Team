@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\data;
@@ -17,25 +16,18 @@ use RuntimeException;
  */
 class Schema extends \lithium\core\Object implements \ArrayAccess {
 
-	protected $_fields = [];
+	protected $_fields = array();
 
-	protected $_meta = [];
+	protected $_meta = array();
 
 	protected $_locked = false;
 
-	protected $_types = [];
+	protected $_types = array();
 
-	protected $_autoConfig = ['fields', 'meta', 'locked', 'types'];
+	protected $_autoConfig = array('fields', 'meta', 'locked');
 
-	/**
-	 * Constructor.
-	 *
-	 * @param array $config Available configuration options are:
-	 *        - `'fields'` _array_
-	 * @return void
-	 */
-	public function __construct(array $config = []) {
-		$defaults = ['fields' => []];
+	public function __construct(array $config = array()) {
+		$defaults = array('fields' => array());
 		parent::__construct($config + $defaults);
 	}
 
@@ -77,7 +69,7 @@ class Schema extends \lithium\core\Object implements \ArrayAccess {
 			}
 			return null;
 		}
-		$defaults = [];
+		$defaults = array();
 
 		foreach ($this->_fields as $key => $value) {
 			if (isset($value['default'])) {
@@ -125,12 +117,12 @@ class Schema extends \lithium\core\Object implements \ArrayAccess {
 		return isset($this->_types[$type]) ? $this->_types[$type] : $type;
 	}
 
-	public function cast($object, $key, $data, array $options = []) {
+	public function cast($object, $key, $data, array $options = array()) {
 		return $data;
 	}
 
 	public function reset() {
-		$this->_fields = [];
+		$this->_fields = array();
 	}
 
 	/**

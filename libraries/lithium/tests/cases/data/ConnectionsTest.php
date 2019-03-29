@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\cases\data;
@@ -16,23 +15,23 @@ use lithium\data\source\database\adapter\PostgreSql;
 
 class ConnectionsTest extends \lithium\test\Unit {
 
-	public $config = [
+	public $config = array(
 		'type'     => 'Mock',
 		'adapter'  => null,
 		'host'     => 'localhost',
 		'login'    => '--user--',
 		'password' => '--pass--',
 		'database' => 'db'
-	];
+	);
 
 	protected $_port = null;
 
-	protected $_backup = [];
+	protected $_backup = array();
 
 	public function setUp() {
 		if (!$this->_backup) {
 			foreach (Connections::get() as $conn) {
-				$this->_backup[$conn] = Connections::get($conn, ['config' => true]);
+				$this->_backup[$conn] = Connections::get($conn, array('config' => true));
 			}
 		}
 		Connections::reset();
@@ -44,8 +43,8 @@ class ConnectionsTest extends \lithium\test\Unit {
 	}
 
 	public function testConnectionCreate() {
-		$result = Connections::add('conn-test', ['type' => 'Mock'] + $this->config);
-		$expected = $this->config + ['type' => 'Mock'];
+		$result = Connections::add('conn-test', array('type' => 'Mock') + $this->config);
+		$expected = $this->config + array('type' => 'Mock');
 		$this->assertEqual($expected, $result);
 
 		$result = Connections::get('conn-test');
@@ -61,7 +60,7 @@ class ConnectionsTest extends \lithium\test\Unit {
 	public function testConnectionGetAndReset() {
 		Connections::add('conn-test', $this->config);
 		Connections::add('conn-test-2', $this->config);
-		$this->assertEqual(['conn-test', 'conn-test-2'], Connections::get());
+		$this->assertEqual(array('conn-test', 'conn-test-2'), Connections::get());
 
 		$enabled = (MySql::enabled() || PostgreSql::enabled());
 		$this->skipIf(!$enabled, 'MySql or PostgreSQL is not enabled');
@@ -76,8 +75,8 @@ class ConnectionsTest extends \lithium\test\Unit {
 		$msg = "Cannot connect to localhost:{$this->_port}";
 		$this->skipIf(!$this->_canConnect('localhost', $this->_port), $msg);
 
-		$expected = $this->config + ['type' => 'database', 'filters' => []];
-		$this->assertEqual($expected, Connections::get('conn-test', ['config' => true]));
+		$expected = $this->config + array('type' => 'database', 'filters' => array());
+		$this->assertEqual($expected, Connections::get('conn-test', array('config' => true)));
 
 		$this->assertNull(Connections::reset());
 		$this->assertEmpty(Connections::get());
@@ -95,7 +94,7 @@ class ConnectionsTest extends \lithium\test\Unit {
 		$result = Connections::get('conn-test');
 		$this->assertInstanceOf('lithium\data\source\Mock', $result);
 
-		$this->assertNull(Connections::get('conn-test-2', ['autoCreate' => false]));
+		$this->assertNull(Connections::get('conn-test-2', array('autoCreate' => false)));
 	}
 
 	public function testInvalidConnection() {
@@ -103,26 +102,26 @@ class ConnectionsTest extends \lithium\test\Unit {
 	}
 
 	public function testStreamConnection() {
-		$config = [
+		$config = array(
 			'type' => 'Http',
 			'socket' => 'Stream',
 			'host' => 'localhost',
 			'login' => 'root',
 			'password' => '',
 			'port' => '80'
-		];
+		);
 
 		Connections::add('stream-test', $config);
 		$result = Connections::get('stream-test');
 		$this->assertInstanceOf('lithium\data\source\Http', $result);
-		Connections::config(['stream-test' => false]);
+		Connections::config(array('stream-test' => false));
 	}
 
 	public function testErrorExceptions() {
-		$config = [
+		$config = array(
 			'adapter' => 'None',
 			'type' => 'Error'
-		];
+		);
 		Connections::add('NoConnection', $config);
 		$result = false;
 
@@ -137,20 +136,6 @@ class ConnectionsTest extends \lithium\test\Unit {
 	public function testGetNullAdapter() {
 		Connections::reset();
 		$this->assertInstanceOf('lithium\data\source\Mock', Connections::get(false));
-	}
-
-	public function testConnectionRemove() {
-		$result = Connections::add('conn-to-remove', ['type' => 'Mock'] + $this->config);
-		$expected = $this->config + ['type' => 'Mock'];
-		$this->assertEqual($expected, $result);
-
-		$result = Connections::get('conn-to-remove');
-		$this->assertInstanceOf('lithium\data\source\Mock', $result);
-
-		Connections::remove('conn-to-remove');
-
-		$result = Connections::get('conn-to-remove');
-		$this->assertNull($result);
 	}
 
 	protected function _canConnect($host, $port) {

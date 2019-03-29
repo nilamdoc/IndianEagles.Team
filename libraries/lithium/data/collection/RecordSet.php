@@ -1,15 +1,13 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\data\collection;
 
-use RuntimeException;
 use lithium\util\Set;
 
 class RecordSet extends \lithium\data\Collection {
@@ -20,7 +18,7 @@ class RecordSet extends \lithium\data\Collection {
 	 *
 	 * @var array
 	 */
-	protected $_columns = [];
+	protected $_columns = array();
 
 	/**
 	 * A recursive array of relation dependencies where key are relations
@@ -28,29 +26,15 @@ class RecordSet extends \lithium\data\Collection {
 	 *
 	 * @var array
 	 */
-	protected $_dependencies = [];
-
-	/**
-	 * Holds the relationships as returned via `$this->_query->relationships()`.
-	 *
-	 * @var array
-	 */
-	protected $_relationships = [];
+	protected $_dependencies = array();
 
 	/**
 	 * Precompute index of the main model primary key(s) which allow to find
-	 * values directly in result data without the column name matching process.
+	 * values directly is result data without the column name matching process
 	 *
 	 * @var array
 	 */
-	protected $_keyIndex = [];
-
-	/**
-	 * Keeps a list of hydrated main record indexes values already seen.
-	 *
-	 * @var array
-	 */
-	protected $_seen = [];
+	protected $_keyIndex = array();
 
 	/**
 	 * Initializes the record set and uses the database connection to get the column list contained
@@ -63,25 +47,18 @@ class RecordSet extends \lithium\data\Collection {
 	 */
 	protected function _init() {
 		parent::_init();
-
-		if (!$this->_result) {
-			return;
+		if ($this->_result) {
+			$this->_columns = $this->_columnMap();
+			if ($this->_query) {
+				$columns = array_filter(array_keys($this->_columns));
+				$this->_dependencies = Set::expand(Set::normalize($columns));
+				$this->_keyIndex = $this->_keyIndex('');
+			}
 		}
-		$this->_columns = $this->_columnMap();
-
-		if (!$this->_query) {
-			return;
-		}
-		$this->_keyIndex = $this->_keyIndex();
-
-		$this->_dependencies = Set::expand(Set::normalize(
-			array_filter(array_keys($this->_columns))
-		));
-		$this->_relationships = $this->_query->relationships();
 	}
 
 	/**
-	 * Extracts the next item from the result resource and wraps it into a `Record` object.
+	 * Extract the next item from the result ressource and wraps it into a `Record` object.
 	 *
 	 * @return mixed Returns the next `Record` if exists. Returns `null` otherwise
 	 */
@@ -89,21 +66,20 @@ class RecordSet extends \lithium\data\Collection {
 		if ($this->closed() || !$this->_result->valid()) {
 			return;
 		}
-		$data = $this->_result->current();
 
+		$data = $this->_result->current();
 		if ($this->_query) {
 			$data = $this->_mapRecord($data);
 		}
-		$result = $this->_set($data, null, ['exists' => true]);
+		$result = $this->_set($data, null, array('exists' => true));
 		$this->_result->next();
 
 		return $result;
 	}
 
-	protected function _set($data = null, $offset = null, $options = []) {
+	protected function _set($data = null, $offset = null, $options = array()) {
 		if ($model = $this->_model) {
-			$options += ['defaults' => false];
-			$data = !is_object($data) ? $model::create($data, $options) : $data;
+			$data = !is_object($data) ? $model::connection()->item($model, $data, $options) : $data;
 			$key = $model::key($data);
 		} else {
 			$key = $offset;
@@ -115,61 +91,51 @@ class RecordSet extends \lithium\data\Collection {
 	}
 
 	/**
-	 * Converts a PDO `Result` array to a nested `Record` object.
+	 * Convert a PDO `Result` array to a nested `Record` object
 	 *
-	 * 1. Builds an associative array with data from the row, with joined row data
-	 *    nested under the relationships name. Joined row data is added and new
-	 *    results consumed from the result cursor under the relationships name until
-	 *    the value of the main primary key changes.
-	 *
-	 * 2. The built array is then hydrated and returned.
-	 *
-	 * Note: Joined records must appear sequentially, when non-sequential records
-	 *       are detected an exception is thrown.
-	 *
-	 * @throws RuntimeException
-	 * @param array $row 2 dimensional PDO `Result` array
+	 * @param array $data 2 dimensional PDO `Result` array
 	 * @return object Returns a `Record` object
 	 */
-	protected function _mapRecord($row) {
-		$main = array_intersect_key($row, $this->_keyIndex);
-
-		if ($main) {
-			if (in_array($main, $this->_seen)) {
-				$message  = 'Associated records hydrated out of order: ';
-				$message .= var_export($this->_seen, true);
-				throw new RuntimeException($message);
-			}
-			$this->_seen[] = $main;
-		}
-
+	protected function _mapRecord($data) {
+		$primary = $this->_model;
+		$conn = $primary::connection();
+		$main = $record = array();
 		$i = 0;
-		$record = [];
+
+		foreach ($this->_keyIndex as $key => $value) {
+			$main[$key] = $data[$key];
+		}
 
 		do {
 			$offset = 0;
-
+			if ($i != 0) {
+				$keys = array();
+				foreach ($this->_keyIndex as $key => $value) {
+					$keys[$key] = $data[$key];
+				}
+				if ($main != $keys) {
+					$this->_result->prev();
+					break;
+				}
+			}
 			foreach ($this->_columns as $name => $fields) {
+				$fieldCount = count($fields);
 				$record[$i][$name] = array_combine(
-					$fields, array_slice($row, $offset, ($count = count($fields)))
+					$fields, array_slice($data, $offset, $fieldCount)
 				);
-				$offset += $count;
+				$offset += $fieldCount;
 			}
 			$i++;
+		} while ($main && $data = $this->_result->next());
 
-			if (!$peek = $this->_result->peek()) {
-				break;
-			}
-			if ($main !== array_intersect_key($peek, $this->_keyIndex)) {
-				break;
-			}
-		} while ($main && ($row = $this->_result->next()));
-
-		return $this->_hydrateRecord($this->_dependencies, $this->_model, $record, 0, $i, '');
+		$relMap = $this->_query->relationships();
+		return $this->_hydrateRecord(
+			$this->_dependencies, $primary, $record, 0, $i, '', $relMap, $conn
+		);
 	}
 
 	/**
-	 * Hydrates a 2 dimensional PDO row `Result` array recursively.
+	 * Hydrate a 2 dimensional PDO `Result` array
 	 *
 	 * @param array $relations The cascading with relation
 	 * @param string $primary Model classname
@@ -177,95 +143,102 @@ class RecordSet extends \lithium\data\Collection {
 	 * @param integer $min
 	 * @param integer $max
 	 * @param string $name Alias name
-	 * @return \lithium\data\entity\Record Returns a `Record` object as created by the model.
+	 * @param array $relMap The query relationships array
+	 * @param object $conn The connection object
+	 * @return object Returns a `Record` object
 	 */
-	protected function _hydrateRecord(array $relations, $primary, array $record, $min, $max, $name) {
-		$options = ['exists' => true, 'defaults' => false];
+	protected function _hydrateRecord($relations, $primary, $record, $min, $max, $name, &$relMap, $conn) {
+		$options = array('exists' => true);
 
-		foreach ($relations as $relation => $subrelations) {
-			$relName  = $name ? "{$name}.{$relation}" : $relation;
-			$relModel = $this->_relationships[$relName]['model'];
-			$relField = $this->_relationships[$relName]['fieldName'];
-			$relType  = $this->_relationships[$relName]['type'];
+		$count = count($record);
+		if (!empty($relations)) {
+			foreach ($relations as $relation => $subrelations) {
+				$relName = $name ? $name . '.' . $relation : $relation;
+				$field = $relMap[$relName]['fieldName'];
+				$relModel = $relMap[$relName]['model'];
 
-			if ($relType !== 'hasMany') {
-				$record[$min][$name][$relField] = $this->_hydrateRecord(
-					$subrelations ?: [], $relModel, $record, $min, $max, $relName
-				);
-				continue;
-			}
-
-			$rel = [];
-			$main = $relModel::key($record[$min][$relName]);
-
-			$i = $min;
-			$j = $i + 1;
-
-			while ($j < $max) {
-				$keys = $relModel::key($record[$j][$relName]);
-
-				if ($main != $keys) {
-					$rel[] = $this->_hydrateRecord(
-						$subrelations ?: [], $relModel, $record, $i, $j, $relName
+				if ($relMap[$relName]['type'] === 'hasMany') {
+					$rel = array();
+					$main = $relModel::key($record[$min][$relName]);
+					$i = $min;
+					$j = $i + 1;
+					while ($j < $max) {
+						$keys = $relModel::key($record[$j][$relName]);
+						if ($main != $keys) {
+							$rel[] = $this->_hydrateRecord(
+								$subrelations, $relModel, $record, $i, $j, $relName, $relMap, $conn
+							);
+							$main = $keys;
+							$i = $j;
+						}
+						$j++;
+					}
+					if (array_filter($record[$i][$relName])) {
+						$rel[] = $this->_hydrateRecord(
+							$subrelations, $relModel, $record, $i, $j, $relName, $relMap, $conn
+						);
+					}
+					$opts = array('class' => 'set') + $options;
+					$record[$min][$name][$field] = $conn->item($primary, $rel, $opts);
+				} else {
+					$record[$min][$name][$field] = $this->_hydrateRecord(
+						$subrelations, $relModel, $record, $min, $max, $relName, $relMap, $conn
 					);
-					$main = $keys;
-					$i = $j;
 				}
-				$j++;
 			}
-			if (array_filter($record[$i][$relName])) {
-				$rel[] = $this->_hydrateRecord(
-					$subrelations ?: [], $relModel, $record, $i, $j, $relName
-				);
-			}
-			$record[$min][$name][$relField] = $relModel::create($rel, [
-				'class' => 'set'
-			] + $options);
 		}
-		return $primary::create(
-			isset($record[$min][$name]) ? $record[$min][$name] : [], $options
+		return $conn->item(
+			$primary, isset($record[$min][$name]) ? $record[$min][$name] : array(), $options
 		);
 	}
 
 	protected function _columnMap() {
-		if ($this->_query && ($map = $this->_query->map())) {
+		if ($this->_query && $map = $this->_query->map()) {
 			return $map;
 		}
 		if (!($model = $this->_model)) {
-			return [];
+			return array();
 		}
 		if (!is_object($this->_query) || !$this->_query->join()) {
-			return $model::connection()->schema($this->_query);
+			$map = $model::connection()->schema($this->_query);
+			return $map;
 		}
 		$model = $this->_model;
-		return $model::connection()->schema($this->_query);
+		$map = $model::connection()->schema($this->_query);
+
+		return $map;
 	}
 
 	/**
-	 * Extracts the numerical index of the primary key in numerical indexed row data.
-	 * Works only for the main row data and not for relationship rows.
+	 * Result object contain SQL result which are generally a 2 dimentionnal array
+	 * where line are records and columns are fields.
+	 * This function extract from the Result object the index of primary key(s).
 	 *
-	 * This method will also correctly detect a primary key which doesn't come
-	 * first.
-	 *
-	 * @return array An array where key are index and value are primary key fieldname.
+	 * @param string $name The name of the relation to retreive the index of
+	 *               corresponding primary key(s).
+	 * @return array An array where key are index and value are primary key fieldname
 	 */
-	protected function _keyIndex() {
-		if (!($model = $this->_model) || !isset($this->_columns[''])) {
-			return [];
+	protected function _keyIndex($name) {
+		if (!($model = $this->_model) || !isset($this->_columns[$name])) {
+			return array();
 		}
 		$index = 0;
-
-		foreach ($this->_columns as $name => $fields) {
-			if ($name === '') {
-				if (($offset = array_search($model::meta('key'), $fields)) === false) {
-					return [];
+		foreach ($this->_columns as $key => $value) {
+			if ($key === $name) {
+				$flip = array_flip($value);
+				$keys = $model::meta('key');
+				if (!is_array($keys)) {
+					$keys = array($keys);
 				}
-				return [$index + $offset => $model::meta('key')];
+				$keys = array_flip($keys);
+				$keys = array_intersect_key($flip, $keys);
+				foreach ($keys as &$value) {
+					$value += $index;
+				}
+				return array_flip($keys);
 			}
-			$index += count($fields);
+			$index += count($value);
 		}
-		return [];
 	}
 }
 

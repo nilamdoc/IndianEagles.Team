@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\security\auth\adapter;
@@ -13,7 +12,6 @@ use lithium\core\Libraries;
 use UnexpectedValueException;
 use lithium\security\Password;
 use lithium\core\ClassNotFoundException;
-use lithium\util\Inflector;
 
 /**
  * The `Form` adapter provides basic authentication facilities for checking credentials submitted
@@ -32,15 +30,15 @@ use lithium\util\Inflector;
  * accepts an array of field names to use when looking up a user. An example configuration,
  * including a custom model class and lookup fields might look like the following:
  *
- * ```
- * Auth::config([
- * 	'customer' => [
+ * {{{
+ * Auth::config(array(
+ * 	'customer' => array(
  * 		'adapter' => 'Form',
  * 		'model' => 'Customers',
- * 		'fields' => ['email', 'password']
- * 	]
- * ]);
- * ```
+ * 		'fields' => array('email', 'password')
+ * 	)
+ * ));
+ * }}}
  *
  * If the field names present in the form match the fields used in the database lookup, the above
  * will suffice. If, however, the form fields must be matched to different database field names,
@@ -48,20 +46,20 @@ use lithium\util\Inflector;
  * field names. Suppose, for example, user authentication information in a MongoDB database is
  * nested within a sub-object called `login`. The adapter could be configured as follows:
  *
- * ```
- * Auth::config([
- * 	'customer' => [
+ * {{{
+ * Auth::config(array(
+ * 	'customer' => array(
  * 		'adapter' => 'Form',
  * 		'model' => 'Customers',
- * 		'fields' => ['username' => 'login.username', 'password' => 'login.password'],
- * 		'scope' => ['active' => true]
- * 	]
- * ]);
- * ```
+ * 		'fields' => array('username' => 'login.username', 'password' => 'login.password'),
+ * 		'scope' => array('active' => true)
+ * 	)
+ * ));
+ * }}}
  *
  * Note that any additional fields may be specified which should be included in the query. For
  * example, if a user must select a group when logging in, you may override the `'fields'` key with
- * that value as well (i.e. `'fields' => ['username', 'password', 'group']`). If a field is
+ * that value as well (i.e. `'fields' => array('username', 'password', 'group')`). If a field is
  * specified which is not present in the request data, the value in the authentication query will be
  * `null`). Note that this will only submit data that is specified in the incoming request. If you
  * would like to further limit the query using fixed conditions, use the `'scope'` key, as shown in
@@ -77,15 +75,15 @@ use lithium\util\Inflector;
  * For example, if you're doing simple password hashing against a legacy application, you can
  * configure the adapter as follows:
  *
- * ```
- * Auth::config([
- * 	'default' => [
+ * {{{
+ * Auth::config(array(
+ * 	'default' => array(
  * 		'adapter' => 'Form',
- * 		'filters' => ['password' => ['lithium\security\Hash', 'calculate']],
- * 		'validators' => ['password' => false]
- * 	]
- * ]);
- * ```
+ * 		'filters' => array('password' => array('lithium\util\String', 'hash')),
+ * 		'validators' => array('password' => false)
+ * 	)
+ * ));
+ * }}}
  *
  * This applies the default system hash (SHA 512) against the password prior to using it in the
  * query, and overrides `'validators'` to disable the default crypto-based query validation that
@@ -95,17 +93,17 @@ use lithium\util\Inflector;
  * used to specify the filter must match the key side of the `'fields'` assignment. Additionally,
  * specifying a filter with no key allows the entire data array to be filtered, as in the following:
  *
- * ```
- * Auth::config([
- * 	'default' => [
+ * {{{
+ * Auth::config(array(
+ * 	'default' => array(
  * 		'adapter' => 'Form',
- * 		'filters' => [function ($data) {
+ * 		'filters' => array(function ($data) {
  * 			// Make any modifications to $data, including adding/removing keys
  * 			return $data;
- * 		}]
- * 	]
- * ]);
- * ```
+ * 		})
+ * 	)
+ * ));
+ * }}}
  *
  * For more information, see the `_filters()` method or the `$_filters` property.
  *
@@ -116,20 +114,20 @@ use lithium\util\Inflector;
  * hash function which operates in constant time to validate passwords. Configuring this validator
  * manually would work as follows:
  *
- * ```
+ * {{{
  * use lithium\security\Password;
  *
- * Auth::config([
- * 	'default' => [
+ * Auth::config(array(
+ * 	'default' => array(
  * 		'adapter' => 'Form',
- * 		'validators' => [
+ * 		'validators' => array(
  * 			'password' => function($form, $data) {
  * 				return Password::check($form, $data);
  * 			}
- * 		]
- * 	]
- * ]);
- * ```
+ * 		)
+ * 	)
+ * ));
+ * }}}
  *
  * As with filters, each validator can be defined as any PHP callable, and must be keyed using the
  * name of the form field submitted (if form and database field names do not match). If a validator
@@ -138,7 +136,7 @@ use lithium\util\Inflector;
  *
  * @see lithium\net\http\Request::$data
  * @see lithium\data\Model::find()
- * @see lithium\security\Hash::calculate()
+ * @see lithium\util\String::hash()
  */
 class Form extends \lithium\core\Object {
 
@@ -163,18 +161,18 @@ class Form extends \lithium\core\Object {
 	 * For example, if you had a form field name `username`, which mapped to a database field named
 	 * username, you could use the following in the `'fields'` configuration:
 	 *
-	 * ``` embed:lithium\tests\cases\security\auth\adapter\FormTest::testMixedFieldMapping(3-3) ```
+	 * {{{ embed:lithium\tests\cases\security\auth\adapter\FormTest::testMixedFieldMapping(3-3) }}}
 	 *
 	 * This is especially relevant for document databases, where you may want to map a form field to
 	 * a nested document field:
 	 *
-	 * ```
-	 * 'fields' => ['username' => 'login.username', 'password'],
-	 * ```
+	 * {{{
+	 * 'fields' => array('username' => 'login.username', 'password'),
+	 * }}}
 	 *
 	 * @var array
 	 */
-	protected $_fields = [];
+	protected $_fields = array();
 
 	/**
 	 * Additional data to apply to the model query conditions when looking up users, i.e.
@@ -182,43 +180,40 @@ class Form extends \lithium\core\Object {
 	 *
 	 * @var array
 	 */
-	protected $_scope = [];
+	protected $_scope = array();
 
 	/**
 	 * Callback filters to apply to request data before using it in the authentication query. Each
 	 * key in the array must match a request field specified in the `$_fields` property, and each
 	 * value must either be a reference to a function or method name, or a closure. For example, to
 	 * automatically hash passwords using simple SHA 512 hashing, the `Form` adapter could be
-	 * configured with the following:
-	 * ```
-	 * ['password' => ['lithium\security\Hash', 'calculate']]
-	 * ```
+	 * configured with the following: `array('password' => array('lithium\util\String', 'hash'))`.
 	 *
 	 * Optionally, you can specify a callback with no key, which will receive (and can modify) the
 	 * entire credentials array before the query is executed, as in the following example:
 	 *
-	 * ```
-	 * 	Auth::config([
-	 * 		'members' => [
+	 * {{{
+	 * 	Auth::config(array(
+	 * 		'members' => array(
 	 * 			'adapter' => 'Form',
 	 * 			'model' => 'Member',
-	 * 			'fields' => ['email', 'password'],
-	 * 			'filters' => [function($data) {
+	 * 			'fields' => array('email', 'password'),
+	 * 			'filters' => array(function($data) {
 	 * 				// If the user is outside the company, then their account must have the
 	 * 				// 'private' field set to true in order to log in:
 	 * 				if (!preg_match('/@mycompany\.com$/', $data['email'])) {
 	 * 					$data['private'] = true;
 	 * 				}
 	 * 				return $data;
-	 * 			}]
-	 * 		]
-	 * 	]);
-	 * ```
+	 * 			})
+	 * 		)
+	 * 	));
+	 * }}}
 	 *
 	 * @see lithium\security\auth\adapter\Form::$_fields
 	 * @var array
 	 */
-	protected $_filters = [];
+	protected $_filters = array();
 
 	/**
 	 * An array of callbacks, keyed by form field name, which make an assertion about a piece of
@@ -230,7 +225,7 @@ class Form extends \lithium\core\Object {
 	 * @see lithium\security\auth\adapter\Form::_validate()
 	 * @var array
 	 */
-	protected $_validators = [];
+	protected $_validators = array();
 
 	/**
 	 * If you require custom model logic in your authentication query, use this setting to specify
@@ -251,44 +246,43 @@ class Form extends \lithium\core\Object {
 	 *
 	 * @var array
 	 */
-	protected $_autoConfig = ['model', 'fields', 'scope', 'filters', 'validators', 'query'];
+	protected $_autoConfig = array('model', 'fields', 'scope', 'filters', 'validators', 'query');
 
 	/**
-	 * Constructor. Sets the initial configuration for the `Form` adapter, as detailed below.
+	 * Sets the initial configuration for the `Form` adapter, as detailed below.
 	 *
 	 * @see lithium\security\auth\adapter\Form::$_model
 	 * @see lithium\security\auth\adapter\Form::$_fields
 	 * @see lithium\security\auth\adapter\Form::$_filters
 	 * @see lithium\security\auth\adapter\Form::$_validators
 	 * @see lithium\security\auth\adapter\Form::$_query
-	 * @param array $config Available configuration options:
-	 *         `'model'` _string_: The name of the model class to use. See the `$_model`
-	 *         property for details.
-	 *         `'fields'` _array_: The model fields to query against when taking input from
-	 *         the request data. See the `$_fields` property for details.
-	 *         `'scope'` _array_: Any additional conditions used to constrain the
-	 *         authentication query. For example, if active accounts in an application have
-	 *         an `active` field which must be set to `true`, you can specify
-	 *         `'scope' => ['active' => true]`. See the `$_scope` property for more
-	 *         details.
-	 *         `'filters'` _array_: Named callbacks to apply to request data before the user
-	 *         lookup query is generated. See the `$_filters` property for more details.
-	 *         `'validators'` _array_: Named callbacks to apply to fields in request data and
-	 *         corresponding fields in database data in order to do programmatic
-	 *         authentication checks after the query has occurred. See the `$_validators`
-	 *         property for more details.
-	 *         `'query'` _string_: Determines the model method to invoke for authentication
-	 *         checks. See the `$_query` property for more details.
-	 * @return void
+	 * @param array $config Sets the configuration for the adapter, which has the following options:
+	 *              - `'model'` _string_: The name of the model class to use. See the `$_model`
+	 *                property for details.
+	 *              - `'fields'` _array_: The model fields to query against when taking input from
+	 *                the request data. See the `$_fields` property for details.
+	 *              - `'scope'` _array_: Any additional conditions used to constrain the
+	 *                authentication query. For example, if active accounts in an application have
+	 *                an `active` field which must be set to `true`, you can specify
+	 *                `'scope' => array('active' => true)`. See the `$_scope` property for more
+	 *                details.
+	 *              - `'filters'` _array_: Named callbacks to apply to request data before the user
+	 *                lookup query is generated. See the `$_filters` property for more details.
+	 *              - `'validators'` _array_: Named callbacks to apply to fields in request data and
+	 *                corresponding fields in database data in order to do programmatic
+	 *                authentication checks after the query has occurred. See the `$_validators`
+	 *                property for more details.
+	 *              - `'query'` _string_: Determines the model method to invoke for authentication
+	 *                checks. See the `$_query` property for more details.
 	 */
-	public function __construct(array $config = []) {
-		$defaults = [
+	public function __construct(array $config = array()) {
+		$defaults = array(
 			'model' => 'Users',
 			'query' => 'first',
-			'filters' => [],
-			'validators' => [],
-			'fields' => ['username', 'password']
-		];
+			'filters' => array(),
+			'validators' => array(),
+			'fields' => array('username', 'password')
+		);
 		$config += $defaults;
 
 		$password = function($form, $data) {
@@ -331,10 +325,10 @@ class Form extends \lithium\core\Object {
 	 *              adapter.
 	 * @return array Returns an array containing user information on success, or `false` on failure.
 	 */
-	public function check($credentials, array $options = []) {
+	public function check($credentials, array $options = array()) {
 		$model = $this->_model;
 		$query = $this->_query;
-		$data = $this->_filters($this->_data($credentials->data));
+		$data = $this->_filters($credentials->data);
 
 		$validate = array_flip(array_intersect_key($this->_fields, $this->_validators));
 		$conditions = $this->_scope + array_diff_key($data, $validate);
@@ -355,7 +349,7 @@ class Form extends \lithium\core\Object {
 	 * @param array $options Adapter-specific options. Not implemented in the `Form` adapter.
 	 * @return array Returns the value of `$data`.
 	 */
-	public function set($data, array $options = []) {
+	public function set($data, array $options = array()) {
 		return $data;
 	}
 
@@ -365,7 +359,8 @@ class Form extends \lithium\core\Object {
 	 * @param array $options Adapter-specific options. Not implemented in the `Form` adapter.
 	 * @return void
 	 */
-	public function clear(array $options = []) {}
+	public function clear(array $options = array()) {
+	}
 
 	/**
 	 * Iterates over the filters configured in `$_filters` which are applied to submitted form data
@@ -376,7 +371,7 @@ class Form extends \lithium\core\Object {
 	 * @return array Callback result.
 	 */
 	protected function _filters($data) {
-		$result = [];
+		$result = array();
 
 		foreach ($this->_fields as $from => $to) {
 			$result[$to] = isset($data[$from]) ? $data[$from] : null;
@@ -448,20 +443,6 @@ class Form extends \lithium\core\Object {
 			throw new UnexpectedValueException("Authentication validator is not callable.");
 		}
 		return call_user_func($this->_validators[0], $data, $user) ? $user : false;
-	}
-
-	/**
-	 * Checks if the data container values are inside indexed arrays from binding.
-	 * Get the values from the binding coresponding to the model if such exists.
-	 *
-	 * @see lithium\security\auth\adapter\Form::check
-	 * @param array $data The array of raw form data.
-	 * @return array Original or sub array of the form data.
-	 */
-	protected function _data($data) {
-		$model = $this->_model;
-		$index = strtolower(Inflector::singularize($model::meta('name')));
-		return isset($data[$index]) && is_array($data[$index]) ? $data[$index] : $data;
 	}
 }
 

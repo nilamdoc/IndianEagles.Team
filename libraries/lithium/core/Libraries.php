@@ -1,19 +1,19 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\core;
 
 use RuntimeException;
-use lithium\util\Text;
-use lithium\aop\Filters;
+use lithium\util\String;
+use lithium\util\collection\Filters;
 use lithium\core\ConfigException;
 use lithium\core\ClassNotFoundException;
+use Closure;
 
 /**
  * Manages all aspects of class and file location, naming and mapping. Implements auto-loading for
@@ -59,11 +59,18 @@ use lithium\core\ClassNotFoundException;
 class Libraries {
 
 	/**
+	 * Stores the closures that represent the method filters. They are indexed by method name.
+	 *
+	 * @var array
+	 */
+	protected static $_methodFilters = array();
+
+	/**
 	 * The list of class libraries registered with the class loader.
 	 *
 	 * @var array
 	 */
-	protected static $_configurations = [];
+	protected static $_configurations = array();
 
 	/**
 	 * Contains a cascading list of search path templates, indexed by base object type.
@@ -79,53 +86,57 @@ class Libraries {
 	 * @see lithium\core\Libraries::paths()
 	 * @var array
 	 */
-	protected static $_paths = [
-		'adapter' => [
+	protected static $_paths = array(
+		'adapter' => array(
 			'{:library}\extensions\adapter\{:namespace}\{:class}\{:name}',
-			'{:library}\{:namespace}\{:class}\adapter\{:name}'
-		],
-		'command' => [
+			'{:library}\{:namespace}\{:class}\adapter\{:name}' => array('libraries' => 'lithium')
+		),
+		'command' => array(
 			'{:library}\extensions\command\{:namespace}\{:class}\{:name}',
-			'{:library}\console\command\{:namespace}\{:class}\{:name}'
-		],
-		'controllers' => [
+			'{:library}\console\command\{:namespace}\{:class}\{:name}' => array(
+				'libraries' => 'lithium'
+			)
+		),
+		'controllers' => array(
 			'{:library}\controllers\{:namespace}\{:class}\{:name}Controller'
-		],
-		'data' => [
+		),
+		'data' => array(
 			'{:library}\extensions\data\{:namespace}\{:class}\{:name}',
-			'{:library}\data\{:namespace}\{:class}\adapter\{:name}',
-			'{:library}\data\{:namespace}\{:class}\{:name}',
-			'{:library}\data\{:class}\adapter\{:name}'
-		],
-		'helper' => [
+			'{:library}\data\{:namespace}\{:class}\adapter\{:name}' => array(
+				'libraries' => 'lithium'
+			),
+			'{:library}\data\{:namespace}\{:class}\{:name}' => array('libraries' => 'lithium'),
+			'{:library}\data\{:class}\adapter\{:name}' => array('libraries' => 'lithium')
+		),
+		'helper' => array(
 			'{:library}\extensions\helper\{:name}',
-			'{:library}\template\helper\{:name}'
-		],
-		'libraries' => [
+			'{:library}\template\helper\{:name}' => array('libraries' => 'lithium')
+		),
+		'libraries' => array(
 			'{:app}/libraries/{:name}',
 			'{:root}/{:name}'
-		],
-		'models' => [
+		),
+		'models' => array(
 			'{:library}\models\{:name}'
-		],
-		'strategy' => [
+		),
+		'strategy' => array(
 			'{:library}\extensions\strategy\{:namespace}\{:class}\{:name}',
 			'{:library}\extensions\strategy\{:class}\{:name}',
-			'{:library}\{:namespace}\{:class}\strategy\{:name}'
-		],
-		'socket' => [
+			'{:library}\{:namespace}\{:class}\strategy\{:name}' => array('libraries' => 'lithium')
+		),
+		'socket' => array(
 			'{:library}\extensions\net\socket\{:name}',
 			'{:library}\extensions\socket\{:name}',
 			'{:library}\net\socket\{:name}'
-		],
-		'test' => [
+		),
+		'test' => array(
 			'{:library}\extensions\test\{:namespace}\{:class}\{:name}',
-			'{:library}\test\{:namespace}\{:class}\{:name}'
-		],
-		'tests' => [
+			'{:library}\test\{:namespace}\{:class}\{:name}' => array('libraries' => 'lithium')
+		),
+		'tests' => array(
 			'{:library}\tests\{:namespace}\{:class}\{:name}Test'
-		]
-	];
+		)
+	);
 
 	/**
 	 * Stores the name of the default library. When adding a library configuration to the
@@ -144,7 +155,7 @@ class Libraries {
 	 * @var array
 	 * @see lithium\core\Libraries::load()
 	 */
-	protected static $_cachedPaths = [];
+	protected static $_cachedPaths = array();
 
 	/**
 	 * Holds associations between fully-namespaced class names and file's paths mapped
@@ -154,7 +165,7 @@ class Libraries {
 	 * @see lithium\core\Libraries::map()
 	 * @see lithium\core\Libraries::unmap()
 	 */
-	protected static $_map = [];
+	protected static $_map = array();
 
 	/**
 	 * Accessor method for the class path templates which `Libraries` uses to look up and load
@@ -162,9 +173,9 @@ class Libraries {
 	 * organization of built-in class types.
 	 *
 	 * For example, in a queuing application, you can define a class type called `'job'`:
-	 * ```
-	 * Libraries::paths(['job' => '{:library}\extensions\job\{:name}']);
-	 * ```
+	 * {{{
+	 * Libraries::paths(array('job' => '{:library}\extensions\job\{:name}'));
+	 * }}}
 	 *
 	 * Then, any classes you add to the `extensions/job` directory in your application will be
 	 * automatically detected when calling `Libraries::locate('job')`. Additionally, any matching
@@ -174,18 +185,18 @@ class Libraries {
 	 * Supposing you wanted to have the option of further organizing jobs by class type (some jobs
 	 * are related to updating caches, others to sending notifications, etc.), you can specify
 	 * multiple paths per class type, with varying levels of specificity:
-	 * ```
-	 * Libraries::paths(['job' => [
+	 * {{{
+	 * Libraries::paths(array('job' => array(
 	 * 	'{:library}\extensions\job\{:class}\{:name}',
 	 * 	'{:library}\extensions\job\{:name}'
-	 * ]]);
-	 * ```
+	 * )));
+	 * }}}
 	 *
 	 * This allows you to, for example, have two different classes called `Cleanup`. One may be
 	 * located in `app\extensions\job\Cleanup`, while the other is in
-	 * `app\extensions\job\cache\Cleanup`. Calling: `Libraries::locate('job');` will find
-	 * both classes, while `Libraries::locate('job.cache');` will only find the second. You can
-	 * also find individual jobs by name: `Libraries::locate('job', 'Cleanup');`
+	 * `app\extensions\job\cache\Cleanup`. Calling: {{{Libraries::locate('job');}}} will find
+	 * both classes, while {{{Libraries::locate('job.cache');}}} will only find the second. You can
+	 * also find individual jobs by name: {{{Libraries::locate('job', 'Cleanup');}}}
 	 *
 	 * See `Libraries::locate()` for more information on using built-in and user-defined paths to
 	 * look up classes.
@@ -193,19 +204,16 @@ class Libraries {
 	 * In addition to adding custom class types, `paths()` allows you to redefine the naming and
 	 * organization of existing types. For example, if you wished to reference your model classes
 	 * as `app\models\PostModel` instead of `app\models\Post`, you can do the following:
-	 * ```
-	 * Libraries::paths(['models' => '{:library}\models\{:name}Model']);
-	 * ```
-	 *
-	 * Note, however, that this is a destructive, not an additive operation, and will
-	 * replace any existing paths defined for that type. If you wish to add a search path
-	 * for an existing type, you must do the following:
-	 * ```
+	 * {{{Libraries::paths(array('models' => '{:library}\models\{:name}Model'));}}} Note, however,
+	 * that this is a destructive, not an additive operation, and will replace any existing paths
+	 * defined for that type. If you wish to add a search path for an existing type, you must do
+	 * the following:
+	 * {{{
 	 * $existing = Libraries::paths('controllers');
-	 * Libraries::paths(['controller' => array_merge(
-	 * 	['{:library}\extensions\controllers\{:name}Controller'], (array) $existing
-	 * )]);
-	 * ```
+	 * Libraries::paths(array('controller' => array_merge(
+	 * 	array('{:library}\extensions\controllers\{:name}Controller'), (array) $existing
+	 * )));
+	 * }}}
 	 *
 	 * @see lithium\core\Libraries::locate()
 	 * @see lithium\core\Libraries::$_paths
@@ -258,7 +266,7 @@ class Libraries {
 	 *          `'Zend_'` or `'Solar_'`. If the library has no global prefix, set to `false`.
 	 *        - `'suffix'` _string_: Gets appended to the end of the file name. For example, most
 	 *          libraries end classes in `'.php'`, but some use `'.class.php'`, or `'.inc.php'`.
-	 *        - `'transform'` _\Closure_: Defines a custom way to transform a class name into its
+	 *        - `'transform'` _closure_: Defines a custom way to transform a class name into its
 	 *          corresponding file path.  Accepts either an array of two strings which are
 	 *          interpreted as the pattern and replacement for a regex, or an anonymous function,
 	 *          which receives the class name and library configuration arrays as parameters, and
@@ -268,8 +276,8 @@ class Libraries {
 	 *          for caching, log files, uploads, etc.
 	 * @return array Returns the resulting set of options created for this library.
 	 */
-	public static function add($name, array $config = []) {
-		$defaults = [
+	public static function add($name, array $config = array()) {
+		$defaults = array(
 			'name' => $name,
 			'path' => null,
 			'prefix' => $name . "\\",
@@ -280,7 +288,7 @@ class Libraries {
 			'bootstrap' => true,
 			'defer' => false,
 			'default' => false
-		];
+		);
 		if ($name === 'lithium') {
 			$defaults['defer'] = true;
 			$defaults['bootstrap'] = false;
@@ -334,20 +342,20 @@ class Libraries {
 	 * Allows library information to be retrieved in various ways, including:
 	 *
 	 * By name:
-	 * ``` embed:lithium\tests\cases\core\LibrariesTest::testLibraryConfigAccess(1-1) ```
+	 * {{{ embed:lithium\tests\cases\core\LibrariesTest::testLibraryConfigAccess(1-1) }}}
 	 *
 	 * With no parameters, to return all configuration for all libraries:
-	 * ``` embed:lithium\tests\cases\core\LibrariesTest::testLibraryConfigAccess(22-22) ```
+	 * {{{ embed:lithium\tests\cases\core\LibrariesTest::testLibraryConfigAccess(22-22) }}}
 	 *
 	 * By list of names with a key to extract:
-	 * ``` embed:lithium\tests\cases\core\LibrariesTest::testLibraryConfigAccess(34-34) ```
+	 * {{{ embed:lithium\tests\cases\core\LibrariesTest::testLibraryConfigAccess(34-34) }}}
 	 *
 	 * With no name, and a key to extract, to return a key/value array, where the library name is
 	 * the key, and the `$key` value is the value:
-	 * ``` embed:lithium\tests\cases\core\LibrariesTest::testLibraryConfigAccess(37-37) ```
+	 * {{{ embed:lithium\tests\cases\core\LibrariesTest::testLibraryConfigAccess(37-37) }}}
 	 *
 	 * By containing class name:
-	 * ``` embed:lithium\tests\cases\core\LibrariesTest::testLibraryConfigAccess(45-45) ```
+	 * {{{ embed:lithium\tests\cases\core\LibrariesTest::testLibraryConfigAccess(45-45) }}}
 	 *
 	 * @param mixed $name Either the name of a library added in `Libraries::add()`, an array of
 	 *              library names, or a fully-namespaced class name (see usage examples above).
@@ -369,7 +377,7 @@ class Libraries {
 		}
 		if (is_array($name) || (!$name && $key)) {
 			$name = $name ?: array_keys(static::$_configurations);
-			$call = [get_called_class(), 'get'];
+			$call = array(get_called_class(), 'get');
 			return array_combine($name, array_map($call, $name, array_fill(0, count($name), $key)));
 		}
 		$config = isset($configs[$name]) ? $configs[$name] : null;
@@ -430,23 +438,23 @@ class Libraries {
 	 *         libraries.
 	 * @todo Patch this to skip paths belonging to nested libraries in recursive searches.
 	 */
-	public static function find($library, array $options = []) {
+	public static function find($library, array $options = array()) {
 		$format = function($file, $config) {
-			$trim = [strlen($config['path']) + 1, strlen($config['suffix'])];
+			$trim = array(strlen($config['path']) + 1, strlen($config['suffix']));
 			$rTrim = strpos($file, $config['suffix']) !== false ? -$trim[1] : 9999;
 			$file = preg_split('/[\/\\\\]/', substr($file, $trim[0], $rTrim));
 			return $config['prefix'] . join('\\', $file);
 		};
 
-		$defaults = compact('format') + [
+		$defaults = compact('format') + array(
 			'path' => '',
 			'recursive' => false,
 			'filter' => '/^(\w+)?(\\\\[a-z0-9_]+)+\\\\[A-Z][a-zA-Z0-9]+$/',
 			'exclude' => '',
 			'namespaces' => false
-		];
+		);
 		$options += $defaults;
-		$libs = [];
+		$libs = array();
 
 		if ($options['namespaces'] && $options['filter'] === $defaults['filter']) {
 			$options['format'] = function($class, $config) use ($format, $defaults) {
@@ -476,8 +484,9 @@ class Libraries {
 	}
 
 	/**
-	 * Loads the class definition specified by `$class`. Looks through the list of libraries
-	 * defined in `$_configurations`, which are added through `lithium\core\Libraries::add()`.
+	 * Loads the class definition specified by `$class`. Also calls the `__init()` method on the
+	 * class, if defined.  Looks through the list of libraries defined in `$_configurations`, which
+	 * are added through `lithium\core\Libraries::add()`.
 	 *
 	 * @see lithium\core\Libraries::add()
 	 * @see lithium\core\Libraries::path()
@@ -492,15 +501,7 @@ class Libraries {
 
 		if ($path && include $path) {
 			static::$_cachedPaths[$class] = $path;
-
-			if (method_exists($class, '__init')) {
-				$message  = "Support for automatic initialization of static classes has been ";
-				$message .= "removed. `{$class}::__init()` exists, please remove it to get rid ";
-				$message .= "of this message. Static classes must now be initialized manually. ";
-				$message .= "i.e. by creating an `init()` method and calling it at the end of ";
-				$message .= "the file and outside of the class.";
-				throw new RuntimeException($message);
-			}
+			method_exists($class, '__init') ? $class::__init() : null;
 		} elseif ($require) {
 			throw new RuntimeException("Failed to load class `{$class}` from path `{$path}`.");
 		}
@@ -535,7 +536,7 @@ class Libraries {
 	 */
 	public static function unmap($classes) {
 		if (!is_array($classes)) {
-			$classes = [$classes];
+			$classes = array($classes);
 		}
 		foreach ($classes as $value) {
 			unset(static::$_map[$value]);
@@ -555,8 +556,8 @@ class Libraries {
 	 * @return string Returns the absolute path to the file containing `$class`, or `null` if the
 	 *         file cannot be found.
 	 */
-	public static function path($class, array $options = []) {
-		$defaults = ['dirs' => false];
+	public static function path($class, array $options = array()) {
+		$defaults = array('dirs' => false);
 		$options += $defaults;
 		$class = ltrim($class, '\\');
 
@@ -649,7 +650,7 @@ class Libraries {
 	 * @return string Returns transformed path of a class to a file, or `null` if the transformation
 	 *         did not match.
 	 */
-	protected static function _transformPath($transform, $class, array $options = []) {
+	protected static function _transformPath($transform, $class, array $options = array()) {
 		if ((is_callable($transform)) && $file = $transform($class, $options)) {
 			return $file;
 		}
@@ -673,10 +674,11 @@ class Libraries {
 	 * @throws lithium\core\ClassNotFoundException Throws an exception if the class can't be found.
 	 * @filter
 	 */
-	public static function instance($type, $name, array $options = []) {
+	public static function instance($type, $name, array $options = array()) {
 		$params = compact('type', 'name', 'options');
+		$_paths =& static::$_paths;
 
-		return Filters::run(get_called_class(), __FUNCTION__, $params, function($params) {
+		$implementation = function($self, $params) use (&$_paths) {
 			$name = $params['name'];
 			$type = $params['type'];
 
@@ -684,10 +686,10 @@ class Libraries {
 				$message = "Invalid class lookup: `\$name` and `\$type` are empty.";
 				throw new ClassNotFoundException($message);
 			}
-			if (!is_string($type) && $type !== null && !isset(static::$_paths[$type])) {
+			if (!is_string($type) && $type !== null && !isset($_paths[$type])) {
 				throw new ClassNotFoundException("Invalid class type `{$type}`.");
 			}
-			if (!$class = static::locate($type, $name)) {
+			if (!$class = $self::locate($type, $name)) {
 				throw new ClassNotFoundException("Class `{$name}` of type `{$type}` not found.");
 			}
 			if (is_object($class)) {
@@ -697,7 +699,29 @@ class Libraries {
 				throw new ClassNotFoundException("Class `{$name}` of type `{$type}` not defined.");
 			}
 			return new $class($params['options']);
-		});
+		};
+		if (!isset(static::$_methodFilters[__FUNCTION__])) {
+			return $implementation(get_called_class(), $params);
+		}
+		$class = get_called_class();
+		$method = __FUNCTION__;
+		$data = array_merge(static::$_methodFilters[__FUNCTION__], array($implementation));
+		return Filters::run($class, $params, compact('data', 'class', 'method'));
+	}
+
+	/**
+	 * Apply a closure to a method in `Libraries`.
+	 *
+	 * @see lithium\util\collection\Filters
+	 * @param string $method The name of the method to apply the closure to.
+	 * @param Closure $filter The closure that is used to filter the method.
+	 * @return void
+	 */
+	public static function applyFilter($method, $filter = null) {
+		if (!isset(static::$_methodFilters[$method])) {
+			static::$_methodFilters[$method] = array();
+		}
+		static::$_methodFilters[$method][] = $filter;
 	}
 
 	/**
@@ -707,9 +731,7 @@ class Libraries {
 	 * precedence. For example, this will find the first model called `File` in any plugin or class
 	 * library loaded into an application, including the application itself.
 	 *
-	 * ```
-	 * Libraries::locate('models', 'File');
-	 * ```
+	 * {{{Libraries::locate('models', 'File');}}}
 	 *
 	 * Order of precedence is usually based on the order in which the library was registered (via
 	 * `Libraries::add()`), unless the library was registered with the `'defer'` option set to
@@ -722,9 +744,7 @@ class Libraries {
 	 * If `$name` is not specified, `locate()` returns an array with all classes of the specified
 	 * type which can be found. By default, `locate()` searches all registered libraries.
 	 *
-	 * ```
-	 * Libraries::locate('models');
-	 * ```
+	 * {{{Libraries::locate('models');}}}
 	 *
 	 * For example, the above will return an array of all model classes in all registered plugins
 	 * and libraries (including the app itself).
@@ -758,21 +778,21 @@ class Libraries {
 	 *         registered library. If `$name` is not specified, returns an array of all classes
 	 *         found which match `$type`.
 	 */
-	public static function locate($type, $name = null, array $options = []) {
+	public static function locate($type, $name = null, array $options = array()) {
 		if (is_object($name) || strpos($name, '\\') !== false) {
 			return $name;
 		}
-		$ident  = $name ? ($type . '.' . $name) : ($type . '.*');
+		$ident = $name ? ($type . '.' . $name) : ($type . '.*');
 		$ident .= $options ? '.' . md5(serialize($options)) : null;
 
 		if (isset(static::$_cachedPaths[$ident])) {
 			return static::$_cachedPaths[$ident];
 		}
 		$params = static::_params($type, $name);
-		$defaults = [
+		$defaults = array(
 			'type' => 'class',
 			'library' => $params['library'] !== '*' ? $params['library'] : null
-		];
+		);
 		$options += $defaults;
 		unset($params['library']);
 		$paths = static::paths($params['type']);
@@ -788,7 +808,7 @@ class Libraries {
 			$result = static::_locateDeferred(null, $paths, $params, $options);
 			return static::$_cachedPaths[$ident] = $result;
 		}
-		foreach ([false, true] as $defer) {
+		foreach (array(false, true) as $defer) {
 			if ($result = static::_locateDeferred($defer, $paths, $params, $options)) {
 				return (static::$_cachedPaths[$ident] = $result);
 			}
@@ -808,7 +828,7 @@ class Libraries {
 	 */
 	public static function cache($cache = null) {
 		if ($cache === false) {
-			static::$_cachedPaths = [];
+			static::$_cachedPaths = array();
 		}
 		if (is_array($cache)) {
 			static::$_cachedPaths += $cache;
@@ -822,10 +842,8 @@ class Libraries {
 	 *
 	 * @see lithium\core\Libraries::$_paths
 	 * @see lithium\core\Libraries::locate()
-	 * @param boolean|null $defer A boolean flag indicating which libraries to search, either
-	 *        the ones with the `'defer'` flag set, or the ones without. Providing `null`
-	 *        will cause the method to ignore the `'defer'` flag set on any library and
-	 *        perform a complete lookup.
+	 * @param boolean $defer A boolean flag indicating which libraries to search, either the ones
+	 *        with the `'defer'` flag set, or the ones without.
 	 * @param array $paths List of paths to be searched for the given service (class).  These are
 	 *        defined in `lithium\core\Libraries::$_paths`, and are organized by class type.
 	 * @param array $params The list of insert parameters to be injected into each path format
@@ -834,7 +852,7 @@ class Libraries {
 	 * @return string Returns a class path as a string if a given class is found, or null if no
 	 *         class in any path matching any of the parameters is located.
 	 */
-	protected static function _locateDeferred($defer, $paths, $params, array $options = []) {
+	protected static function _locateDeferred($defer, $paths, $params, array $options = array()) {
 		$libraries = static::$_configurations;
 
 		if (isset($options['library'])) {
@@ -845,9 +863,9 @@ class Libraries {
 				continue;
 			}
 
-			foreach (static::_searchPaths($paths, $library) as $tpl) {
+			foreach (static::_searchPaths($paths, $library, $params) as $tpl) {
 				$params['library'] = rtrim($config['prefix'], '\\');
-				$class = str_replace('\\*', '', Text::insert($tpl, $params));
+				$class = str_replace('\\*', '', String::insert($tpl, $params));
 
 				if (file_exists($file = Libraries::path($class, $options))) {
 					return ($options['type'] === 'file') ? $file : $class;
@@ -863,15 +881,17 @@ class Libraries {
 	 * @see lithium\core\Libraries::_search()
 	 * @param array $paths The list of all possible path templates from `Libraries::$_paths`.
 	 * @param string $library The name of the library being searched.
+	 * @param array $params The parameters used in the service location lookup.
 	 * @return array Returns an array of valid path template strings.
 	 */
-	protected static function _searchPaths($paths, $library) {
-		$result = [];
+	protected static function _searchPaths($paths, $library, $params) {
+		$result = array();
+		$params = array('library' => null, 'type' => null) + $params;
 
 		foreach ($paths as $tpl => $opts) {
 			if (is_int($tpl)) {
 				$tpl = $opts;
-				$opts = [];
+				$opts = array();
 			}
 			if (isset($opts['libraries']) && !in_array($library, (array) $opts['libraries'])) {
 				continue;
@@ -888,21 +908,21 @@ class Libraries {
 	 * @param array $options
 	 * @return array
 	 */
-	protected static function _locateAll(array $params, array $options = []) {
-		$defaults = ['libraries' => null, 'recursive' => true, 'namespaces' => false];
+	protected static function _locateAll(array $params, array $options = array()) {
+		$defaults = array('libraries' => null, 'recursive' => true, 'namespaces' => false);
 		$options += $defaults;
 
 		$paths = (array) static::$_paths[$params['type']];
 		$libraries = $options['library'] ? $options['library'] : $options['libraries'];
 		$libraries = static::get((array) $libraries);
-		$flags = ['escape' => '/'];
-		$classes = [];
+		$flags = array('escape' => '/');
+		$classes = array();
 
 		foreach ($libraries as $library => $config) {
 			$params['library'] = $config['path'];
 
-			foreach (static::_searchPaths($paths, $library) as $tpl) {
-				$options['path'] = str_replace('\\', '/', Text::insert($tpl, $params, $flags));
+			foreach (static::_searchPaths($paths, $library, $params) as $tpl) {
+				$options['path'] = str_replace('\\', '/', String::insert($tpl, $params, $flags));
 				$options['path'] = str_replace('*/', '', $options['path']);
 				$classes = array_merge($classes, static::_search($config, $options));
 			}
@@ -915,17 +935,17 @@ class Libraries {
 	 *
 	 * @see lithium\core\Libraries::$_paths
 	 * @param string $type Path type (specified in `Libraries::$_paths`).
-	 * @param array $params Path parameters.
-	 * @return string|null Valid path name or `null` when no of path of given tpe is set.
+	 * @param string $params Path parameters.
+	 * @return string Valid path name.
 	 */
 	protected static function _locatePath($type, $params) {
 		if (!isset(static::$_paths[$type])) {
-			return null;
+			return;
 		}
-		$params += ['app' => LITHIUM_APP_PATH, 'root' => LITHIUM_LIBRARY_PATH];
+		$params += array('app' => LITHIUM_APP_PATH, 'root' => LITHIUM_LIBRARY_PATH);
 
 		foreach (static::$_paths[$type] as $path) {
-			if (is_dir($path = str_replace('\\', '/', Text::insert($path, $params)))) {
+			if (is_dir($path = str_replace('\\', '/', String::insert($path, $params)))) {
 				return $path;
 			}
 		}
@@ -935,12 +955,12 @@ class Libraries {
 	 * Search file system.
 	 *
 	 * @param string $config
-	 * @param array $options
+	 * @param string $options
 	 * @param string $name
 	 * @return array
 	 */
 	protected static function _search($config, $options, $name = null) {
-		$defaults = [
+		$defaults = array(
 			'path' => null,
 			'suffix' => null,
 			'namespaces' => false,
@@ -949,32 +969,22 @@ class Libraries {
 			'filter' => false,
 			'exclude' => false,
 			'format' => function ($file, $config) {
-				$trim = [strlen($config['path']) + 1, strlen($config['suffix'])];
+				$trim = array(strlen($config['path']) + 1, strlen($config['suffix']));
 				$file = substr($file, $trim[0], -$trim[1]);
 				return $config['prefix'] . str_replace('/', '\\', $file);
 			}
-		];
+		);
 		$options += $defaults;
 		$path = $options['path'];
 		$suffix = $options['namespaces'] ? '' : $config['suffix'];
 		$suffix = ($options['suffix'] === null) ? $suffix : $options['suffix'];
 
-
-		$dFlags = GLOB_ONLYDIR;
-		$zFlags = 0;
-		if (strpos($path, '{') !== false) {
-			$message  = "Search path `{$path}` relies on brace globbing. ";
-			$message .= 'Support for brace globbing in search paths has been deprecated.';
-			trigger_error($message, E_USER_DEPRECATED);
-
-			$dFlags |= GLOB_BRACE;
-			$zFlags |= GLOB_BRACE;
-		}
-		$libs = (array) glob($path . $suffix, $options['namespaces'] ? $dFlags : $zFlags);
+		$dFlags = GLOB_ONLYDIR & GLOB_BRACE;
+		$libs = (array) glob($path . $suffix, $options['namespaces'] ? $dFlags : GLOB_BRACE);
 
 		if ($options['recursive']) {
 			list($current, $match) = explode('/*', $path, 2);
-			$queue = array_diff((array) glob($current . '/*', $dFlags), $libs);
+			$dirs = $queue = array_diff((array) glob($current . '/*', $dFlags), $libs);
 			$match = str_replace('##', '.+', preg_quote(str_replace('*', '##', $match), '/'));
 			$match = '/' . $match . preg_quote($suffix, '/') . '$/';
 
@@ -1002,7 +1012,7 @@ class Libraries {
 	 * @return array Returns a copy of `$libs`, filtered and transformed based on the configuration
 	 *         provided in `$options`.
 	 */
-	protected static function _filter($libs, array $config, array $options = []) {
+	protected static function _filter($libs, array $config, array $options = array()) {
 		if (is_callable($options['format'])) {
 			foreach ($libs as $i => $file) {
 				$libs[$i] = $options['format']($file, $config);
@@ -1063,45 +1073,6 @@ class Libraries {
 			$namespace = $parts ? join('\\', $parts) : "*";
 		}
 		return compact('library', 'namespace', 'type', 'class', 'name');
-	}
-
-	/* Deprecated / BC */
-
-	/**
-	 * Stores the closures that represent the method filters. They are indexed by method name.
-	 *
-	 * @deprecated Not used anymore.
-	 * @var array
-	 */
-	protected static $_methodFilters = [];
-
-	/**
-	 * Apply a closure to a method in `Libraries`.
-	 *
-	 * @deprecated Replaced by `\lithium\aop\Filters::apply()` and `::clear()`.
-	 * @see lithium\util\collection\Filters
-	 * @param string $method The name of the method to apply the closure to.
-	 * @param Closure $filter The closure that is used to filter the method.
-	 * @return void
-	 */
-	public static function applyFilter($method, $filter = null) {
-		$message  = '`' . __METHOD__ . '()` has been deprecated in favor of ';
-		$message .= '`\lithium\aop\Filters::apply()` and `::clear()`.';
-		trigger_error($message, E_USER_DEPRECATED);
-
-		$class = get_called_class();
-
-		if ($method === false) {
-			Filters::clear($class);
-			return;
-		}
-		foreach ((array) $method as $m) {
-			if ($filter === false) {
-				Filters::clear($class, $m);
-			} else {
-				Filters::apply($class, $m, $filter);
-			}
-		}
 	}
 }
 

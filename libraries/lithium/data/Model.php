@@ -1,16 +1,14 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\data;
 
 use lithium\core\Libraries;
-use lithium\aop\Filters;
 use lithium\util\Set;
 use lithium\util\Inflector;
 use lithium\core\ConfigException;
@@ -21,32 +19,35 @@ use BadMethodCallException;
  * Models are tasked with providing meaning to otherwise raw and unprocessed data (e.g.
  * user profile).
  *
- * Models expose a consistent and unified API to interact with an underlying data source (e.g.
+ * Models expose a consistent and unified API to interact with an underlying datasource (e.g.
  * MongoDB, CouchDB, MySQL) for operations such as querying, saving, updating and deleting data
  * from the persistent storage.
+ *
+ * Models allow you to interact with your data in two fundamentally different ways: querying, and
+ * data mutation (saving/updating/deleting). All query-related operations may be done through the
+ * static `find()` method, along with some additional utility methods provided for convenience.
  *
  * Classes extending this one should, conventionally, be named as Plural, CamelCase and be
  * placed in the `models` directory. i.e. a posts model would be `model/Posts.php`.
  *
- * Models allow you to interact with your data in two fundamentally different ways: querying, and
- * data mutation (saving/updating/deleting). All **query-related** operations may be done through the
- * static `find()` method, along with some additional utility methods provided for convenience.
- *
  * Examples:
- * ```
+ * {{{
  * // Return all 'post' records
  * Posts::find('all');
- * Posts::all(); // This is equivalent to the above.
+ * Posts::all();
  *
  * // With conditions and a limit
- * Posts::find('all', ['conditions' => ['published' => true], 'limit' => 10]);
+ * Posts::find('all', array('conditions' => array('published' => true), 'limit' => 10));
+ * Posts::all(array('conditions' => array('published' => true), 'limit' => 10));
  *
  * // Integer count of all 'post' records
  * Posts::find('count');
+ * Posts::count(); // This is equivalent to the above.
  *
  * // With conditions
- * Posts::find('count', ['conditions' => ['published' => true]]);
- * ```
+ * Posts::find('count', array('conditions' => array('published' => true)));
+ * Posts::count(array('published' => true));
+ * }}}
  *
  * The actual objects returned from `find()` calls will depend on the type of data source in use.
  * MongoDB, for example, will return results as a `Document` (as will CouchDB), while MySQL will
@@ -54,20 +55,20 @@ use BadMethodCallException;
  * class, and provide the necessary abstraction to make working with either type completely
  * transparent.
  *
- * For **data mutation** (saving/updating/deleting), the `Model` class acts as a broker to the proper
+ * For data mutation (saving/updating/deleting), the `Model` class acts as a broker to the proper
  * objects. When creating a new record or document, for example, a call to `Posts::create()` will
  * return an instance of `lithium\data\entity\Record` or `lithium\data\entity\Document`, which can
  * then be acted upon.
  *
  * Example:
- * ```
+ * {{{
  * $post = Posts::create();
  * $post->author = 'Robert';
  * $post->title = 'Newest Post!';
  * $post->content = 'Lithium rocks. That is all.';
  *
  * $post->save();
- * ```
+ * }}}
  *
  * @see lithium\data\entity\Record
  * @see lithium\data\entity\Document
@@ -81,40 +82,40 @@ class Model extends \lithium\core\StaticObject {
 	 * Criteria for data validation.
 	 *
 	 * Example usage:
-	 * ```
-	 * public $validates = [
+	 * {{{
+	 * public $validates = array(
 	 *     'title' => 'please enter a title',
-	 *     'email' => [
-	 *         ['notEmpty', 'message' => 'Email is empty.'],
-	 *         ['email', 'message' => 'Email is not valid.'],
-	 *     ]
-	 * ];
-	 * ```
+	 *     'email' => array(
+	 *         array('notEmpty', 'message' => 'Email is empty.'),
+	 *         array('email', 'message' => 'Email is not valid.'),
+	 *     )
+	 * );
+	 * }}}
 	 *
 	 * @var array
 	 */
-	public $validates = [];
+	public $validates = array();
 
 	/**
 	 * Model hasOne relations.
 	 *
 	 * @var array
 	 */
-	public $hasOne = [];
+	public $hasOne = array();
 
 	/**
 	 * Model hasMany relations.
 	 *
 	 * @var array
 	 */
-	public $hasMany = [];
+	public $hasMany = array();
 
 	/**
 	 * Model belongsTo relations.
 	 *
 	 * @var array
 	 */
-	public $belongsTo = [];
+	public $belongsTo = array();
 
 	/**
 	 * Stores model instances for internal use.
@@ -126,7 +127,7 @@ class Model extends \lithium\core\StaticObject {
 	 *
 	 * @var array
 	 */
-	protected static $_instances = [];
+	protected static $_instances = array();
 
 	/**
 	 * List of initialized instances.
@@ -134,49 +135,60 @@ class Model extends \lithium\core\StaticObject {
 	 * @see lithium\data\Model::_initialize();
 	 * @var array
 	 */
-	protected static $_initialized = [];
+	protected static $_initialized = array();
+
+	/**
+	 * Stores the filters that are applied to the model instances stored in `Model::$_instances`.
+	 *
+	 * @var array
+	 */
+	protected $_instanceFilters = array();
 
 	/**
 	 * Class dependencies.
 	 *
 	 * @var array
 	 */
-	protected $_classes = [
-		'connections' => 'lithium\data\Connections'
-	];
+	protected $_classes = array(
+		'connections' => 'lithium\data\Connections',
+		'query'       => 'lithium\data\model\Query',
+		'validator'   => 'lithium\util\Validator',
+		'entity'      => 'lithium\data\Entity'
+	);
 
 	/**
 	 * A list of the current relation types for this `Model`.
 	 *
 	 * @var array
 	 */
-	protected $_relations = [];
+	protected $_relations = array();
 
 	/**
 	 * Matching between relation's fieldnames and their corresponding relation name.
 	 *
 	 * @var array
 	 */
-	protected $_relationFieldNames = [];
+	protected $_relationFieldNames = array();
 
 	/**
 	 * List of relation types.
 	 *
 	 * Valid relation types are:
+	 *
 	 * - `belongsTo`
 	 * - `hasOne`
 	 * - `hasMany`
 	 *
 	 * @var array
 	 */
-	protected $_relationTypes = ['belongsTo', 'hasOne', 'hasMany'];
+	protected $_relationTypes = array('belongsTo', 'hasOne', 'hasMany');
 
 	/**
 	 * Store available relation names for this model which still unloaded.
 	 *
 	 * @var array This array use the following notation : `relation_name => relation_type`.
 	 */
-	protected $_relationsToLoad = [];
+	protected $_relationsToLoad = array();
 
 	/**
 	 * Specifies all meta-information for this model class, including the name of the data source it
@@ -196,79 +208,103 @@ class Model extends \lithium\core\StaticObject {
 	 * @var array
 	 * @see lithium\data\Connections::add()
 	 */
-	protected $_meta = [
+	protected $_meta = array(
 		'name' => null,
 		'title' => null,
 		'class' => null,
 		'source' => null,
 		'connection' => 'default'
-	];
+	);
 
 	/**
 	 * Array of closures used to lazily initialize metadata.
 	 *
 	 * @var array
 	 */
-	protected $_initializers = [];
+	protected $_initializers = array();
 
 	/**
-	 * Defines the data schema in array notation or, after initialization, holds the
-	 * schema object.
+	 * Stores the data schema.
 	 *
-	 * `Model` subclasses can manually define a schema in array notation. The array
-	 * notation will then be lazily converted to a schema object by the first call to
-	 * `Model::schema()`.
+	 * The schema is lazy-loaded by the first call to `Model::schema()`, unless it has been
+	 * manually defined in the `Model` subclass.
 	 *
-	 * The schema should only be defined in subclasses for schemaless persistent data
-	 * sources (e.g. MongoDB), for all other data sources this is done automatically. If
-	 * you desire a fixed schema for a schemaless data source, the following example shows
-	 * how you'd define one manually.
+	 * For schemaless persistent storage (e.g. MongoDB), this is never populated automatically - if
+	 * you desire a fixed schema to interact with in those cases, you will be required to define it
+	 * yourself.
 	 *
-	 * For MongoDB specifically, you can also automate schema definition. Please see
-	 * lithium\data\soure\MondoDb::$_schema for more information.
+	 * Example:
+	 * {{{
+	 * protected $_schema = array(
+	 *     '_id'  => array('type' => 'id'), // required for Mongo
+	 *     'name' => array('type' => 'string', 'default' => 'Moe', 'null' => false),
+	 *     'sign' => array('type' => 'string', 'default' => 'bar', 'null' => false),
+	 *     'age'  => array('type' => 'integer', 'default' => 0, 'null' => false)
+	 * );
+	 * }}}
 	 *
-	 * ```
-	 * protected $_schema = [
-	 *     '_id'  => ['type' => 'id'],
-	 *     'name' => ['type' => 'string', 'default' => 'Moe', 'null' => false],
-	 *     'sign' => ['type' => 'string', 'default' => 'bar', 'null' => false],
-	 *     'age'  => ['type' => 'integer', 'default' => 0, 'null' => false]
-	 * ];
-	 * ```
+	 * For MongoDB specifically, you can also implement a callback in your database connection
+	 * configuration that fetches and returns the schema data, as in the following:
+	 *
+	 * {{{
+	 * // config/bootstrap/connections.php:
+	 * Connections::add('default', array(
+	 *  'type' => 'MongoDb',
+	 *  'host' => 'localhost',
+	 *  'database' => 'app_name',
+	 *  'schema' => function($db, $collection, $meta) {
+	 *      $result = $db->connection->schemas->findOne(compact('collection'));
+	 *      return $result ? $result['data'] : array();
+	 *  }
+	 * ));
+	 * }}}
+	 *
+	 * This example defines an optional MongoDB convention in which the schema for each individual
+	 * collection is stored in a "schemas" collection, where each document contains the name of
+	 * a collection, along with a `'data'` key, which contains the schema for that collection, in
+	 * the format specified above.
+	 *
+	 * When defining `'$_schema'` where the data source is MongoDB, the types map to database
+	 * types as follows:
+	 *
+	 * {{{
+	 *  id      => MongoId
+	 *  date    => MongoDate
+	 *  regex   => MongoRegex
+	 *  integer => integer
+	 *  float   => float
+	 *  boolean => boolean
+	 *  code    => MongoCode
+	 *  binary  => MongoBinData
+	 * }}}
 	 *
 	 * @see lithium\data\source\MongoDb::$_schema
-	 * @see lithium\data\Model::schema()
-	 * @see lithium\data\Schema
-	 * @var array|\lithium\data\Schema
+	 * @var array
 	 */
-	protected $_schema = [];
+	protected $_schema = array();
 
 	/**
 	 * Default query parameters for the model finders.
 	 *
-	 * Can be either redefined in a model subclass or changed during runtime
-	 * using `Model::query()`.
+	 * - `'conditions'`: The conditional query elements, e.g.
+	 *                 `'conditions' => array('published' => true)`
+	 * - `'fields'`: The fields that should be retrieved. When set to `null`, defaults to
+	 *             all fields.
+	 * - `'order'`: The order in which the data will be returned, e.g. `'order' => 'ASC'`.
+	 * - `'limit'`: The maximum number of records to return.
+	 * - `'page'`: For pagination of data.
+	 * - `'with'`: An array of relationship names to be included in the query.
 	 *
-	 * For a detailed description of the available query options below see
-	 * the description of the `$options` parameter of `Model::find()`.
-	 *
-	 * @see lithium\data\Model::find()
-	 * @see lithium\data\Model::query()
-	 * @see lithium\data\model\Query::__construct()
 	 * @var array
 	 */
-	protected $_query = [
-		'fields'     => null,
+	protected $_query = array(
 		'conditions' => null,
-		'having'     => null,
-		'group'      => null,
+		'fields'     => null,
 		'order'      => null,
 		'limit'      => null,
-		'offset'     => null,
 		'page'       => null,
-		'with'       => [],
-		'joins'      => []
-	];
+		'with'       => array()
+	);
 
 	/**
 	 * Custom find query properties, indexed by name.
@@ -276,14 +312,14 @@ class Model extends \lithium\core\StaticObject {
 	 * @see lithium\data\Model::finder()
 	 * @var array
 	 */
-	protected $_finders = [];
+	protected $_finders = array();
 
 	/**
 	 * Stores all custom instance methods created by `Model::instanceMethods`.
 	 *
 	 * @var array
 	 */
-	protected static $_instanceMethods = [];
+	protected static $_instanceMethods = array();
 
 	/**
 	 * Holds an array of values that should be processed on `Model::config()`. Each value should
@@ -293,22 +329,28 @@ class Model extends \lithium\core\StaticObject {
 	 * @see lithium\data\Model::config()
 	 * @var array
 	 */
-	protected $_autoConfig = [
+	protected $_autoConfig = array(
 		'meta',
 		'finders',
 		'query',
 		'schema',
 		'classes',
 		'initializers'
-	];
+	);
 
 	/**
-	 * Holds an array of attributes to be inherited.
+	 * Holds an array of values that should be processed on `Model::config()`. Each value should
+	 * have a matching inherited public property defined in the class.
 	 *
-	 * @see lithium\data\Model::_inherited()
+	 * @see lithium\data\Model::config()
 	 * @var array
 	 */
-	protected $_inherits = [];
+	protected $_inherit = array(
+		'validates',
+		'belongsTo',
+		'hasMany',
+		'hasOne'
+	);
 
 	/**
 	 * Configures the model for use. This method will set the `Model::$_schema`, `Model::$_meta`,
@@ -322,7 +364,7 @@ class Model extends \lithium\core\StaticObject {
 	 *        - `schema`: A `Schema` instance for this model.
 	 *        - `classes`: Classes used by this model.
 	 */
-	public static function config(array $config = []) {
+	public static function config(array $config = array()) {
 		if (($class = get_called_class()) === __CLASS__) {
 			return;
 		}
@@ -360,70 +402,23 @@ class Model extends \lithium\core\StaticObject {
 		}
 		static::$_initialized[$class] = true;
 
-		$self->_inherit();
-
-		$source = [
-			'classes' => [], 'meta' => [], 'finders' => [], 'schema' => []
-		];
-
-		$meta = $self->_meta;
-		if ($meta['connection']) {
-			$classes = $self->_classes;
-			$conn = $classes['connections']::get($meta['connection']);
-			$source = (($conn) ? $conn->configureClass($class) : []) + $source;
-		}
-
-		$self->_classes += $source['classes'];
-		$self->_meta = compact('class') + $self->_meta + $source['meta'];
-
-		$self->_initializers += [
-			'name' => function($self) {
-				return basename(str_replace('\\', '/', $self));
-			},
-			'source' => function($self) {
-				return Inflector::tableize($self::meta('name'));
-			},
-			'title' => function($self) {
-				$titleKeys = ['title', 'name'];
-				$titleKeys = array_merge($titleKeys, (array) $self::meta('key'));
-				return $self::hasField($titleKeys);
-			}
-		];
-
-		if (is_object($self->_schema)) {
-			$self->_schema->append($source['schema']);
-		} else {
-			$self->_schema += $source['schema'];
-		}
-
-		$self->_finders += $source['finders'] + static::_finders();
-
-		$self->_classes += [
-			'query'       => 'lithium\data\model\Query',
-			'validator'   => 'lithium\util\Validator',
-			'entity'      => 'lithium\data\Entity'
-		];
-
-		static::_relationsToLoad();
-		return $self;
-	}
-
-	/**
-	 * Merge parent class attributes to the current instance.
-	 */
-	protected function _inherit() {
-
-		$inherited = array_fill_keys($this->_inherited(), []);
+		$inherited = array_fill_keys($self->_autoConfig, array());
+		$inheritedAttrs = array_fill_keys($self->_inherit, array());
 
 		foreach (static::_parents() as $parent) {
 			$parentConfig = get_class_vars($parent);
 
-			foreach ($inherited as $key => $value) {
+			foreach ($self->_autoConfig as $key) {
+				if (isset($parentConfig["_{$key}"])) {
+					$val = $parentConfig["_{$key}"];
+					$inherited[$key] = is_array($val) ? $inherited[$key] + $val : $val;
+				}
+			}
+
+			foreach ($self->_inherit as $key) {
 				if (isset($parentConfig["{$key}"])) {
 					$val = $parentConfig["{$key}"];
-					if (is_array($val)) {
-						$inherited[$key] += $val;
-					}
+					$inheritedAttrs[$key] = $inheritedAttrs[$key] + $val;
 				}
 			}
 
@@ -432,31 +427,51 @@ class Model extends \lithium\core\StaticObject {
 			}
 		}
 
-		foreach ($inherited as $key => $value) {
-			if (is_array($this->{$key})) {
-				$this->{$key} += $value;
-			}
+		foreach ($inheritedAttrs as $key => $value) {
+			$self->{$key} += $value;
 		}
-	}
 
-	/**
-	 * Return inherited attributes.
-	 *
-	 * @param array
-	 */
-	protected function _inherited() {
-		return array_merge($this->_inherits, [
-			'validates',
-			'belongsTo',
-			'hasMany',
-			'hasOne',
-			'_meta',
-			'_finders',
-			'_query',
-			'_schema',
-			'_classes',
-			'_initializers'
-		]);
+		$tmp = $self->_meta + $inherited['meta'];
+		$source = array('meta' => array(), 'finders' => array(), 'schema' => array());
+
+		if ($tmp['connection']) {
+			$conn = $inherited['classes']['connections']::get($tmp['connection']);
+			$source = (($conn) ? $conn->configureClass($class) : array()) + $source;
+		}
+
+		$self->_query += $inherited['query'];
+		$self->_classes += $inherited['classes'];
+
+		$local = compact('class') + $self->_meta;
+		$self->_meta = ($local + $source['meta'] + $inherited['meta']);
+
+		$self->_initializers += $inherited['initializers'] + array(
+			'name' => function($self) {
+				return basename(str_replace('\\', '/', $self));
+			},
+			'source' => function($self) {
+				return Inflector::tableize($self::meta('name'));
+			},
+			'title' => function($self) {
+				$titleKeys = array('title', 'name');
+				$titleKeys = array_merge($titleKeys, (array) $self::meta('key'));
+				return $self::hasField($titleKeys);
+			}
+		);
+
+		$source['schema'] = $source['schema'] + $inherited['schema'];
+		if (is_object($self->_schema)) {
+			$self->_schema->append($source['schema']);
+		} elseif (is_array($self->_schema)) {
+			$self->_schema = $self->_schema + $source['schema'];
+		} else {
+			$self->_schema = $source['schema'];
+		}
+
+		$self->_finders += $source['finders'] + $inherited['finders'] + $self->_findFilters();
+
+		static::_relationsToLoad();
+		return $self;
 	}
 
 	/**
@@ -468,7 +483,7 @@ class Model extends \lithium\core\StaticObject {
 	 * @param array $options The configuration passed to the constructor.
 	 * @return object
 	 */
-	protected static function _instance($name, array $options = []) {
+	protected static function _instance($name, array $options = array()) {
 		$self = static::_object();
 		if (is_string($name) && isset($self->_classes[$name])) {
 			$name = $self->_classes[$name];
@@ -477,27 +492,11 @@ class Model extends \lithium\core\StaticObject {
 	}
 
 	/**
-	 * Enables magic finders. These provide some syntactic-sugar which allows
-	 * to i.e. use `Model::all()` instead  of `Model::find('all')`.
-	 *
-	 * ```
-	 * // Retrieves post with id `23` using the `'first'` finder.
-	 * Posts::first(['conditions' => ['id' => 23]]);
-	 * Posts::findById(23);
-	 * Posts::findById(23);
-	 *
-	 * // All posts that have a trueish `is_published` field.
-	 * Posts::all(['conditions' => ['is_published' => true]]);
-	 * Posts::findAll(['conditions' => ['is_published' => true]]);
-	 * Posts::findAllByIsPublshed(true)
-	 *
-	 * // Counts all posts.
-	 * Posts::count()
-	 * ```
+	 * Allows the use of syntactic-sugar like `Model::all()` instead of `Model::find('all')`.
 	 *
 	 * @see lithium\data\Model::find()
 	 * @see lithium\data\Model::$_meta
-	 * @link http://php.net/language.oop5.overloading.php PHP Manual: Overloading
+	 * @link http://php.net/manual/en/language.oop5.overloading.php PHP Manual: Overloading
 	 * @throws BadMethodCallException On unhandled call, will throw an exception.
 	 * @param string $method Method name caught by `__callStatic()`.
 	 * @param array $params Arguments given to the above `$method` call.
@@ -505,15 +504,17 @@ class Model extends \lithium\core\StaticObject {
 	 */
 	public static function __callStatic($method, $params) {
 		$self = static::_object();
+		$isFinder = isset($self->_finders[$method]);
 
-		if (isset($self->_finders[$method])) {
-			if (count($params) === 2 && is_array($params[1])) {
-				$params = [$params[1] + [$method => $params[0]]];
-			}
+		if ($isFinder && count($params) === 2 && is_array($params[1])) {
+			$params = array($params[1] + array($method => $params[0]));
+		}
+
+		if ($method === 'all' || $isFinder) {
 			if ($params && !is_array($params[0])) {
-				$params[0] = ['conditions' => static::key($params[0])];
+				$params[0] = array('conditions' => static::key($params[0]));
 			}
-			return $self::find($method, $params ? $params[0] : []);
+			return $self::find($method, $params ? $params[0] : array());
 		}
 		preg_match('/^findBy(?P<field>\w+)$|^find(?P<type>\w+)By(?P<fields>\w+)$/', $method, $args);
 
@@ -526,7 +527,7 @@ class Model extends \lithium\core\StaticObject {
 		$type = isset($args['type']) ? $args['type'] : 'first';
 		$type[0] = strtolower($type[0]);
 
-		$conditions = [$field => array_shift($params)];
+		$conditions = array($field => array_shift($params));
 		$params = (isset($params[0]) && count($params) === 1) ? $params[0] : $params;
 		return $self::find($type, compact('conditions') + $params);
 	}
@@ -550,13 +551,11 @@ class Model extends \lithium\core\StaticObject {
 	}
 
 	/**
-	 * Determines if a given method can be called.
+	 * Custom check to determine if our given magic methods can be responded to.
 	 *
-	 * @param string $method Name of the method.
-	 * @param boolean $internal Provide `true` to perform check from inside the
-	 *                class/object. When `false` checks also for public visibility;
-	 *                defaults to `false`.
-	 * @return boolean Returns `true` if the method can be called, `false` otherwise.
+	 * @param  string  $method     Method name.
+	 * @param  bool    $internal   Interal call or not.
+	 * @return bool
 	 */
 	public static function respondsTo($method, $internal = false) {
 		$self = static::_object();
@@ -572,231 +571,86 @@ class Model extends \lithium\core\StaticObject {
 	 * The `find` method allows you to retrieve data from the connected data source.
 	 *
 	 * Examples:
-	 * ```
+	 * {{{
 	 * Posts::find('all'); // returns all records
 	 * Posts::find('count'); // returns a count of all records
 	 *
-	 * // The first ten records that have `'author'` set to `'Bob'`.
-	 * Posts::find('all', [
-	 *     'conditions' => ['author' => 'Bob'],
-	 *     'limit' => 10
-	 * ]);
+	 * // The first ten records that have 'author' set to 'Bob'
+	 * Posts::find('all', array(
+	 *     'conditions' => array('author' => "Bob"), 'limit' => 10
+	 * ));
+	 * }}}
 	 *
-	 * // First record where the id matches 23.
-	 * Posts::find('first', [
-	 *     'conditions' => ['id' => 23]
-	 * ]);
-	 * ```
-	 *
-	 * Shorthands:
-	 * ```
-	 * // Shorthand for find first by primary key.
-	 * Posts::find(23);
-	 *
-	 * // Also works with objects.
-	 * Posts::find(new MongoId(23));
-	 * ```
-	 *
-	 * @see lithium\data\Model::finder()
-	 * @param string|object|integer $type The name of the finder to use. By default the
-	 *        following finders are available. Custom finders can be added via `Model::finder()`.
-	 *        - `'all'`: Returns all records matching the conditions.
-	 *        - `'first'`: Returns the first record matching the conditions.
-	 *        - `'count'`: Returns an integer count of all records matching the conditions.
-	 *          When using `Database` adapter, you can specify the field to count on
-	 *          via `fields`, when multiple fields are given does a count on all fields (`'*'`).
-	 *        - `'list'`: Returns a one dimensional array, where the key is the (primary)p
-	 *          key and the value the title of the record (the record must have a `'title'`
-	 *          field). A result may look like: `[1 => 'Foo', 2 => 'Bar']`.
-	 *
-	 *        Instead of the name of a finder, also supports shorthand usage with an object or
-	 *        integer as the first parameter. When passed such a value it is equal to
-	 *        `Model::find('first', ['conditions' => ['<key>' => <value>]])`.
-	 *
-	 *        Note: When an undefined finder is tried to be used, the method will not error out, but
-	 *        fallback to the `'all'` finder.
-	 * @param array $options Options for the query.
-	 *        Common options accepted are:
-	 *        - `'conditions'` _array_: The conditions for the query
-	 *           i.e. `'array('is_published' => true)`.
-	 *        - `'fields'` _array|null_: The fields that should be retrieved. When set to
-	 *          `null` or `'*'` and by default, uses all fields. To optimize query performance,
-	 *          limit the fields to just the ones actually needed.
-	 *        - `'order'` _array|string_: The order in which the data will be returned,
-	 *           i.e. `'created ASC'` sorts by created date in ascending order. To sort by
-	 *           multiple fields use the array syntax `array('title' => 'ASC', 'id' => 'ASC)`.
-	 *        - `'limit'` _integer_: The maximum number of records to return.
-	 *        - `'page'` _integer_: Allows to paginate data sets. Specifies the page of the set
-	 *          together with the limit option specifying the number of records per page. The first
-	 *          page starts at `1`. Equals limit * offset.
-	 *        - `'with'` _array_: Relationship names to be included in the query.
-	 *        Also supported are:
-	 *        - `'offset'` _integer_
-	 *        - `'having'` _array|string_
-	 *        - `'group'` _array|string_
-	 *        - `'joins'` _array_
-	 * @return mixed The result/s of the find. Actual result depends on the finder being used. Most
-	 *         often this is an instance of `lithium\data\Collection` or `lithium\data\Entity`.
-	 * @filter Allows to execute logic before querying (i.e. for rewriting of $options)
-	 *         or after i.e. for caching results.
+	 * @see lithium\data\Model::$_finders
+	 * @param string $type The find type, which is looked up in `Model::$_finders`. By default it
+	 *        accepts `all`, `first`, `list` and `count`,
+	 * @param array $options Options for the query. By default, accepts:
+	 *        - `conditions`: The conditional query elements, e.g.
+	 *                 `'conditions' => array('published' => true)`
+	 *        - `fields`: The fields that should be retrieved. When set to `null`, defaults to
+	 *             all fields.
+	 *        - `order`: The order in which the data will be returned, e.g. `'order' => 'ASC'`.
+	 *        - `limit`: The maximum number of records to return.
+	 *        - `page`: For pagination of data.
+	 * @return mixed
+	 * @filter This method can be filtered.
 	 */
-	public static function find($type, array $options = []) {
+	public static function find($type, array $options = array()) {
 		$self = static::_object();
+		$finder = array();
 
-		if (is_object($type) || !isset($self->_finders[$type])) {
+		if ($type === null) {
+			return null;
+		}
+		$isFinder = is_string($type) && isset($self->_finders[$type]);
+
+		if ($type !== 'all' && !is_array($type) && !$isFinder) {
 			$options['conditions'] = static::key($type);
 			$type = 'first';
 		}
 
-		$options += (array) $self->_query;
-		$meta = ['meta' => $self->_meta, 'name' => get_called_class()];
+		if ($isFinder && is_array($self->_finders[$type])) {
+			$options = Set::merge($self->_finders[$type], $options);
+		}
+
+		$options = (array) $options + (array) $self->_query;
+		$meta = array('meta' => $self->_meta, 'name' => get_called_class());
 		$params = compact('type', 'options');
 
-		$implementation = function($params) use ($meta) {
-			$options = $params['options'] + ['type' => 'read', 'model' => $meta['name']];
-			$query = static::_instance('query', $options);
-
-			return static::connection()->read($query, $options);
+		$filter = function($self, $params) use ($meta) {
+			$options = $params['options'] + array('type' => 'read', 'model' => $meta['name']);
+			$query = $self::invokeMethod('_instance', array('query', $options));
+			return $self::connection()->read($query, $options);
 		};
-		if (isset($self->_finders[$type])) {
-			$finder = $self->_finders[$type];
-
-			$reflect = new \ReflectionFunction($finder);
-			if ($reflect->getNumberOfParameters() > 2) {
-				$message  = 'Old style finder function in file ' . $reflect->getFileName() . ' ';
-				$message .= 'on line ' . $reflect->getStartLine() . '. ';
-				$message .= 'The signature for finder functions has changed. It is now ';
-				$message .= '`($params, $next)` instead of the old `($self, $params, $chain)`. ';
-				$message .= 'Instead of `$self` use `$this` or `static`.';
-				trigger_error($message, E_USER_DEPRECATED);
-
-				return Filters::bcRun(
-					get_called_class(), __FUNCTION__, $params, $implementation, [$finder]
-				);
-			}
-
-			$implementation = function($params) use ($finder, $implementation) {
-				return $finder($params, $implementation);
-			};
+		if (is_string($type) && isset($self->_finders[$type])) {
+			$finder = is_callable($self->_finders[$type]) ? array($self->_finders[$type]) : array();
 		}
-		return Filters::run(get_called_class(), __FUNCTION__, $params, $implementation);
+		return static::_filter(__FUNCTION__, $params, $filter, $finder);
 	}
 
 	/**
-	 * Sets or gets a custom finder by name. The finder definition can be an array of
-	 * default query options, or an anonymous functions that accepts an array of query
-	 * options, and a function to continue. To get a finder specify just the name.
+	 * Gets or sets a finder by name.  This can be an array of default query options,
+	 * or a closure that accepts an array of query options, and a closure to execute.
 	 *
-	 * In this example we define and use `'published'` finder to quickly
-	 * retrieve all published posts.
-	 * ```
-	 * Posts::finder('published', [
-	 *     'conditions' => ['is_published' => true]
-	 * ]);
-	 *
-	 * Posts::find('published');
-	 * ```
-	 *
-	 * Here we define the same finder using an anonymous function which
-	 * gives us more control over query modification.
-	 * ```
-	 * Posts::finder('published', function($params, $next) {
-	 *     $params['options']['conditions']['is_published'] = true;
-	 *
-	 *     // Perform modifications before executing the query...
-	 *     $result = $next($params);
-	 *     // ... or after it has executed.
-	 *
-	 *     return $result;
-	 * });
-	 * ```
-	 *
-	 * When using finder array definitions the option array is _recursivly_ merged
-	 * (using `Set::merge()`) with additional options specified on the `Model::find()`
-	 * call. Options specificed on the find will overwrite options specified in the
-	 * finder.
-	 *
-	 * Array finder definitions are normalized here, so that it can be relied upon that defined
-	 * finders are always anonymous functions.
-	 *
-	 * @see lithium\util\Set::merge()
-	 * @param string $name The finder name, e.g. `'first'`.
-	 * @param string|callable|null $finder The finder definition.
-	 * @return callable|void Returns finder definition if querying, or void if setting.
+	 * @param string $name The finder name, e.g. `first`.
+	 * @param string $finder If you are setting a finder, this is the finder definition.
+	 * @return mixed Returns finder definition if querying, or `null` if setting.
 	 */
 	public static function finder($name, $finder = null) {
 		$self = static::_object();
 
-		if ($finder === null) {
+		if (!$finder) {
 			return isset($self->_finders[$name]) ? $self->_finders[$name] : null;
-		}
-		if (is_array($finder)) {
-			$finder = function($params, $next) use ($finder) {
-				$params['options'] = Set::merge($params['options'], $finder);
-				return $next($params);
-			};
 		}
 		$self->_finders[$name] = $finder;
 	}
 
 	/**
-	 * Returns an array with the default finders.
-	 *
-	 * @see lithium\data\Model::_initialize()
-	 * @return array
-	 */
-	protected static function _finders() {
-		$self = static::_object();
-
-		return [
-			'all' => function($params, $next) {
-				return $next($params);
-			},
-			'first' => function($params, $next) {
-				$options =& $params['options'];
-				$options['limit'] = 1;
-
-				$data = $next($params);
-
-				if (isset($options['return']) && $options['return'] === 'array') {
-					$data = is_array($data) ? reset($data) : $data;
-				} else {
-					$data = is_object($data) ? $data->rewind() : $data;
-				}
-				return $data ?: null;
-			},
-			'list' => function($params, $next) use ($self) {
-				$result = [];
-				$meta = $self::meta();
-				$name = $meta['key'];
-
-				foreach ($next($params) as $entity) {
-					$key = $entity->{$name};
-					$result[is_scalar($key) ? $key : (string) $key] = $entity->title();
-				}
-				return $result;
-			},
-			'count' => function($params, $next) use ($self) {
-				$options = array_diff_key($params['options'], $self->_query);
-
-				if ($options && !isset($params['options']['conditions'])) {
-					$options = ['conditions' => $options];
-				} else {
-					$options = $params['options'];
-				}
-				$options += ['type' => 'read', 'model' => $self];
-				$query = $self::invokeMethod('_instance', ['query', $options]);
-				return $self::connection()->calculation('count', $query, $options);
-			}
-		];
-	}
-
-	/**
 	 * Gets or sets the default query for the model.
 	 *
-	 * @param array $query Possible options are:
+	 * @param array $query.  Possible options are:
 	 *        - `'conditions'`: The conditional query elements, e.g.
-	 *          `'conditions' => ['published' => true]`
+	 *          `'conditions' => array('published' => true)`
 	 *        - `'fields'`: The fields that should be retrieved. When set to `null`, defaults to
 	 *          all fields.
 	 *        - `'order'`: The order in which the data will be returned, e.g. `'order' => 'ASC'`.
@@ -811,7 +665,7 @@ class Model extends \lithium\core\StaticObject {
 		if (!$query) {
 			return $self->_query;
 		}
-		$self->_query = $query + $self->_query;
+		$self->_query += $query;
 	}
 
 	/**
@@ -843,7 +697,7 @@ class Model extends \lithium\core\StaticObject {
 	protected function _getMetaKey($key = null) {
 		if (!$key) {
 			$all = array_keys($this->_initializers);
-			$call = [&$this, '_getMetaKey'];
+			$call = array(&$this, '_getMetaKey');
 			return $all ? array_combine($all, array_map($call, $all)) + $this->_meta : $this->_meta;
 		}
 
@@ -898,11 +752,11 @@ class Model extends \lithium\core\StaticObject {
 		}
 
 		if (!is_array($values) && !is_array($key)) {
-			return [$key => $values];
+			return array($key => $values);
 		}
 
 		$key = (array) $key;
-		$result = [];
+		$result = array();
 		foreach ($key as $value) {
 			if (!isset($values[$value])) {
 				return null;
@@ -924,9 +778,9 @@ class Model extends \lithium\core\StaticObject {
 	 */
 	protected static function _key($key, $values, $entity) {
 		if (isset($values->$key)) {
-			return [$key => $values->$key];
+			return array($key => $values->$key);
 		} elseif (!$values instanceof $entity) {
-			return [$key => $values];
+			return array($key => $values);
 		}
 		return null;
 	}
@@ -936,7 +790,7 @@ class Model extends \lithium\core\StaticObject {
 	 * to this model, but of a certain type.
 	 *
 	 * @param string $type A type of model relation.
-	 * @return array|object|void An array of relation instances or an instance of relation.
+	 * @return mixed An array of relation instances or an instance of relation.
 	 */
 	public static function relations($type = null) {
 		$self = static::_object();
@@ -944,6 +798,7 @@ class Model extends \lithium\core\StaticObject {
 		if ($type === null) {
 			return static::_relations();
 		}
+
 		if (isset($self->_relationFieldNames[$type])) {
 			$type = $self->_relationFieldNames[$type];
 		}
@@ -951,18 +806,21 @@ class Model extends \lithium\core\StaticObject {
 		if (isset($self->_relations[$type])) {
 			return $self->_relations[$type];
 		}
+
 		if (isset($self->_relationsToLoad[$type])) {
 			return static::_relations(null, $type);
 		}
+
 		if (in_array($type, $self->_relationTypes, true)) {
 			return array_keys(static::_relations($type));
 		}
+		return null;
 	}
 
 	/**
 	 * This method automagically bind in the fly unloaded relations.
 	 *
-	 * @see lithium\data\Model::relations()
+	 * @see lithium\data\model::relations()
 	 * @param $type A type of model relation.
 	 * @param $name A relation name.
 	 * @return An array of relation instances or an instance of relation.
@@ -982,7 +840,7 @@ class Model extends \lithium\core\StaticObject {
 			foreach ($self->_relationsToLoad as $name => $t) {
 				static::bind($t, $name, (array) $self->{$t}[$name]);
 			}
-			$self->_relationsToLoad = [];
+			$self->_relationsToLoad = array();
 			return $self->_relations;
 		}
 		foreach ($self->_relationsToLoad as $name => $t) {
@@ -1009,7 +867,7 @@ class Model extends \lithium\core\StaticObject {
 	 *              See the `Relationship` class for more information.
 	 * @return object Returns an instance of the `Relationship` class that defines the connection.
 	 */
-	public static function bind($type, $name, array $config = []) {
+	public static function bind($type, $name, array $config = array()) {
 		$self = static::_object();
 		if (!isset($config['fieldName'])) {
 			$config['fieldName'] = $self->_relationFieldName($type, $name);
@@ -1025,13 +883,13 @@ class Model extends \lithium\core\StaticObject {
 
 	/**
 	 * Lazy-initialize the schema for this Model object, if it is not already manually set in the
-	 * object. You can declare `protected $_schema = [...]` to define the schema manually.
+	 * object. You can declare `protected $_schema = array(...)` to define the schema manually.
 	 *
 	 * @param mixed $field Optional. You may pass a field name to get schema information for just
 	 *        one field. Otherwise, an array containing all fields is returned. If `false`, the
 	 *        schema is reset to an empty value. If an array, field definitions contained are
 	 *        appended to the schema.
-	 * @return array|lithium\data\Schema
+	 * @return array
 	 */
 	public static function schema($field = null) {
 		$self = static::_object();
@@ -1045,6 +903,7 @@ class Model extends \lithium\core\StaticObject {
 				throw new ConfigException("Could not load schema object for model `{$class}`.");
 			}
 			$key = (array) $self::meta('key');
+
 			if ($self->_schema && $self->_schema->fields() && !$self->_schema->has($key)) {
 				$key = implode('`, `', $key);
 				throw new ConfigException("Missing key `{$key}` from schema.");
@@ -1085,11 +944,11 @@ class Model extends \lithium\core\StaticObject {
 	 * Instantiates a new record or document object, initialized with any data passed in. For
 	 * example:
 	 *
-	 * ```
-	 * $post = Posts::create(['title' => 'New post']);
+	 * {{{
+	 * $post = Posts::create(array('title' => 'New post'));
 	 * echo $post->title; // echoes 'New post'
 	 * $success = $post->save();
-	 * ```
+	 * }}}
 	 *
 	 * Note that while this method creates a new object, there is no effect on the database until
 	 * the `save()` method is called.
@@ -1097,11 +956,11 @@ class Model extends \lithium\core\StaticObject {
 	 * In addition, this method can be used to simulate loading a pre-existing object from the
 	 * database, without actually querying the database:
 	 *
-	 * ```
-	 * $post = Posts::create(['id' => $id, 'moreData' => 'foo'], ['exists' => true]);
+	 * {{{
+	 * $post = Posts::create(array('id' => $id, 'moreData' => 'foo'), array('exists' => true));
 	 * $post->title = 'New title';
 	 * $success = $post->save();
-	 * ```
+	 * }}}
 	 *
 	 * This will create an update query against the object with an ID matching `$id`. Also note that
 	 * only the `title` field will be updated.
@@ -1113,37 +972,23 @@ class Model extends \lithium\core\StaticObject {
 	 *         `'default'` key of each field defined in `$_schema`.
 	 * @filter
 	 */
-	public static function create(array $data = [], array $options = []) {
-		$defaults = ['defaults' => true, 'class' => 'entity'];
-		$options += $defaults;
-
-		$params = compact('data', 'options');
-
-		return Filters::run(get_called_class(), __FUNCTION__, $params, function($params) {
-			$class = $params['options']['class'];
-			unset($params['options']['class']);
-			if ($class === 'entity' && $params['options']['defaults']) {
-				$data = Set::merge(Set::expand(static::schema()->defaults()), $params['data']);
-			} else {
-				$data = $params['data'];
-			}
-			return static::_instance($class, [
-				'model' => get_called_class(),
-				'data' => $data
-			] + $params['options']);
+	public static function create(array $data = array(), array $options = array()) {
+		return static::_filter(__FUNCTION__, compact('data', 'options'), function($self, $params) {
+			$data = Set::merge(Set::expand($self::schema()->defaults()), $params['data']);
+			return $self::connection()->item($self, $data, $params['options']);
 		});
 	}
 
 	/**
 	 * Getter and setter for custom instance methods. This is used in `Entity::__call()`.
 	 *
-	 * ```
-	 * Model::instanceMethods([
-	 *     'methodName' => ['Class', 'method'],
-	 *     'anotherMethod' => [$object, 'method'],
+	 * {{{
+	 * Model::instanceMethods(array(
+	 *     'methodName' => array('Class', 'method'),
+	 *     'anotherMethod' => array($object, 'method'),
 	 *     'closureCallback' => function($entity) {}
-	 * ]);
-	 * ```
+	 * ));
+	 * }}}
 	 *
 	 * @see lithium\data\Entity::__call()
 	 * @param array $methods
@@ -1153,12 +998,12 @@ class Model extends \lithium\core\StaticObject {
 		$class = get_called_class();
 
 		if (!isset(static::$_instanceMethods[$class])) {
-			static::$_instanceMethods[$class] = [];
+			static::$_instanceMethods[$class] = array();
 		}
-		if ($methods === []) {
-			return static::$_instanceMethods[$class] = [];
+		if ($methods === array()) {
+			return static::$_instanceMethods[$class] = array();
 		}
-		if ($methods !== null) {
+		if (!is_null($methods)) {
 			static::$_instanceMethods[$class] = $methods + static::$_instanceMethods[$class];
 		}
 		return static::$_instanceMethods[$class];
@@ -1169,39 +1014,36 @@ class Model extends \lithium\core\StaticObject {
 	 * document in the database that corresponds to `$entity`.
 	 *
 	 * For example, to create a new record or document:
-	 * ```
+	 * {{{
 	 * $post = Posts::create(); // Creates a new object, which doesn't exist in the database yet
 	 * $post->title = "My post";
 	 * $success = $post->save();
-	 * ```
+	 * }}}
 	 *
 	 * It is also used to update existing database objects, as in the following:
-	 * ```
+	 * {{{
 	 * $post = Posts::first($id);
 	 * $post->title = "Revised title";
 	 * $success = $post->save();
-	 * ```
+	 * }}}
 	 *
 	 * By default, an object's data will be checked against the validation rules of the model it is
 	 * bound to. Any validation errors that result can then be accessed through the `errors()`
 	 * method.
 	 *
-	 * ```
+	 * {{{
 	 * if (!$post->save($someData)) {
-	 *     return ['errors' => $post->errors()];
+	 *     return array('errors' => $post->errors());
 	 * }
-	 * ```
+	 * }}}
 	 *
 	 * To override the validation checks and save anyway, you can pass the `'validate'` option:
 	 *
-	 * ```
+	 * {{{
 	 * $post->title = "We Don't Need No Stinkin' Validation";
 	 * $post->body = "I know what I'm doing.";
-	 * $post->save(null, ['validate' => false]);
-	 * ```
-	 *
-	 * By default only validates and saves fields from the schema (if available). This behavior
-	 * can be controlled via the `'whitelist'` and `'locked'` options.
+	 * $post->save(null, array('validate' => false));
+	 * }}}
 	 *
 	 * @see lithium\data\Model::$validates
 	 * @see lithium\data\Model::validates()
@@ -1215,70 +1057,63 @@ class Model extends \lithium\core\StaticObject {
 	 * @param array $options Options:
 	 *        - `'callbacks'` _boolean_: If `false`, all callbacks will be disabled before
 	 *           executing. Defaults to `true`.
-	 *        - `'validate'` _boolean|array_: If `false`, validation will be skipped, and the
-	 *          record will be immediately saved. Defaults to `true`. May also be specified as
-	 *          an array, in which case it will replace the default validation rules specified
-	 *          in the `$validates` property of the model.
-	 *        - `'events'` _string|array_: A string or array defining one or more validation
-	 *          _events_. Events are different contexts in which data events can occur, and
-	 *          correspond to the optional `'on'` key in validation rules. They will be passed
-	 *          to the validates() method if `'validate'` is not `false`.
+	 *        - `'validate'` _mixed_: If `false`, validation will be skipped, and the record will
+	 *          be immediately saved. Defaults to `true`. May also be specified as an array, in
+	 *          which case it will replace the default validation rules specified in the
+	 *         `$validates` property of the model.
+	 *        - `'events'` _mixed_: A string or array defining one or more validation _events_.
+	 *          Events are different contexts in which data events can occur, and correspond to the
+	 *          optional `'on'` key in validation rules. They will be passed to the validates()
+	 *          method if `'validate'` is not `false`.
 	 *        - `'whitelist'` _array_: An array of fields that are allowed to be saved to this
-	 *          record. When unprovided will - if available - default to fields of the current
-	 *          schema and the `'locked'` option is not `false`.
-	 *        - `'locked'` _boolean_: Whether to use schema for saving just fields from the
-	 *          schema or not. Defaults to `true`.
+	 *          record.
 	 * @return boolean Returns `true` on a successful save operation, `false` on failure.
 	 * @filter
 	 */
-	public function save($entity, $data = null, array $options = []) {
+	public function save($entity, $data = null, array $options = array()) {
 		$self = static::_object();
-		$_meta = ['model' => get_called_class()] + $self->_meta;
+		$_meta = array('model' => get_called_class()) + $self->_meta;
 		$_schema = $self->schema();
 
-		$defaults = [
+		$defaults = array(
 			'validate' => true,
 			'events' => $entity->exists() ? 'update' : 'create',
 			'whitelist' => null,
 			'callbacks' => true,
 			'locked' => $self->_meta['locked']
-		];
+		);
 		$options += $defaults;
 		$params = compact('entity', 'data', 'options');
 
-		$filter = function($params) use ($_meta, $_schema) {
+		$filter = function($self, $params) use ($_meta, $_schema) {
 			$entity = $params['entity'];
 			$options = $params['options'];
 
 			if ($params['data']) {
 				$entity->set($params['data']);
 			}
-			if (($whitelist = $options['whitelist']) || $options['locked']) {
-				$whitelist = $whitelist ?: array_keys($_schema->fields());
-			}
 			if ($rules = $options['validate']) {
 				$events = $options['events'];
-				$validateOpts = compact('events', 'whitelist');
-				if (is_array($rules)) {
-					$validateOpts['rules'] = $rules;
-				}
+				$validateOpts = is_array($rules) ? compact('rules','events') : compact('events');
 
 				if (!$entity->validates($validateOpts)) {
 					return false;
 				}
 			}
-			$type = $entity->exists() ? 'update' : 'create';
+			if (($whitelist = $options['whitelist']) || $options['locked']) {
+				$whitelist = $whitelist ?: array_keys($_schema->fields());
+			}
 
-			$query = static::_instance('query',
-				compact('type', 'whitelist', 'entity') + $options + $_meta
-			);
-			return static::connection()->{$type}($query, $options);
+			$type = $entity->exists() ? 'update' : 'create';
+			$queryOpts = compact('type', 'whitelist', 'entity') + $options + $_meta;
+			$query = $self::invokeMethod('_instance', array('query', $queryOpts));
+			return $self::connection()->{$type}($query, $options);
 		};
 
 		if (!$options['callbacks']) {
-			return $filter($params);
+			return $filter(get_called_class(), $params);
 		}
-		return Filters::run(get_called_class(), __FUNCTION__, $params, $filter);
+		return static::_filter(__FUNCTION__, $params, $filter);
 	}
 
 	/**
@@ -1300,12 +1135,12 @@ class Model extends \lithium\core\StaticObject {
 	 * @see lithium\data\Model::$validates
 	 * @see lithium\util\Validator::check()
 	 * @see lithium\data\Entity::errors()
-	 * @param object $entity Model entity to validate. Typically either a `Record` or `Document`
+	 * @param string $entity Model entity to validate. Typically either a `Record` or `Document`
 	 *        object. In the following example:
-	 *        ```
+	 *        {{{
 	 *            $post = Posts::create($data);
 	 *            $success = $post->validates();
-	 *        ```
+	 *        }}}
 	 *        The `$entity` parameter is equal to the `$post` object instance.
 	 * @param array $options Available options:
 	 *        - `'rules'` _array_: If specified, this array will _replace_ the default
@@ -1319,53 +1154,35 @@ class Model extends \lithium\core\StaticObject {
 	 *          Using this parameter, you can set up custom events in your rules as well, such
 	 *          as `'on' => 'login'`. Note that when defining validation rules, the `'on'` key
 	 *          can also be an array of multiple events.
-	 *        - `'required`' _mixed_: Represents whether the value is required to be present
-	 *          in `$values`. If `'required'` is set to `true`, the validation rule will be
-	 *          checked. if `'required'` is set to 'false' , the validation rule will be skipped
-	 *          if the corresponding key is not present. If don't set `'required'` or set this
-	 *          to `null`, the validation rule will be skipped if the corresponding key is not
-	 *          present in update and will be checked in insert. Defaults is set to `null`.
-	 *        - `'whitelist'` _array_: If specified, only fields in this array will be validated
-	 *          and others will be skipped.
 	 * @return boolean Returns `true` if all validation rules on all fields succeed, otherwise
 	 *         `false`. After validation, the messages for any validation failures are assigned to
 	 *         the entity, and accessible through the `errors()` method of the entity object.
 	 * @filter
 	 */
-	public function validates($entity, array $options = []) {
-		$defaults = [
+	public function validates($entity, array $options = array()) {
+		$defaults = array(
 			'rules' => $this->validates,
 			'events' => $entity->exists() ? 'update' : 'create',
-			'model' => get_called_class(),
-			'required' => null,
-			'whitelist' => null
-		];
+			'model' => get_called_class()
+		);
 		$options += $defaults;
-
-		if ($options['required'] === null) {
-			$options['required'] = !$entity->exists();
-		}
 		$self = static::_object();
 		$validator = $self->_classes['validator'];
 		$entity->errors(false);
 		$params = compact('entity', 'options');
 
-		$implementation = function($params) use ($validator) {
+		$filter = function($parent, $params) use ($validator) {
 			$entity = $params['entity'];
 			$options = $params['options'];
 			$rules = $options['rules'];
 			unset($options['rules']);
-			if ($whitelist = $options['whitelist']) {
-				$whitelist = array_combine($whitelist, $whitelist);
-				$rules = array_intersect_key($rules, $whitelist);
-			}
 
 			if ($errors = $validator::check($entity->data(), $rules, $options)) {
 				$entity->errors($errors);
 			}
 			return empty($errors);
 		};
-		return Filters::run(get_called_class(), __FUNCTION__, $params, $implementation);
+		return static::_filter(__FUNCTION__, $params, $filter);
 	}
 
 	/**
@@ -1374,20 +1191,17 @@ class Model extends \lithium\core\StaticObject {
 	 * @param object $entity Entity to delete.
 	 * @param array $options Options.
 	 * @return boolean Success.
-	 * @filter Good for executing logic for i.e. invalidating cached results.
+	 * @filter
 	 */
-	public function delete($entity, array $options = []) {
+	public function delete($entity, array $options = array()) {
 		$params = compact('entity', 'options');
 
-		return Filters::run(get_called_class(), __FUNCTION__, $params, function($params) {
-			$options = $params + $params['options'] + [
-				'model' => get_called_class(),
-				'type' => 'delete'
-			];
+		return static::_filter(__FUNCTION__, $params, function($self, $params) {
+			$options = $params + $params['options'] + array('model' => $self, 'type' => 'delete');
 			unset($options['options']);
 
-			$query = static::_instance('query', $options);
-			return static::connection()->delete($query, $options);
+			$query = $self::invokeMethod('_instance', array('query', $options));
+			return $self::connection()->delete($query, $options);
 		});
 	}
 
@@ -1406,18 +1220,15 @@ class Model extends \lithium\core\StaticObject {
 	 * @return boolean Returns `true` if the update operation succeeded, otherwise `false`.
 	 * @filter
 	 */
-	public static function update($data, $conditions = [], array $options = []) {
+	public static function update($data, $conditions = array(), array $options = array()) {
 		$params = compact('data', 'conditions', 'options');
 
-		return Filters::run(get_called_class(), __FUNCTION__, $params, function($params) {
-			$options = $params + $params['options'] + [
-				'model' => get_called_class(),
-				'type' => 'update'
-			];
+		return static::_filter(__FUNCTION__, $params, function($self, $params) {
+			$options = $params + $params['options'] + array('model' => $self, 'type' => 'update');
 			unset($options['options']);
 
-			$query = static::_instance('query', $options);
-			return static::connection()->update($query, $options);
+			$query = $self::invokeMethod('_instance', array('query', $options));
+			return $self::connection()->update($query, $options);
 		});
 	}
 
@@ -1435,18 +1246,15 @@ class Model extends \lithium\core\StaticObject {
 	 * @return boolean Returns `true` if the remove operation succeeded, otherwise `false`.
 	 * @filter
 	 */
-	public static function remove($conditions = [], array $options = []) {
+	public static function remove($conditions = array(), array $options = array()) {
 		$params = compact('conditions', 'options');
 
-		return Filters::run(get_called_class(), __FUNCTION__, $params, function($params) {
-			$options = $params['options'] + $params + [
-				'model' => get_called_class(),
-				'type' => 'delete'
-			];
+		return static::_filter(__FUNCTION__, $params, function($self, $params) {
+			$options = $params['options'] + $params + array('model' => $self, 'type' => 'delete');
 			unset($options['options']);
 
-			$query = static::_instance('query', $options);
-			return static::connection()->delete($query, $options);
+			$query = $self::invokeMethod('_instance', array('query', $options));
+			return $self::connection()->delete($query, $options);
 		});
 	}
 
@@ -1465,9 +1273,56 @@ class Model extends \lithium\core\StaticObject {
 		if ($conn = $connections::get($name)) {
 			return $conn;
 		}
-		$class = get_called_class();
-		$msg = "The data connection `{$name}` is not configured for model `{$class}`.";
-		throw new ConfigException($msg);
+		throw new ConfigException("The data connection `{$name}` is not configured.");
+	}
+
+	/**
+	 * Wraps `StaticObject::applyFilter()` to account for object instances.
+	 *
+	 * @see lithium\core\StaticObject::applyFilter()
+	 * @param string $method
+	 * @param mixed $closure
+	 */
+	public static function applyFilter($method, $closure = null) {
+		$instance = static::_object();
+
+		if ($method === false) {
+			$instance->_instanceFilters = array();
+			return;
+		}
+		$methods = (array) $method;
+
+		foreach ($methods as $method) {
+			if (!isset($instance->_instanceFilters[$method]) || $closure === false) {
+				$instance->_instanceFilters[$method] = array();
+			}
+			if ($closure !== false) {
+				$instance->_instanceFilters[$method][] = $closure;
+			}
+		}
+	}
+
+	/**
+	 * Wraps `StaticObject::_filter()` to account for object instances.
+	 *
+	 * @see lithium\core\StaticObject::_filter()
+	 * @param string $method
+	 * @param array $params
+	 * @param mixed $callback
+	 * @param array $filters Defaults to empty array.
+	 * @return object
+	 */
+	protected static function _filter($method, $params, $callback, $filters = array()) {
+		if (!strpos($method, '::')) {
+			$method = get_called_class() . '::' . $method;
+		}
+		list($class, $method) = explode('::', $method, 2);
+		$instance = static::_object();
+
+		if (isset($instance->_instanceFilters[$method])) {
+			$filters = array_merge($instance->_instanceFilters[$method], $filters);
+		}
+		return parent::_filter($method, $params, $callback, $filters);
 	}
 
 	protected static function &_object() {
@@ -1484,15 +1339,15 @@ class Model extends \lithium\core\StaticObject {
 	/**
 	 * Iterates through relationship types to construct relation map.
 	 *
-	 * @todo See if this can be rewritten to be lazy.
 	 * @return void
+	 * @todo See if this can be rewritten to be lazy.
 	 */
 	protected static function _relationsToLoad() {
 		try {
 			if (!$connection = static::connection()) {
 				return;
 			}
-		} catch (ConfigException $e) {
+		} catch (ConfigExcepton $e) {
 			return;
 		}
 
@@ -1521,7 +1376,58 @@ class Model extends \lithium\core\StaticObject {
 	}
 
 	/**
-	 * Resetting the model.
+	 * Exports an array of custom finders which use the filter system to wrap around `find()`.
+	 *
+	 * @return void
+	 */
+	protected static function _findFilters() {
+		$self = static::_object();
+		$_query = $self->_query;
+
+		return array(
+			'first' => function($self, $params, $chain) {
+				$options =& $params['options'];
+				$options['limit'] = 1;
+				$data = $chain->next($self, $params, $chain);
+
+				if (isset($options['return']) && $options['return'] === 'array') {
+					$data = is_array($data) ? reset($data) : $data;
+				} else {
+					$data = is_object($data) ? $data->rewind() : $data;
+				}
+
+				return $data ?: null;
+			},
+			'list' => function($self, $params, $chain) {
+				$result = array();
+				$meta = $self::meta();
+				$name = $meta['key'];
+
+				foreach ($chain->next($self, $params, $chain) as $entity) {
+					$key = $entity->{$name};
+					$result[is_scalar($key) ? $key : (string) $key] = $entity->title();
+				}
+				return $result;
+			},
+			'count' => function($self, $params) use ($_query) {
+				$model = $self;
+				$type = $params['type'];
+				$options = array_diff_key($params['options'], $_query);
+
+				if ($options && !isset($params['options']['conditions'])) {
+					$options = array('conditions' => $options);
+				} else {
+					$options = $params['options'];
+				}
+				$options += array('type' => 'read') + compact('model');
+				$query = $self::invokeMethod('_instance', array('query', $options));
+				return $self::connection()->calculation('count', $query, $options);
+			}
+		);
+	}
+
+	/**
+	 * Reseting the model
 	 */
 	public static function reset() {
 		$class = get_called_class();

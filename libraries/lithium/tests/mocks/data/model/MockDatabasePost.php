@@ -1,31 +1,32 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\mocks\data\model;
 
-class MockDatabasePost extends \lithium\data\Model {
+class MockDatabasePost extends \lithium\tests\mocks\data\MockBase {
 
-	public $hasMany = [
+	public static $connection = null;
+
+	public $hasMany = array(
 		'MockDatabaseComment',
-		'MockDatabasePostRevision' => [
-			'constraints' => ['MockDatabasePostRevision.deleted' => null]
-		]
-	];
+		'MockDatabasePostRevision' => array(
+			'constraints' => array('MockDatabasePostRevision.deleted' => null)
+		)
+	);
 
-	protected $_meta = ['connection' => false, 'key' => 'id'];
+	protected $_meta = array('connection' => false, 'key' => 'id');
 
-	protected $_schema = [
-		'id' => ['type' => 'integer'],
-		'author_id' => ['type' => 'integer'],
-		'title' => ['type' => 'string'],
-		'created' => ['type' => 'datetime']
-	];
+	protected $_schema = array(
+		'id' => array('type' => 'integer'),
+		'author_id' => array('type' => 'integer'),
+		'title' => array('type' => 'string'),
+		'created' => array('type' => 'datetime')
+	);
 }
 
 ?>

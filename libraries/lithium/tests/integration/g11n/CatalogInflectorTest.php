@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\integration\g11n;
@@ -15,13 +14,14 @@ use lithium\util\Inflector;
 
 class CatalogInflectorTest extends \lithium\test\Integration {
 
-	protected $_backup = [];
+	protected $_backup = array();
 
 	public function setUp() {
 		$this->_backup['catalogConfig'] = Catalog::config();
-		Catalog::config([
-			'runtime' => ['adapter' => new Memory()]
-		]);
+		Catalog::reset();
+		Catalog::config(array(
+			'runtime' => array('adapter' => new Memory())
+		));
 	}
 
 	public function tearDown() {
@@ -31,12 +31,12 @@ class CatalogInflectorTest extends \lithium\test\Integration {
 	}
 
 	public function testTransliteration() {
-		$data = [
-			'transliteration' => [
+		$data = array(
+			'transliteration' => array(
 				'\$' => 'dollar',
 				'&' => 'and'
-			]
-		];
+			)
+		);
 		Catalog::write('runtime', 'inflection', 'en', $data);
 
 		Inflector::rules(
@@ -47,12 +47,12 @@ class CatalogInflectorTest extends \lithium\test\Integration {
 		$expected = 'this-and-that';
 		$this->assertEqual($expected, $result);
 
-		$data = [
-			'transliteration' => [
+		$data = array(
+			'transliteration' => array(
 				't' => 'd',
 				'&' => 'und'
-			]
-		];
+			)
+		);
 		Catalog::write('runtime', 'inflection', 'de', $data);
 
 		Inflector::rules(

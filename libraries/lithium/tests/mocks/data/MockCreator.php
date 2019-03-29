@@ -1,35 +1,36 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\mocks\data;
 
-class MockCreator extends \lithium\data\Model {
+class MockCreator extends \lithium\tests\mocks\data\MockBase {
 
-	protected $_meta = ['connection' => false];
+	public static $connection = null;
 
-	protected $_schema = [
-		'name' => [
+	protected $_meta = array('connection' => false);
+
+	protected $_schema = array(
+		'name' => array(
 			'default' => 'Moe',
 			'type' => 'string',
 			'null' => false
-		],
-		'sign' => [
+		),
+		'sign' => array(
 			'default' => 'bar',
 			'type' => 'string',
 			'null' => false
-		],
-		'age' => [
+		),
+		'age' => array(
 			'default' => 0,
 			'type' => 'number',
 			'null' => false
-		]
-	];
+		)
+	);
 }
 
 ?>

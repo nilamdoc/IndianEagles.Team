@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\g11n\catalog;
@@ -75,24 +74,20 @@ class Adapter extends \lithium\core\Object {
 		}
 		$id = $item['id'];
 
-		$defaults = [
-			'ids' => [],
+		$defaults = array(
+			'ids' => array(),
 			'translated' => null,
-			'flags' => [],
-			'comments' => [],
-			'occurrences' => []
-		];
+			'flags' => array(),
+			'comments' => array(),
+			'occurrences' => array()
+		);
 		$item += $defaults;
-
-		if (isset($item['context']) && $item['context']) {
-			$id .= '|' . $item['context'];
-		}
 
 		if (!isset($data[$id])) {
 			$data[$id] = $item;
 			return $data;
 		}
-		foreach (['ids', 'flags', 'comments', 'occurrences'] as $field) {
+		foreach (array('ids', 'flags', 'comments', 'occurrences') as $field) {
 			$data[$id][$field] = array_merge($data[$id][$field], $item[$field]);
 		}
 		if (!isset($data[$id]['translated'])) {

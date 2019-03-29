@@ -1,15 +1,13 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\test;
 
-use lithium\aop\Filters;
 use lithium\test\Dispatcher;
 use lithium\core\Libraries;
 use lithium\test\Group;
@@ -27,26 +25,26 @@ class Controller extends \lithium\core\Object {
 	 *
 	 * @var array
 	 */
-	protected $_context = [];
+	protected $_context = array();
 
 	/**
 	 * Magic method to make Controller callable.
 	 *
 	 * @see lithium\action\Dispatcher::_callable()
-	 * @param \lithium\action\Request $request
+	 * @param object $request A \lithium\action\Request object.
 	 * @param array $dispatchParams Array of params after being parsed by router.
 	 * @param array $options Some basic options for this controller.
 	 * @return string
 	 * @filter
 	 */
-	public function __invoke($request, $dispatchParams, array $options = []) {
-		$dispatchParamsDefaults = ['args' => []];
+	public function __invoke($request, $dispatchParams, array $options = array()) {
+		$dispatchParamsDefaults = array('args' => array());
 		$dispatchParams += $dispatchParamsDefaults;
-		$defaults = ['format' => 'html', 'timeout' => 0];
+		$defaults = array('format' => 'html', 'timeout' => 0);
 		$options += (array) $request->query + $defaults;
 		$params = compact('request', 'dispatchParams', 'options');
 
-		return Filters::run($this, __FUNCTION__, $params, function($params) {
+		return $this->_filter(__METHOD__, $params, function($self, $params) {
 			$request = $params['request'];
 			$options = $params['options'];
 			$params = $params['dispatchParams'];
@@ -58,17 +56,17 @@ class Controller extends \lithium\core\Object {
 				$options['title'] = 'All Tests';
 			}
 
-			$this->_saveCtrlContext();
+			$self->invokeMethod('_saveCtrlContext');
 			$report = Dispatcher::run($group, $options);
-			$this->_restoreCtrlContext();
+			$self->invokeMethod('_restoreCtrlContext');
 
 			$filters = Libraries::locate('test.filter');
-			$menu = Libraries::locate('tests', null, [
+			$menu = Libraries::locate('tests', null, array(
 				'filter' => '/cases|integration|functional/',
 				'exclude' => '/mocks/'
-			]);
+			));
 			sort($menu);
-			$menu = Set::expand(array_combine($menu, $menu), ['separator' => "\\"]);
+			$menu = Set::expand(array_combine($menu, $menu), array('separator' => "\\"));
 			$result = compact('request', 'report', 'filters', 'menu');
 			return $report->render('layout', $result);
 		});

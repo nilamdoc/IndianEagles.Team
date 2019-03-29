@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\storage\session\strategy;
@@ -20,12 +19,12 @@ use lithium\core\ConfigException;
  *
  * Example configuration:
  *
- * ```
- * Session::config(['default' => [
+ * {{{
+ * Session::config(array('default' => array(
  *    'adapter' => 'Cookie',
- *    'strategies' => ['Encrypt' => ['secret' => 'f00bar$l1thium']]
- * ]]);
- * ```
+ *    'strategies' => array('Encrypt' => array('secret' => 'f00bar$l1thium'))
+ * )));
+ * }}}
  *
  * By default, this strategy uses the AES algorithm in the CBC mode. This means that an
  * initialization vector has to be generated and transported with the payload data. This
@@ -33,16 +32,16 @@ use lithium\core\ConfigException;
  * an initialization vector but is not recommended to use as it's insecure). You can override this
  * defaults by passing a different `cipher` and/or `mode` to the config like this:
  *
- * ```
- * Session::config(['default' => [
+ * {{{
+ * Session::config(array('default' => array(
  *     'adapter' => 'Cookie',
- *     'strategies' => ['Encrypt' => [
+ *     'strategies' => array('Encrypt' => array(
  *         'cipher' => MCRYPT_RIJNDAEL_256,
  *         'mode' => MCRYPT_MODE_ECB, // Don't use ECB when you don't have to!
  *         'secret' => 'f00bar$l1thium'
- *     ]]
- * ]]);
- * ```
+ *     ))
+ * )));
+ * }}}
  *
  * Please keep in mind that it is generally not a good idea to store sensitive information in
  * cookies (or generally on the client side) and this class is no exception to the rule. It allows
@@ -53,9 +52,9 @@ use lithium\core\ConfigException;
  * want to use your own hashing algorithm, make sure it has the maximum key length of the algorithm
  * used. See the `Encrypt::_hashSecret()` method for more information on this.
  *
- * @link http://php.net/book.mcrypt.php The mcrypt extension.
- * @link http://php.net/mcrypt.ciphers.php List of supported ciphers.
- * @link http://php.net/mcrypt.constants.php List of supported modes.
+ * @link http://php.net/manual/en/book.mcrypt.php The mcrypt extension.
+ * @link http://www.php.net/manual/en/mcrypt.ciphers.php List of supported ciphers.
+ * @link http://www.php.net/manual/en/mcrypt.constants.php List of supported modes.
  */
 class Encrypt extends \lithium\core\Object {
 
@@ -72,23 +71,22 @@ class Encrypt extends \lithium\core\Object {
 	/**
 	 * Default configuration.
 	 */
-	protected $_defaults = [
+	protected $_defaults = array(
 		'cipher' => MCRYPT_RIJNDAEL_128,
 		'mode' => MCRYPT_MODE_CBC
-	];
+	);
 
 	/**
 	 * Constructor.
 	 *
 	 * @param array $config Configuration array. You can override the default cipher and mode.
-	 * @return void
 	 */
-	public function __construct(array $config = []) {
+	public function __construct(array $config = array()) {
 		if (!static::enabled()) {
-			throw new ConfigException('The mcrypt extension is not installed or enabled.');
+			throw new ConfigException("The Mcrypt extension is not installed or enabled.");
 		}
 		if (!isset($config['secret'])) {
-			throw new ConfigException('Encrypt strategy requires a secret key.');
+			throw new ConfigException("Encrypt strategy requires a secret key.");
 		}
 		parent::__construct($config + $this->_defaults);
 
@@ -100,9 +98,9 @@ class Encrypt extends \lithium\core\Object {
 	}
 
 	/**
-	 * Destructor. Closes the crypto resource when it is no longer needed.
+	 * Destructor.
 	 *
-	 * @return void
+	 * Closes the crypto resource when it is no longer needed.
 	 */
 	public function __destruct() {
 		mcrypt_module_close(static::$_resource);
@@ -115,10 +113,10 @@ class Encrypt extends \lithium\core\Object {
 	 * @param array $options Options for this method.
 	 * @return mixed Returns the decrypted key or the dataset.
 	 */
-	public function read($data, array $options = []) {
+	public function read($data, array $options = array()) {
 		$class = $options['class'];
 
-		$encrypted = $class::read(null, ['strategies' => false]);
+		$encrypted = $class::read(null, array('strategies' => false));
 		$key = isset($options['key']) ? $options['key'] : null;
 
 		if (!isset($encrypted['__encrypted']) || !$encrypted['__encrypted']) {
@@ -141,15 +139,15 @@ class Encrypt extends \lithium\core\Object {
 	 * @param array $options Options for this method.
 	 * @return string Returns the written data in cleartext.
 	 */
-	public function write($data, array $options = []) {
+	public function write($data, array $options = array()) {
 		$class = $options['class'];
 
-		$futureData = $this->read(null, ['key' => null] + $options) ?: [];
-		$futureData = [$options['key'] => $data] + $futureData;
+		$futureData = $this->read(null, array('key' => null) + $options) ?: array();
+		$futureData = array($options['key'] => $data) + $futureData;
 
 		$payload = empty($futureData) ? null : $this->_encrypt($futureData);
 
-		$class::write('__encrypted', $payload, ['strategies' => false] + $options);
+		$class::write('__encrypted', $payload, array('strategies' => false) + $options);
 		return $payload;
 	}
 
@@ -160,15 +158,15 @@ class Encrypt extends \lithium\core\Object {
 	 * @param array $options Options for this method.
 	 * @return string Returns the deleted data in cleartext.
 	 */
-	public function delete($data, array $options = []) {
+	public function delete($data, array $options = array()) {
 		$class = $options['class'];
 
-		$futureData = $this->read(null, ['key' => null] + $options) ?: [];
+		$futureData = $this->read(null, array('key' => null) + $options) ?: array();
 		unset($futureData[$options['key']]);
 
 		$payload = empty($futureData) ? null : $this->_encrypt($futureData);
 
-		$class::write('__encrypted', $payload, ['strategies' => false] + $options);
+		$class::write('__encrypted', $payload, array('strategies' => false) + $options);
 		return $data;
 	}
 
@@ -178,7 +176,7 @@ class Encrypt extends \lithium\core\Object {
 	 * @param array $decrypted The cleartext data to be encrypted.
 	 * @return string A Base64 encoded and encrypted string.
 	 */
-	protected function _encrypt($decrypted = []) {
+	protected function _encrypt($decrypted = array()) {
 		$vector = $this->_config['vector'];
 		$secret = $this->_hashSecret($this->_config['secret']);
 
@@ -230,7 +228,7 @@ class Encrypt extends \lithium\core\Object {
 	 * algorithm. If the key size is shorter than the one generated by `sha256`, the first n bytes
 	 * will be used.
 	 *
-	 * @link http://php.net/function.mcrypt-enc-get-key-size.php
+	 * @link http://www.php.net/manual/de/function.mcrypt-enc-get-key-size.php
 	 * @param string $key The possibly too weak key.
 	 * @return string The hashed (raw) key.
 	 */
@@ -248,7 +246,7 @@ class Encrypt extends \lithium\core\Object {
 	 * Generates an initialization vector.
 	 *
 	 * @return string Returns an initialization vector.
-	 * @link http://php.net/function.mcrypt-create-iv.php
+	 * @link http://www.php.net/manual/en/function.mcrypt-create-iv.php
 	 */
 	protected static function _vector() {
 		if (static::$_vector) {
@@ -262,7 +260,7 @@ class Encrypt extends \lithium\core\Object {
 	 * Returns the vector size vor a given cipher and mode.
 	 *
 	 * @return number The vector size.
-	 * @link http://php.net/function.mcrypt-enc-get-iv-size.php
+	 * @link http://www.php.net/manual/en/function.mcrypt-enc-get-iv-size.php
 	 */
 	protected static function _vectorSize() {
 		return mcrypt_enc_get_iv_size(static::$_resource);

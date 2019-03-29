@@ -1,66 +1,46 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\cases\data\model;
 
-use lithium\data\Connections;
 use lithium\data\model\Query;
 use lithium\data\entity\Record;
 use lithium\tests\mocks\data\MockPostObject;
 use lithium\tests\mocks\data\model\MockDatabase;
 use lithium\tests\mocks\data\model\MockQueryPost;
 use lithium\tests\mocks\data\model\MockQueryComment;
-use lithium\tests\mocks\data\model\MockGallery;
-use lithium\tests\mocks\data\model\MockImage;
-use lithium\tests\mocks\data\model\MockImageTag;
-use lithium\tests\mocks\data\model\MockTag;
 
 class QueryTest extends \lithium\test\Unit {
 
-	protected $_db;
-
 	protected $_model = 'lithium\tests\mocks\data\model\MockQueryPost';
 
-	protected $_configs = [];
+	protected $_configs = array();
 
-	protected $_queryArr = [
+	protected $_queryArr = array(
 		'model' => 'lithium\tests\mocks\data\model\MockQueryPost',
 		'type' => 'read',
 		'order' => 'created DESC',
 		'limit' => 10,
 		'page' => 1,
-		'fields' => ['id', 'author_id', 'title'],
-		'conditions' => ['author_id' => 12],
+		'fields' => array('id', 'author_id', 'title'),
+		'conditions' => array('author_id' => 12),
 		'comment' => 'Find all posts by author 12'
-	];
+	);
 
 	public function setUp() {
-		$this->_db = new MockDatabase();
-		Connections::add('mockconn', ['object' => $this->_db]);
-
-		$config = ['meta' => ['connection' => 'mockconn']];
-		MockQueryPost::config($config);
-		MockQueryComment::config($config);
-		MockGallery::config($config);
-		MockImage::config($config);
-		MockImageTag::config($config);
-		MockTag::config($config);
+		$this->db = new MockDatabase();
+		MockQueryPost::$connection = $this->db;
+		MockQueryComment::$connection = $this->db;
 	}
 
 	public function tearDown() {
-		Connections::remove('mockconn');
 		MockQueryPost::reset();
 		MockQueryComment::reset();
-		MockGallery::reset();
-		MockImage::reset();
-		MockImageTag::reset();
-		MockTag::reset();
 	}
 
 	/**
@@ -70,8 +50,8 @@ class QueryTest extends \lithium\test\Unit {
 		$query = new Query();
 		$this->assertEmpty($query->conditions());
 
-		$query = new Query(['conditions' => 'foo', 'limit' => '10']);
-		$this->assertEqual(['foo'], $query->conditions());
+		$query = new Query(array('conditions' => 'foo', 'limit' => '10'));
+		$this->assertEqual(array('foo'), $query->conditions());
 		$this->assertIdentical(10, $query->limit());
 	}
 
@@ -89,68 +69,68 @@ class QueryTest extends \lithium\test\Unit {
 	public function testFields() {
 		$query = new Query($this->_queryArr);
 
-		$expected = ['id','author_id','title'];
+		$expected = array('id','author_id','title');
 		$result = $query->fields();
 		$this->assertEqual($expected, $result);
 
 		$query->fields('content');
 
-		$expected = ['id','author_id','title','content'];
+		$expected = array('id','author_id','title','content');
 		$result = $query->fields();
 		$this->assertEqual($expected, $result);
 
-		$query->fields(['updated','created']);
+		$query->fields(array('updated','created'));
 
-		$expected = ['id','author_id','title','content','updated','created'];
-		$result = $query->fields();
-		$this->assertEqual($expected, $result);
-
-		$query->fields(false);
-		$query->fields(['id', 'title']);
-
-		$expected = ['id','title'];
+		$expected = array('id','author_id','title','content','updated','created');
 		$result = $query->fields();
 		$this->assertEqual($expected, $result);
 
 		$query->fields(false);
-		$expected = [
-			[['count(MockDatabasePost.id)']],
-			['count(MockDatabasePost.id)'],
-			[(object) 'count(MockDatabasePost.id)'],
+		$query->fields(array('id', 'title'));
+
+		$expected = array('id','title');
+		$result = $query->fields();
+		$this->assertEqual($expected, $result);
+
+		$query->fields(false);
+		$expected = array(
+			array(array('count(MockDatabasePost.id)')),
+			array('count(MockDatabasePost.id)'),
+			array((object) 'count(MockDatabasePost.id)'),
 			(object) 'count(MockDatabasePost.id)'
-		];
+		);
 		$query->fields($expected);
 		$result = $query->fields();
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testFieldsWithArray() {
-		$query = new Query([
+		$query = new Query(array(
 			'model' => 'lithium\tests\mocks\data\model\MockQueryPost',
 			'type' => 'read',
 			'with' => 'MockQueryComment'
-		]);
+		));
 
-		$query->fields(['MockQueryPost', 'MockQueryPost' => ['id']]);
+		$query->fields(array('MockQueryPost', 'MockQueryPost' => array('id')));
 		$result = $query->fields();
-		$expected = ['MockQueryPost', 'MockQueryPost.id'];
+		$expected = array('MockQueryPost', 'MockQueryPost.id');
 		$this->assertEqual($expected, $result);
 
 		$query->fields(false);
-		$query->fields([
-			'MockQueryPost' => ['id'],
+		$query->fields(array(
+			'MockQueryPost' => array('id'),
 			'title',
-			'MockQueryComment' => ['comment', 'title'],
+			'MockQueryComment' => array('comment', 'title'),
 			'MockQueryComment'
-		]);
+		));
 		$result = $query->fields();
-		$expected = [
+		$expected = array(
 			'MockQueryPost.id',
 			'title',
 			'MockQueryComment.comment',
 			'MockQueryComment.title',
 			'MockQueryComment'
-		];
+		);
 		$this->assertEqual($expected, $result);
 	}
 
@@ -205,7 +185,7 @@ class QueryTest extends \lithium\test\Unit {
 		$result = $query->entity();
 		$this->assertNull($result);
 
-		$record = (object) ['id' => 12];
+		$record = (object) array('id' => 12);
 		$record->title = 'Lorem Ipsum';
 
 		$query->entity($record);
@@ -239,7 +219,7 @@ class QueryTest extends \lithium\test\Unit {
 	public function testData() {
 		$query = new Query($this->_queryArr);
 
-		$expected = [];
+		$expected = array();
 		$result = $query->data();
 		$this->assertEqual($expected, $result);
 
@@ -249,13 +229,13 @@ class QueryTest extends \lithium\test\Unit {
 
 		$query->entity($record);
 
-		$expected = ['id' => 12, 'title' => 'Lorem Ipsum'];
+		$expected = array('id' => 12, 'title' => 'Lorem Ipsum');
 		$result = $query->data();
 		$this->assertEqual($expected, $result);
 
-		$query->data(['id' => 35, 'title' => 'Nix', 'body' => 'Prix']);
+		$query->data(array('id' => 35, 'title' => 'Nix', 'body' => 'Prix'));
 
-		$expected = ['id' => 35, 'title' => 'Nix', 'body' => 'Prix'];
+		$expected = array('id' => 35, 'title' => 'Nix', 'body' => 'Prix');
 		$result = $query->data();
 		$this->assertEqual($expected, $result);
 	}
@@ -263,13 +243,13 @@ class QueryTest extends \lithium\test\Unit {
 	public function testConditions() {
 		$query = new Query($this->_queryArr);
 
-		$expected = ['author_id' => 12];
+		$expected = array('author_id' => 12);
 		$result = $query->conditions();
 		$this->assertEqual($expected, $result);
 
-		$query->conditions(['author_id' => 13, 'title LIKE' => 'Lorem%']);
+		$query->conditions(array('author_id' => 13, 'title LIKE' => 'Lorem%'));
 
-		$expected = ['author_id' => 13, 'title LIKE' => 'Lorem%'];
+		$expected = array('author_id' => 13, 'title LIKE' => 'Lorem%');
 		$result = $query->conditions();
 		$this->assertEqual($expected, $result);
 	}
@@ -277,13 +257,13 @@ class QueryTest extends \lithium\test\Unit {
 	public function testHaving() {
 		$query = new Query($this->_queryArr);
 
-		$expected = [];
+		$expected = array();
 		$result = $query->having();
 		$this->assertEqual($expected, $result);
 
-		$query->having(['count' => 5]);
+		$query->having(array('count' => 5));
 
-		$expected = ['count' => 5];
+		$expected = array('count' => 5);
 		$result = $query->having();
 		$this->assertEqual($expected, $result);
 	}
@@ -291,19 +271,19 @@ class QueryTest extends \lithium\test\Unit {
 	public function testConditionFromRecord() {
 		$entity = new Record();
 		$entity->id = 12;
-		$query = new Query(compact('entity') + ['model' => $this->_model]);
+		$query = new Query(compact('entity') + array('model' => $this->_model));
 
-		$expected = ['id' => 12];
+		$expected = array('id' => 12);
 		$result = $query->conditions();
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testExtra() {
-		$object = new MockPostObject(['id' => 1, 'data' => 'test']);
-		$query = new Query([
+		$object = new MockPostObject(array('id' => 1, 'data' => 'test'));
+		$query = new Query(array(
 			'conditions' => 'foo', 'extra' => 'value', 'extraObject' => $object
-		]);
-		$this->assertEqual(['foo'], $query->conditions());
+		));
+		$this->assertEqual(array('foo'), $query->conditions());
 		$this->assertEqual('value', $query->extra());
 		$this->assertEqual($object, $query->extraObject());
 		$this->assertNull($query->extra2());
@@ -318,7 +298,7 @@ class QueryTest extends \lithium\test\Unit {
 		$this->assertInternalType('array', $export);
 		$this->skipIf(!is_array($export), 'Query::export() does not return an array');
 
-		$expected = [
+		$expected = array(
 			'alias',
 			'calculate',
 			'comment',
@@ -341,7 +321,7 @@ class QueryTest extends \lithium\test\Unit {
 			'whitelist',
 			'with',
 			'relationships'
-		];
+		);
 		$result = array_keys($export);
 
 		sort($expected);
@@ -357,30 +337,30 @@ class QueryTest extends \lithium\test\Unit {
 	}
 
 	public function testRestrictedKeyExport() {
-		$options = [
+		$options = array(
 			'type' => 'update',
-			'data' => ['title' => 'Bar'],
-			'conditions' => ['title' => 'Foo'],
+			'data' => array('title' => 'Bar'),
+			'conditions' => array('title' => 'Foo'),
 			'model' => $this->_model
-		];
+		);
 		$query = new Query($options);
 
-		$result = $query->export($this->_db, [
-			'keys' => ['type', 'data', 'conditions']
-		]);
-		$expected = [
+		$result = $query->export($this->db, array(
+			'keys' => array('type', 'data', 'conditions')
+		));
+		$expected = array(
 			'type' => 'update',
-			'data' => ['title' => 'Bar'],
+			'data' => array('title' => 'Bar'),
 			'conditions' => "WHERE {title} = 'Foo'"
-		];
+		);
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testPagination() {
-		$query = new Query(['limit' => 5, 'page' => 1]);
+		$query = new Query(array('limit' => 5, 'page' => 1));
 		$this->assertEqual(0, $query->offset());
 
-		$query = new Query(['limit' => 5, 'page' => 2]);
+		$query = new Query(array('limit' => 5, 'page' => 2));
 		$this->assertEqual(5, $query->offset());
 
 		$query->page(1);
@@ -388,9 +368,9 @@ class QueryTest extends \lithium\test\Unit {
 	}
 
 	public function testJoins() {
-		$query = new Query(['joins' => [['foo' => 'bar']]]);
-		$query->joins(['bar' => 'baz']);
-		$expected = [['foo' => 'bar'], ['bar' => 'baz']];
+		$query = new Query(array('joins' => array(array('foo' => 'bar'))));
+		$query->joins(array('bar' => 'baz'));
+		$expected = array(array('foo' => 'bar'), array('bar' => 'baz'));
 		$joins = $query->joins();
 		$this->assertEqual($expected, $joins);
 
@@ -400,17 +380,17 @@ class QueryTest extends \lithium\test\Unit {
 		$this->assertEqual('baz', $joins[1]['bar']);
 		$this->assertArrayNotHasKey('foo', $joins[1]);
 
-		$query->joins('zim', ['dib' => 'gir']);
+		$query->joins('zim', array('dib' => 'gir'));
 		$joins = $query->joins();
 		$this->assertCount(3, $joins);
 
 		$this->assertEqual('gir', $joins['zim']['dib']);
 
-		$expected = [
-			['foo' => 'bar'],
-			['bar' => 'baz'],
-			'zim' => ['dib' => 'gir']
-		];
+		$expected = array(
+			array('foo' => 'bar'),
+			array('bar' => 'baz'),
+			'zim' => array('dib' => 'gir')
+		);
 		$this->assertEqual($expected, $joins);
 	}
 
@@ -419,60 +399,60 @@ class QueryTest extends \lithium\test\Unit {
 		$model::meta('source', 'foo');
 		$model::bind('hasMany', 'MockQueryComment');
 
-		$query = new Query([
+		$query = new Query(array(
 			'type' => 'read',
 			'model' => $model,
 			'with' => 'MockQueryComment'
-		]);
+		));
 		$export = $query->export(new MockDatabase());
 
-		$expected = ['MockQueryComment' => [
+		$expected = array('MockQueryComment' => array(
 			'type' => 'hasMany',
 			'model' => 'lithium\tests\mocks\data\model\MockQueryComment',
 			'fieldName' => 'mock_query_comments',
 			'alias' => 'MockQueryComment'
-		]];
+		));
 		$this->assertArrayHasKey('relationships', $export);
 		$this->skipIf(!isset($export['relationships']));
 		$this->assertEqual($expected, $export['relationships']);
 
-		$query = new Query(compact('model') + [
+		$query = new Query(compact('model') + array(
 			'type' => 'read',
 			'with' => 'MockQueryComment',
 			'limit' => 3,
-			'order' => ['author_id', 'id'],
+			'order' => 'author_id ASC',
 			'group' => 'author_id'
-		]);
-		$expected = 'SELECT * FROM {foo} AS {MockQueryPost} LEFT JOIN {mock_query_comments} AS ';
+		));
+		$expected = 'SELECT * FROM {foo} AS {MockQueryPost} LEFT JOIN AS ';
 		$expected .= '{MockQueryComment} ON {MockQueryPost}.{id} = {MockQueryComment}';
 		$expected .= '.{mock_query_post_id} GROUP BY {MockQueryPost}.{author_id} ORDER BY ';
-		$expected .= '{MockQueryPost}.{author_id} ASC, {MockQueryPost}.{id} ASC LIMIT 3;';
-		$this->assertEqual($expected, $this->_db->renderCommand($query));
+		$expected .= '{MockQueryPost}.{author_id} ASC LIMIT 3;';
+		$this->assertEqual($expected, $this->db->renderCommand($query));
 	}
 
 	/**
 	 * Tests that assigning a whitelist to a query properly restricts the list of data fields that
 	 * the query exposes.
+	 *
+	 * @return void
 	 */
 	public function testWhitelisting() {
-		$data = ['foo' => 1, 'bar' => 2, 'baz' => 3];
+		$data = array('foo' => 1, 'bar' => 2, 'baz' => 3);
 		$query = new Query(compact('data'));
 		$this->assertEqual($data, $query->data());
 
-		$query = new Query(compact('data') + ['whitelist' => ['foo', 'bar']]);
-		$this->assertEqual(['foo' => 1, 'bar' => 2], $query->data());
-
-		$data = ['baz' => 3];
-		$query = new Query(compact('data') + ['whitelist' => ['foo', 'bar']]);
-		$this->assertIdentical([], $query->data());
+		$query = new Query(compact('data') + array('whitelist' => array('foo', 'bar')));
+		$this->assertEqual(array('foo' => 1, 'bar' => 2), $query->data());
 	}
 
 	/**
 	 * Tests basic property accessors and mutators.
+	 *
+	 * @return void
 	 */
 	public function testBasicAssignments() {
 		$query = new Query();
-		$group = ['key' => 'hits', 'reduce' => 'function() {}'];
+		$group = array('key' => 'hits', 'reduce' => 'function() {}');
 		$calculate = 'count';
 
 		$this->assertNull($query->group());
@@ -492,48 +472,47 @@ class QueryTest extends \lithium\test\Unit {
 	}
 
 	public function testInstantiationWithConditionsAndData() {
-		$options = [
+		$options = array(
 			'type' => 'update',
-			'data' => ['title' => '..'],
-			'conditions' => ['title' => 'FML'],
+			'data' => array('title' => '..'),
+			'conditions' => array('title' => 'FML'),
 			'model' => 'lithium\tests\mocks\data\model\MockQueryPost'
-		];
+		);
 		$query = new Query($options);
-		$result = $query->export($this->_db);
+		$result = $query->export($this->db);
 
-		$this->assertEqual(['title' => '..'], $result['data']);
+		$this->assertEqual(array('title' => '..'), $result['data']);
 		$this->assertEqual("WHERE {title} = 'FML'", $result['conditions']);
 	}
 
 	public function testEntityConditions() {
-		$entity = new Record(['model' => $this->_model, 'exists' => true]);
+		$entity = new Record(array('model' => $this->_model, 'exists' => true));
 		$entity->id = 13;
 		$query = new Query(compact('entity'));
-		$this->assertEqual(['id' => 13], $query->conditions());
+		$this->assertEqual(array('id' => 13), $query->conditions());
 	}
 
 	public function testInvalidEntityCondition() {
-		$entity = new Record(['model' => $this->_model, 'exists' => true]);
+		$entity = new Record(array('model' => $this->_model, 'exists' => true));
 		$entity->_id = 13;
 		$query = new Query(compact('entity'));
-		$this->assertException('/No matching primary key found/', function() use ($query) {
-			$query->conditions();
-		});
+		$this->expectException('/No matching primary key found/');
+		$query->conditions();
 	}
 
 	public function testAutomaticAliasing() {
-		$query = new Query([
+		$query = new Query(array(
 			'type' => 'read',
 			'model' => $this->_model
-		]);
+		));
 		$this->assertEqual('MockQueryPost', $query->alias());
 	}
 
 	public function testFluentInterface() {
 		$query = new Query();
-		$conditions = ['foo' => 'bar'];
-		$fields = ['foo', 'bar', 'baz', 'created'];
-		$order = ['created' => 'ASC'];
+		$conditions = array('foo' => 'bar');
+		$fields = array('foo', 'bar', 'baz', 'created');
+		$order = array('created' => 'ASC');
 
 		$result = $query->conditions($conditions)->fields($fields)->order($order);
 		$this->assertEqual($result, $query);
@@ -548,30 +527,30 @@ class QueryTest extends \lithium\test\Unit {
 	public function testQueryWithCustomAlias() {
 		$model = 'lithium\tests\mocks\data\model\MockQueryComment';
 
-		$query = new Query([
+		$query = new Query(array(
 			'type' => 'read',
 			'model' => $model,
 			'source' => 'my_custom_table',
 			'alias' => 'MyCustomAlias'
-		]);
-		$result = $query->export($this->_db);
+		));
+		$result = $query->export($this->db);
 		$this->assertEqual('{my_custom_table}', $result['source']);
 		$this->assertEqual('AS {MyCustomAlias}', $result['alias']);
 	}
 
 	public function testRelationships() {
-		$query = new Query(['relationships' => ['Model1' => ['foo' => 'bar']]]);
-		$query->relationships('Model1.Model2', ['bar' => 'baz']);
-		$expected = [
-			'Model1' => ['foo' => 'bar'],
-			'Model1.Model2' => ['bar' => 'baz']
-		];
+		$query = new Query(array('relationships' => array('Model1' => array('foo' => 'bar'))));
+		$query->relationships('Model1.Model2', array('bar' => 'baz'));
+		$expected = array(
+			'Model1' => array('foo' => 'bar'),
+			'Model1.Model2' => array('bar' => 'baz')
+		);
 		$relationships = $query->relationships();
 		$this->assertEqual($expected, $relationships);
 
 		$query = new Query();
-		$query->relationships('Model1', ['foo' => 'bar']);
-		$query->relationships('Model1.Model2', ['bar' => 'baz']);
+		$query->relationships('Model1', array('foo' => 'bar'));
+		$query->relationships('Model1.Model2', array('bar' => 'baz'));
 		$relationships = $query->relationships();
 		$this->assertEqual($expected, $relationships);
 	}
@@ -594,11 +573,11 @@ class QueryTest extends \lithium\test\Unit {
 		$this->assertIdentical('MockQueryComment__2', $query->alias(true, 'Model1'));
 		$this->assertIdentical('MockQueryComment2__2', $query->alias(true, 'Model2'));
 
-		$query = new Query(compact('model') + [
+		$query = new Query(compact('model') + array(
 			'source' => 'my_custom_table',
 			'alias' => 'MyCustomAlias'
-		]);
-		$result = $query->export($this->_db);
+		));
+		$result = $query->export($this->db);
 		$this->assertIdentical('{my_custom_table}', $result['source']);
 		$this->assertIdentical('AS {MyCustomAlias}', $result['alias']);
 
@@ -622,7 +601,7 @@ class QueryTest extends \lithium\test\Unit {
 		$this->assertIdentical('Relation5', $query->alias(true, 'Other.Relation5'));
 		$this->assertIdentical('Relation5__2', $query->alias(true, 'Other.Other.Relation5'));
 
-		$expected = [
+		$expected = array (
 			'MyCustomAlias' => null,
 			'MyCustomAlias__2' => 'Relation1',
 			'MyCustomAlias__3' => 'Other.Relation2',
@@ -630,77 +609,77 @@ class QueryTest extends \lithium\test\Unit {
 			'Relation4' => 'Relation4',
 			'Relation5' => 'Other.Relation5',
 			'Relation5__2' => 'Other.Other.Relation5'
-		];
+		);
 
-		$this->assertEqual($expected, $query->paths($this->_db));
+		$this->assertEqual($expected, $query->paths($this->db));
 
 		$model = 'lithium\tests\mocks\data\model\MockQueryPost';
-		$query = new Query([
+		$query = new Query(array(
 			'type' => 'read',
 			'model' => $model
-		]);
+		));
 		$query->alias(null, 'MockQueryComment');
 		$query->alias('MockQueryPost2', 'MockQueryComment.MockQueryPost');
 
-		$expected = [
+		$expected = array(
 			'MockQueryPost' => null,
 			'MockQueryComment' => 'MockQueryComment',
 			'MockQueryPost2' => 'MockQueryComment.MockQueryPost'
-		];
-		$this->assertEqual($expected, $query->paths($this->_db));
+		);
+		$this->assertEqual($expected, $query->paths($this->db));
 	}
 
 	public function testModels() {
 		$model = 'lithium\tests\mocks\data\model\MockQueryPost';
-		$query = new Query([
+		$query = new Query(array(
 			'type' => 'read',
 			'model' => $model,
 			'with' => 'MockQueryComment'
-		]);
+		));
 
-		$expected = [
+		$expected = array(
 			'MockQueryPost' => 'lithium\tests\mocks\data\model\MockQueryPost',
 			'MockQueryComment' => 'lithium\tests\mocks\data\model\MockQueryComment'
-		];
-		$this->assertEqual($expected, $query->models($this->_db));
+		);
+		$this->assertEqual($expected, $query->models($this->db));
 
-		$query = new Query([
+		$query = new Query(array(
 			'type' => 'read',
 			'model' => $model,
 			'alias' => 'Post',
-			'with' => [
-				'MockQueryComment' => ['alias' => 'Comment'],
-				'MockQueryComment.MockQueryPost' => ['alias' => 'Post2'],
-			]
-		]);
+			'with' => array(
+				'MockQueryComment' => array('alias' => 'Comment'),
+				'MockQueryComment.MockQueryPost' => array('alias' => 'Post2'),
+			)
+		));
 
-		$expected = [
+		$expected = array(
 			'Post' => 'lithium\tests\mocks\data\model\MockQueryPost',
 			'Comment' => 'lithium\tests\mocks\data\model\MockQueryComment',
 			'Post2' => 'lithium\tests\mocks\data\model\MockQueryPost'
-		];
-		$this->assertEqual($expected, $query->models($this->_db));
+		);
+		$this->assertEqual($expected, $query->models($this->db));
 	}
 
 	public function testExportWithJoinedStrategy() {
-		$query = new Query([
+		$query = new Query(array(
 			'type' => 'read',
 			'alias' => 'MyAlias',
 			'model' => 'lithium\tests\mocks\data\model\MockGallery',
 			'calculate' => 'MyCalculate',
 			'comment' => 'No comment',
-			'conditions' => ['id' => 2],
-			'fields' => ['Tag'],
-			'with' => ['Image.ImageTag.Tag', 'Image', 'Image.ImageTag']
-		]);
-		$export = $query->export($this->_db);
+			'conditions' => array('id' => 2),
+			'fields' => array('Tag'),
+			'with' => array('Image.ImageTag.Tag', 'Image', 'Image.ImageTag')
+		));
+		$export = $query->export($this->db);
 
 		$joins = 'LEFT JOIN {mock_image} AS {Image} ON {MyAlias}.{id} = {Image}.{gallery_id} ';
 		$joins .= 'LEFT JOIN {mock_image_tag} AS {ImageTag} ON {Image}.{id} = ';
 		$joins .= '{ImageTag}.{image_id} LEFT JOIN {mock_tag} AS {Tag} ON {ImageTag}.{tag_id} = ';
 		$joins .= '{Tag}.{id}';
 
-		$expected = [
+		$expected = array(
 			'type' => 'read',
 			'alias' => 'AS {MyAlias}',
 			'comment' => '/* No comment */',
@@ -714,60 +693,57 @@ class QueryTest extends \lithium\test\Unit {
 			'mode' => null,
 			'model' => 'lithium\tests\mocks\data\model\MockGallery',
 			'calculate' => 'MyCalculate',
-			'with' => [
+			'with' => array(
 				'Image.ImageTag.Tag' => null,
 				'Image' => null,
 				'Image.ImageTag' => null
-			],
+			),
 			'source' => '{mock_gallery}',
 			'offset' => null,
 			'page' => null,
-			'data' => [],
-			'whitelist' => [],
+			'data' => array(),
+			'whitelist' => array(),
 			'schema' => null,
-			'map' => [],
-			'relationships' => [
-				'Image' => [
+			'map' => array(),
+			'relationships' => array(
+				'Image' => array(
 					'type' => 'hasMany',
 					'model' => 'lithium\tests\mocks\data\model\MockImage',
 					'fieldName' => 'images',
 					'alias' => 'Image'
-				],
-				'Image.ImageTag' => [
+				),
+				'Image.ImageTag' => array(
 					'type' => 'hasMany',
 					'model' => 'lithium\tests\mocks\data\model\MockImageTag',
 					'fieldName' => 'image_tags',
 					'alias' => 'ImageTag'
-				],
-				'Image.ImageTag.Tag' => [
+				),
+				'Image.ImageTag.Tag' => array(
 					'type' => 'belongsTo',
 					'model' => 'lithium\tests\mocks\data\model\MockTag',
 					'fieldName' => 'tag',
 					'alias' => 'Tag'
-				]
-			]
-		];
+				)
+			)
+		);
 
 		$this->assertEqual($expected, $export);
 	}
 
 	public function testExportWithUndefinedStrategy() {
-		$query = new Query([
+		$query = new Query(array(
 			'alias' => 'MyAlias',
 			'model' => 'lithium\tests\mocks\data\model\MockGallery',
 			'calculate' => 'MyCalculate',
 			'comment' => 'No comment',
-			'conditions' => ['id' => 2],
-			'fields' => ['Image.ImageTag.Tag'],
+			'conditions' => array('id' => 2),
+			'fields' => array('Image.ImageTag.Tag'),
 			'type' => 'read',
-			'with' => ['Image.ImageTag.Tag', 'Image', 'Image.ImageTag'],
+			'with' => array('Image.ImageTag.Tag', 'Image', 'Image.ImageTag'),
 			'strategy' => 'custom'
-		]);
-		$db = $this->_db;
-
-		$this->assertException('Undefined query strategy `custom`.', function() use ($query, $db) {
-			$query->export($db);
-		});
+		));
+		$this->expectException('Undefined query strategy `custom`.');
+		$export = $query->export($this->db);
 	}
 
 	public function testRespondsTo() {

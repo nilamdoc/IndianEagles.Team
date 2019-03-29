@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\cases\g11n\catalog\adapter;
@@ -23,20 +22,20 @@ class MemoryTest extends \lithium\test\Unit {
 	}
 
 	public function testReadAndWrite() {
-		$data = [
-			'singular 1' => [
+		$data = array(
+			'singular 1' => array(
 				'id' => 'singular 1',
-				'ids' => ['singular' => 'singular 1', 'plural' => 'plural 1'],
-				'flags' => ['fuzzy' => true],
-				'translated' => [],
-				'occurrences' => [
-					['file' => 'test.php', 'line' => 1]
-				],
-				'comments' => [
+				'ids' => array('singular' => 'singular 1', 'plural' => 'plural 1'),
+				'flags' => array('fuzzy' => true),
+				'translated' => array(),
+				'occurrences' => array(
+					array('file' => 'test.php', 'line' => 1)
+				),
+				'comments' => array(
 					'comment 1'
-				]
-			]
-		];
+				)
+			)
+		);
 		$result = $this->adapter->write('category', 'ja', 'default', $data);
 		$this->assertEqual($data, $this->adapter->read('category', 'ja', 'default'));
 	}

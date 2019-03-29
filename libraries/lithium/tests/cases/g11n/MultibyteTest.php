@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\cases\g11n;
@@ -14,7 +13,7 @@ use lithium\tests\mocks\g11n\multibyte\adapter\MockAdapter;
 
 class MultibyteTest extends \lithium\test\Unit {
 
-	protected $_backup = [];
+	protected $_backup = array();
 
 	public $adapter;
 
@@ -23,7 +22,7 @@ class MultibyteTest extends \lithium\test\Unit {
 		Multibyte::reset();
 
 		$this->adapter = new MockAdapter();
-		Multibyte::config(['default' => ['object' => $this->adapter]]);
+		Multibyte::config(array('default' => array('object' => $this->adapter)));
 	}
 
 	public function tearDown() {
@@ -46,13 +45,13 @@ class MultibyteTest extends \lithium\test\Unit {
 	}
 
 	public function testIsQuick() {
-		$result = Multibyte::is('äbc', ['quick' => true]);
+		$result = Multibyte::is('äbc', array('quick' => true));
 		$this->assertTrue($result);
 
-		$result = Multibyte::is('κόσμε', ['quick' => true]);
+		$result = Multibyte::is('κόσμε', array('quick' => true));
 		$this->assertTrue($result);
 
-		$result = Multibyte::is("κό\nσμε", ['quick' => true]);
+		$result = Multibyte::is("κό\nσμε", array('quick' => true));
 		$this->assertTrue($result);
 	}
 
@@ -80,7 +79,7 @@ class MultibyteTest extends \lithium\test\Unit {
 		$path = LITHIUM_LIBRARY_PATH . '/lithium/tests/resources/utf8_decoder_stress_test.txt';
 		$data = file($path);
 
-		$items = [
+		$items = array(
 			64 => true,
 			70 => false,
 			71 => true,
@@ -155,7 +154,7 @@ class MultibyteTest extends \lithium\test\Unit {
 			263 => false,
 			267 => true,
 			268 => true
-		];
+		);
 		foreach ($items as $number => $expected) {
 			$result = Multibyte::is($data[$number]);
 			$message  = "Expected item on line {$number} to be detected as ";
@@ -183,7 +182,7 @@ class MultibyteTest extends \lithium\test\Unit {
 		$path = LITHIUM_LIBRARY_PATH . '/lithium/tests/resources/utf8_decoder_stress_test.txt';
 		$data = file($path);
 
-		$items = [
+		$items = array(
 			64 => true,
 			70 => true,
 			71 => true,
@@ -258,9 +257,9 @@ class MultibyteTest extends \lithium\test\Unit {
 			263 => true,
 			267 => true,
 			268 => true
-		];
+		);
 		foreach ($items as $number => $expected) {
-			$result = Multibyte::is($data[$number], ['quick' => true]);
+			$result = Multibyte::is($data[$number], array('quick' => true));
 			$message  = "Expected item on line {$number} to be detected as ";
 			$message .= ($expected ? 'valid' : 'invalid') . " UTF-8.\n";
 			$this->assertEqual($expected, $result, $message);
@@ -271,7 +270,7 @@ class MultibyteTest extends \lithium\test\Unit {
 		Multibyte::strlen('test');
 
 		$result = $this->adapter->testStrlenArgs;
-		$expected = ['test'];
+		$expected = array('test');
 		$this->assertEqual($expected, $result);
 	}
 
@@ -279,13 +278,13 @@ class MultibyteTest extends \lithium\test\Unit {
 		Multibyte::strpos('abcab', 'c');
 
 		$result = $this->adapter->testStrposArgs;
-		$expected = ['abcab', 'c', 0];
+		$expected = array('abcab', 'c', 0);
 		$this->assertEqual($expected, $result);
 
 		Multibyte::strpos('abcab', 'c', 23);
 
 		$result = $this->adapter->testStrposArgs;
-		$expected = ['abcab', 'c', 23];
+		$expected = array('abcab', 'c', 23);
 		$this->assertEqual($expected, $result);
 	}
 
@@ -293,7 +292,7 @@ class MultibyteTest extends \lithium\test\Unit {
 		Multibyte::strrpos('abcab', 'c');
 
 		$result = $this->adapter->testStrrposArgs;
-		$expected = ['abcab', 'c'];
+		$expected = array('abcab', 'c');
 		$this->assertEqual($expected, $result);
 	}
 
@@ -301,13 +300,13 @@ class MultibyteTest extends \lithium\test\Unit {
 		Multibyte::substr('abcab', 1);
 
 		$result = $this->adapter->testSubstrArgs;
-		$expected = ['abcab', 1, null];
+		$expected = array('abcab', 1, null);
 		$this->assertEqual($expected, $result);
 
 		Multibyte::substr('abcab', 1, 2);
 
 		$result = $this->adapter->testSubstrArgs;
-		$expected = ['abcab', 1, 2];
+		$expected = array('abcab', 1, 2);
 		$this->assertEqual($expected, $result);
 	}
 }

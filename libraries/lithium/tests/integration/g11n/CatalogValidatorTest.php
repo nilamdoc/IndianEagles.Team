@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\integration\g11n;
@@ -15,18 +14,19 @@ use lithium\util\Validator;
 
 class CatalogValidatorTest extends \lithium\test\Integration {
 
-	protected $_backup = [];
+	protected $_backup = array();
 
 	public function setUp() {
 		$this->_backup['catalogConfig'] = Catalog::config();
-		Catalog::config([
-			'runtime' => ['adapter' => new Memory()]
-		]);
+		Catalog::reset();
+		Catalog::config(array(
+			'runtime' => array('adapter' => new Memory())
+		));
+		Validator::__init();
 	}
 
 	public function tearDown() {
 		Catalog::reset();
-		Validator::reset();
 		Catalog::config($this->_backup['catalogConfig']);
 	}
 
@@ -41,10 +41,10 @@ class CatalogValidatorTest extends \lithium\test\Integration {
 	}
 
 	public function testMultipleRules() {
-		$data = [
+		$data = array(
 			'postalCode' => '/postalCode en_US/',
 			'phone' => '/phone en_US/'
-		];
+		);
 		Catalog::write('runtime', 'validation', 'en_US', $data);
 
 		Validator::add(Catalog::read('runtime', 'validation', 'en_US'));
@@ -62,10 +62,10 @@ class CatalogValidatorTest extends \lithium\test\Integration {
 		$data = '/phone en_GB/';
 		Catalog::write('runtime', 'validation.phone', 'en_GB', $data);
 
-		Validator::add('phone', [
+		Validator::add('phone', array(
 			'en_US' => Catalog::read('runtime', 'validation.phone', 'en_US'),
 			'en_GB' => Catalog::read('runtime', 'validation.phone', 'en_GB')
-		]);
+		));
 
 		$result = Validator::isPhone('phone en_US', 'en_US');
 		$this->assertTrue($result);

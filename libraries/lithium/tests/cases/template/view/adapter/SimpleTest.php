@@ -1,16 +1,15 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\cases\template\view\adapter;
 
 use lithium\template\view\adapter\Simple;
-use lithium\tests\mocks\util\MockTextObject;
+use lithium\tests\mocks\util\MockStringObject;
 
 class SimpleTest extends \lithium\test\Unit {
 
@@ -21,16 +20,16 @@ class SimpleTest extends \lithium\test\Unit {
 	}
 
 	public function testBasicRender() {
-		$result = $this->subject->template('layout', ['layout' => '{:content}']);
+		$result = $this->subject->template('layout', array('layout' => '{:content}'));
 		$expected = '{:content}';
 		$this->assertEqual($expected, $result);
 
-		$message = new MockTextObject();
+		$message = new MockStringObject();
 		$message->message = 'Lithium is about to rock you.';
 
-		$result = $this->subject->render('Hello {:name}! {:message}', compact('message') + [
+		$result = $this->subject->render('Hello {:name}! {:message}', compact('message') + array(
 			'name' => 'World'
-		]);
+		));
 		$expected = 'Hello World! Lithium is about to rock you.';
 		$this->assertEqual($expected, $result);
 	}

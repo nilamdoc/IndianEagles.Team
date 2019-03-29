@@ -1,15 +1,14 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\mocks\console;
 
-use lithium\util\Text;
+use lithium\util\String;
 
 class MockResponse extends \lithium\console\Response {
 
@@ -17,18 +16,18 @@ class MockResponse extends \lithium\console\Response {
 
 	public $testParam;
 
-	public function __construct(array $config = []) {
+	public function __construct(array $config = array()) {
 		parent::__construct($config);
 		$this->output = null;
 		$this->error = null;
 	}
 
 	public function output($output) {
-		return $this->output .= Text::insert($output, $this->styles(false));
+		return $this->output .= String::insert($output, $this->styles(false));
 	}
 
 	public function error($error) {
-		return $this->error .= Text::insert($error, $this->styles(false));
+		return $this->error .= String::insert($error, $this->styles(false));
 	}
 
 	public function __destruct() {

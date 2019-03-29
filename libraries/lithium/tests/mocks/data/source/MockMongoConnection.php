@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\mocks\data\source;
@@ -13,9 +12,9 @@ use MongoId;
 
 class MockMongoConnection {
 
-	public $queries = [];
+	public $queries = array();
 
-	public $results = [];
+	public $results = array();
 
 	protected $_collection = null;
 
@@ -31,27 +30,18 @@ class MockMongoConnection {
 	}
 
 	public function listDBs() {
-		return [];
+		return array();
 	}
 
-	public function getConnections() {
-		return [[
-			'hash' => 'localhost:27017;-;X;56052',
-			'server' => [],
-			'connection' => []
-		]];
-	}
-
-	public function insert(array &$data, array $options = []) {
+	public function insert(array &$data, array $options = array()) {
 		$data['_id'] = new MongoId();
 		return $this->_record(__FUNCTION__, compact('data', 'options'));
 	}
 
-	protected function _record($type, array $data = []) {
+	protected function _record($type, array $data = array()) {
 		$collection = $this->_collection;
 		$this->queries[] = compact('type', 'collection') + $data;
-		$result = array_pop($this->results);
-		return $result === null ? false : $result;
+		return array_pop($this->results);
 	}
 
 	public function update($conditions, $update, $options) {
@@ -75,7 +65,7 @@ class MockMongoConnection {
 		return $this;
 	}
 
-	public function storeBytes($bytes = null, array $extra = [], array $options = []) {
+	public function storeBytes($bytes = null, array $extra = array(), array $options = array()) {
 		return;
 	}
 }

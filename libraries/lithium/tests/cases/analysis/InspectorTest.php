@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\cases\analysis;
@@ -13,7 +12,6 @@ use lithium\analysis\Inspector;
 use lithium\core\Libraries;
 use lithium\tests\mocks\analysis\MockEmptyClass;
 use lithium\tests\mocks\core\MockMethodFiltering;
-use lithium\action\Controller;
 
 class InspectorTest extends \lithium\test\Unit {
 
@@ -34,15 +32,15 @@ class InspectorTest extends \lithium\test\Unit {
 		$result = array_keys(Inspector::methods($class, 'extents'));
 		$this->assertEqual(array_intersect($result, $expected), $result);
 
-		$result = array_keys(Inspector::methods($class, 'extents', [
+		$result = array_keys(Inspector::methods($class, 'extents', array(
 			'self' => true, 'public' => true
-		]));
+		)));
 		$this->assertEqual($expected, $result);
 
 		$this->assertNull(Inspector::methods('lithium\core\Foo'));
 
 		$result = Inspector::methods('stdClass', 'extents');
-		$this->assertEqual([], $result);
+		$this->assertEqual(array(), $result);
 	}
 
 	public function testMethodInspection() {
@@ -62,8 +60,8 @@ class InspectorTest extends \lithium\test\Unit {
 	 * Recursively meta.
 	 */
 	public function testMethodRange() {
-		$result = Inspector::methods(__CLASS__, 'ranges', ['methods' => __FUNCTION__]);
-		$expected = [__FUNCTION__ => [__LINE__ - 1, __LINE__, __LINE__ + 1]];
+		$result = Inspector::methods(__CLASS__, 'ranges', array('methods' => __FUNCTION__));
+		$expected = array(__FUNCTION__ => array(__LINE__ - 1, __LINE__, __LINE__ + 1));
 		$this->assertEqual($expected, $result);
 	}
 
@@ -85,58 +83,56 @@ class InspectorTest extends \lithium\test\Unit {
 			 */
 		} while (false);
 
-		$result = Inspector::executable($this, ['methods' => __FUNCTION__]);
-		$expected = [__LINE__ - 1, __LINE__, __LINE__ + 1];
+		$result = Inspector::executable($this, array('methods' => __FUNCTION__));
+		$expected = array(__LINE__ - 1, __LINE__, __LINE__ + 1);
 		$this->assertEqual($expected, $result);
 	}
 
 	public function testExecutableLinesOnEmptyClass() {
 		$result = Inspector::executable(new MockEmptyClass());
-		$this->assertEqual([], $result);
+		$this->assertEqual(array(), $result);
 	}
 
 	/**
 	 * Tests reading specific line numbers of a file.
+	 *
+	 * @return void
 	 */
 	public function testLineIntrospection() {
-		$backup = error_reporting();
-		error_reporting(E_ALL);
-
-		$result = Inspector::lines(__FILE__, [__LINE__ - 4]);
-		$expected = [__LINE__ - 5 => "\tpublic function testLineIntrospection() {"];
+		$result = Inspector::lines(__FILE__, array(__LINE__ - 1));
+		$expected = array(__LINE__ - 2 => "\tpublic function testLineIntrospection() {");
 		$this->assertEqual($expected, $result);
 
-		$result = Inspector::lines(__CLASS__, [18]);
-		$expected = [18 => 'class InspectorTest extends \lithium\test\Unit {'];
+		$result = Inspector::lines(__CLASS__, array(16));
+		$expected = array(16 => 'class InspectorTest extends \lithium\test\Unit {');
 		$this->assertEqual($expected, $result);
 
 		$lines = 'This is the first line.' . PHP_EOL . 'And this the second.';
-		$result = Inspector::lines($lines, [2]);
-		$expected = [2 => 'And this the second.'];
+		$result = Inspector::lines($lines, array(2));
+		$expected = array(2 => 'And this the second.');
 		$this->assertEqual($expected, $result);
 
-		$this->assertException('/(Missing argument 2|Too few arguments.*1 passed.*2 expected)/', function() {
-			Inspector::lines('lithium\core\Foo');
-		});
-		$this->assertNull(Inspector::lines(__CLASS__, []));
-
-		error_reporting($backup);
+		$this->expectException('/Missing argument 2/');
+		$this->assertNull(Inspector::lines('lithium\core\Foo'));
+		$this->assertNull(Inspector::lines(__CLASS__, array()));
 	}
 
 	/**
 	 * Tests reading specific line numbers of a file that has CRLF line endings.
+	 *
+	 * @return void
 	 */
 	public function testLineIntrospectionWithCRLFLineEndings() {
 		$tmpPath = Libraries::get(true, 'resources') . '/tmp/tests/inspector_crlf';
-		$contents = implode("\r\n", ['one', 'two', 'three', 'four', 'five']);
+		$contents = implode("\r\n", array('one', 'two', 'three', 'four', 'five'));
 		file_put_contents($tmpPath, $contents);
 
-		$result = Inspector::lines($tmpPath, [2]);
-		$expected = [2 => 'two'];
+		$result = Inspector::lines($tmpPath, array(2));
+		$expected = array(2 => 'two');
 		$this->assertEqual($expected, $result);
 
-		$result = Inspector::lines($tmpPath, [1,5]);
-		$expected = [1 => 'one', 5 => 'five'];
+		$result = Inspector::lines($tmpPath, array(1,5));
+		$expected = array(1 => 'one', 5 => 'five');
 		$this->assertEqual($expected, $result);
 
 		$this->_cleanUp();
@@ -144,6 +140,8 @@ class InspectorTest extends \lithium\test\Unit {
 
 	/**
 	 * Tests getting a list of parent classes from an object or string class name.
+	 *
+	 * @return void
 	 */
 	public function testClassParents() {
 		$result = Inspector::parents($this);
@@ -152,24 +150,26 @@ class InspectorTest extends \lithium\test\Unit {
 		$result2 = Inspector::parents(__CLASS__);
 		$this->assertEqual($result2, $result);
 
-		$this->assertFalse(Inspector::parents('lithium\core\Foo', ['autoLoad' => false]));
+		$this->assertFalse(Inspector::parents('lithium\core\Foo', array('autoLoad' => false)));
 	}
 
 	public function testClassFileIntrospection() {
-		$result = Inspector::classes(['file' => __FILE__]);
-		$this->assertEqual([__CLASS__ => __FILE__], $result);
+		$result = Inspector::classes(array('file' => __FILE__));
+		$this->assertEqual(array(__CLASS__ => __FILE__), $result);
 
-		$result = Inspector::classes(['file' => __FILE__, 'group' => 'files']);
+		$result = Inspector::classes(array('file' => __FILE__, 'group' => 'files'));
 		$this->assertCount(1, $result);
 		$this->assertEqual(__FILE__, key($result));
 
-		$result = Inspector::classes(['file' => __FILE__, 'group' => 'foo']);
-		$this->assertEqual([], $result);
+		$result = Inspector::classes(array('file' => __FILE__, 'group' => 'foo'));
+		$this->assertEqual(array(), $result);
 	}
 
 	/**
 	 * Tests that names of classes, methods, properties and namespaces are parsed properly from
 	 * strings.
+	 *
+	 * @return void
 	 */
 	public function testTypeDetection() {
 		$this->assertEqual('namespace', Inspector::type('lithium\util'));
@@ -188,10 +188,12 @@ class InspectorTest extends \lithium\test\Unit {
 
 	/**
 	 * Tests getting reflection information based on a string identifier.
+	 *
+	 * @return void
 	 */
 	public function testIdentifierIntrospection() {
 		$result = Inspector::info(__METHOD__);
-		$this->assertEqual(['public'], $result['modifiers']);
+		$this->assertEqual(array('public'), $result['modifiers']);
 		$this->assertEqual(__FUNCTION__, $result['name']);
 
 		$this->assertNull(Inspector::info('\lithium\util'));
@@ -207,12 +209,12 @@ class InspectorTest extends \lithium\test\Unit {
 
 		$expected = 'Maps reflect method names to result array keys.';
 		$this->assertEqual($expected, $result['description']);
-		$this->assertEqual(['var' => 'array'], $result['tags']);
+		$this->assertEqual(array('var' => 'array'), $result['tags']);
 
-		$result = Inspector::info('\lithium\analysis\Inspector::info()', [
+		$result = Inspector::info('\lithium\analysis\Inspector::info()', array(
 			'modifiers', 'namespace', 'foo'
-		]);
-		$this->assertEqual(['modifiers', 'namespace'], array_keys($result));
+		));
+		$this->assertEqual(array('modifiers', 'namespace'), array_keys($result));
 
 		$this->assertNull(Inspector::info('\lithium\analysis\Inspector::$foo'));
 
@@ -220,13 +222,12 @@ class InspectorTest extends \lithium\test\Unit {
 	}
 
 	public function testClassDependencies() {
-		$expected = [
+		$expected = array(
 			'Exception', 'ReflectionClass', 'ReflectionProperty', 'ReflectionException',
-			'InvalidArgumentException',
-			'SplFileObject', 'lithium\\core\\Libraries', 'lithium\\analysis\\Docblock'
-		];
+			'SplFileObject', 'lithium\\core\\Libraries'
+		);
 
-		$result = Inspector::dependencies($this->subject(), ['type' => 'static']);
+		$result = Inspector::dependencies($this->subject(), array('type' => 'static'));
 		$this->assertEqual($expected, $result);
 
 		$expected[] = 'lithium\\util\\Collection';
@@ -237,6 +238,8 @@ class InspectorTest extends \lithium\test\Unit {
 	/**
 	 * Tests that class and namepace names which are equivalent in a case-insensitive search still
 	 * match properly.
+	 *
+	 * @return void
 	 */
 	public function testCaseSensitiveIdentifiers() {
 		$result = Inspector::type('lithium\storage\Cache');
@@ -250,44 +253,44 @@ class InspectorTest extends \lithium\test\Unit {
 
 	/**
 	 * Tests getting static and non-static properties from various types of classes.
+	 *
+	 * @return void
 	 */
 	public function testGetClassProperties() {
 		$result = array_map(
 			function($property) { return $property['name']; },
-			Inspector::properties($this)
+			Inspector::properties(__CLASS__)
 		);
-		$expected = ['test', 'test2'];
+		$expected = array('test', 'test2');
 		$this->assertEqual($expected, $result);
 
 		$result = array_map(
 			function($property) { return $property['name']; },
-			Inspector::properties($this, ['public' => false])
+			Inspector::properties(__CLASS__, array('public' => false))
 		);
-		$expected = ['test', 'test2', '_test'];
+		$expected = array('test', 'test2', '_test');
 		$this->assertEqual($expected, $result);
 
-		$result = Inspector::properties($this);
-		$expected = [
-			[
-				'modifiers' => ['public'],
-				'value' => 'foo',
+		$result = Inspector::properties(__CLASS__);
+		$expected = array(
+			array(
+				'modifiers' => array('public'),
 				'docComment' => false,
-				'name' => 'test'
-			],
-			[
-				'modifiers' => ['public', 'static'],
-				'value' => 'bar',
+				'name' => 'test',
+				'value' => null
+			),
+			array(
+				'modifiers' => array('public', 'static'),
 				'docComment' => false,
-				'name' => 'test2'
-			]
-		];
+				'name' => 'test2',
+				'value' => 'bar'
+			)
+		);
 		$this->assertEqual($expected, $result);
-
-		$controller = new Controller(['init' => false]);
 
 		$result = array_map(
 			function($property) { return $property['name']; },
-			Inspector::properties($controller)
+			Inspector::properties('lithium\action\Controller')
 		);
 		$this->assertTrue(in_array('request', $result));
 		$this->assertTrue(in_array('response', $result));
@@ -296,7 +299,7 @@ class InspectorTest extends \lithium\test\Unit {
 
 		$result = array_map(
 			function($property) { return $property['name']; },
-			Inspector::properties($controller, ['public' => false])
+			Inspector::properties('lithium\action\Controller', array('public' => false))
 		);
 		$this->assertTrue(in_array('request', $result));
 		$this->assertTrue(in_array('response', $result));
@@ -343,35 +346,37 @@ class InspectorTest extends \lithium\test\Unit {
 	/**
 	 * Tests that the correct parameters are always passed in `Inspector::invokeMethod()`,
 	 * regardless of the number.
+	 *
+	 * @return void
 	 */
 	public function testMethodInvocationWithParameters() {
 		$class = 'lithium\tests\mocks\analysis\MockInspector';
 
-		$this->assertEqual($class::invokeMethod('foo'), []);
-		$this->assertEqual($class::invokeMethod('foo', ['bar']), ['bar']);
+		$this->assertEqual($class::invokeMethod('foo'), array());
+		$this->assertEqual($class::invokeMethod('foo', array('bar')), array('bar'));
 
-		$params = ['one', 'two'];
+		$params = array('one', 'two');
 		$this->assertEqual($class::invokeMethod('foo', $params), $params);
 
-		$params = ['short', 'parameter', 'list'];
+		$params = array('short', 'parameter', 'list');
 		$this->assertEqual($class::invokeMethod('foo', $params), $params);
 
-		$params = ['a', 'longer', 'parameter', 'list'];
+		$params = array('a', 'longer', 'parameter', 'list');
 		$this->assertEqual($class::invokeMethod('foo', $params), $params);
 
-		$params = ['a', 'much', 'longer', 'parameter', 'list'];
+		$params = array('a', 'much', 'longer', 'parameter', 'list');
 		$this->assertEqual($class::invokeMethod('foo', $params), $params);
 
-		$params = ['an', 'extremely', 'long', 'list', 'of', 'parameters'];
+		$params = array('an', 'extremely', 'long', 'list', 'of', 'parameters');
 		$this->assertEqual($class::invokeMethod('foo', $params), $params);
 
-		$params = ['an', 'extremely', 'long', 'list', 'of', 'parameters'];
+		$params = array('an', 'extremely', 'long', 'list', 'of', 'parameters');
 		$this->assertEqual($class::invokeMethod('foo', $params), $params);
 
-		$params = [
+		$params = array(
 			'if', 'you', 'have', 'a', 'parameter', 'list', 'this',
 			'long', 'then', 'UR', 'DOIN', 'IT', 'RONG'
-		];
+		);
 		$this->assertEqual($class::invokeMethod('foo', $params), $params);
 	}
 

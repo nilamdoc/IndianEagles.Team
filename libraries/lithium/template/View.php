@@ -1,15 +1,13 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\template;
 
-use lithium\aop\Filters;
 use lithium\core\Libraries;
 use lithium\template\TemplateException;
 
@@ -42,32 +40,32 @@ use lithium\template\TemplateException;
  *
  * A simple example, using the `Simple` renderer/loader for string templates:
  *
- * ```
- * $view = new View(['loader' => 'Simple', 'renderer' => 'Simple']);
- * echo $view->render('element', ['name' => "Robert"], ['element' => 'Hello, {:name}!']);
+ * {{{
+ * $view = new View(array('loader' => 'Simple', 'renderer' => 'Simple'));
+ * echo $view->render('element', array('name' => "Robert"), array('element' => 'Hello, {:name}!'));
  *
  * // Output:
  * "Hello, Robert!";
- * ```
+ * }}}
  *
  *  _Note_: This is easily adapted for XML templating.
  *
  * Another example, this time of something that could be used in an application
  * error handler:
  *
- * ```
- * $view = new View([
- *     'paths' => [
+ * {{{
+ * $view = new View(array(
+ *     'paths' => array(
  *         'template' => '{:library}/views/errors/{:template}.{:type}.php',
  *         'layout'   => '{:library}/views/layouts/{:layout}.{:type}.php',
- *     ]
- * ]);
+ *     )
+ * ));
  *
- * $page = $View->render('all', ['content' => $info], [
+ * $page = $View->render('all', array('content' => $info), array(
  *     'template' => '404',
  *     'layout' => 'error'
- * ]);
- * ```
+ * ));
+ * }}}
  *
  * To learn more about processes and process steps, see the `$_processes` and `$_steps` properties,
  * respectively.
@@ -83,7 +81,7 @@ class View extends \lithium\core\Object {
 	 *
 	 * @var array List of filters.
 	 */
-	public $outputFilters = [];
+	public $outputFilters = array();
 
 	/**
 	 * Holds the details of the current request that originated the call to this view, if
@@ -115,7 +113,7 @@ class View extends \lithium\core\Object {
 	/**
 	 * Object responsible for rendering output.
 	 *
-	 * @var object Renderer object.
+	 * @var objet Renderer object.
 	 */
 	protected $_renderer = null;
 
@@ -137,11 +135,11 @@ class View extends \lithium\core\Object {
 	 * @see lithium\template\View::render()
 	 * @var array
 	 */
-	protected $_processes = [
-		'all' => ['template', 'layout'],
-		'template' => ['template'],
-		'element' => ['element']
-	];
+	protected $_processes = array(
+		'all' => array('template', 'layout'),
+		'template' => array('template'),
+		'element' => array('element')
+	);
 
 	/**
 	 * The list of available rendering steps. Each step contains instructions for how to render one
@@ -174,24 +172,24 @@ class View extends \lithium\core\Object {
 	 * @see lithium\template\View::render()
 	 * @var array
 	 */
-	protected $_steps = [
-		'template' => ['path' => 'template', 'capture' => ['context' => 'content']],
-		'layout' => [
-			'path' => 'layout', 'conditions' => 'layout', 'multi' => true, 'capture' => [
+	protected $_steps = array(
+		'template' => array('path' => 'template', 'capture' => array('context' => 'content')),
+		'layout' => array(
+			'path' => 'layout', 'conditions' => 'layout', 'multi' => true, 'capture' => array(
 				'context' => 'content'
-			]
-		],
-		'element' => ['path' => 'element']
-	];
+			)
+		),
+		'element' => array('path' => 'element')
+	);
 
 	/**
 	 * Auto-configuration parameters.
 	 *
 	 * @var array Objects to auto-configure.
 	 */
-	protected $_autoConfig = [
+	protected $_autoConfig = array(
 		'request', 'response', 'processes' => 'merge', 'steps' => 'merge'
-	];
+	);
 
 	/**
 	 * Constructor.
@@ -220,18 +218,17 @@ class View extends \lithium\core\Object {
 	 *         - `'outputFilters'` _array_: An array of filters to be used when handling output. By
 	 *           default, the class is initialized with one filter, `h`, which is used in automatic
 	 *           output escaping.
-	 * @return void
 	 */
-	public function __construct(array $config = []) {
-		$defaults = [
+	public function __construct(array $config = array()) {
+		$defaults = array(
 			'request' => null,
 			'response' => null,
 			'loader' => 'File',
 			'renderer' => 'File',
-			'steps' => [],
-			'processes' => [],
-			'outputFilters' => []
-		];
+			'steps' => array(),
+			'processes' => array(),
+			'outputFilters' => array()
+		);
 		parent::__construct($config + $defaults);
 	}
 
@@ -256,13 +253,13 @@ class View extends \lithium\core\Object {
 		};
 		$this->outputFilters += compact('h') + $this->_config['outputFilters'];
 
-		foreach (['loader', 'renderer'] as $key) {
+		foreach (array('loader', 'renderer') as $key) {
 			if (is_object($this->_config[$key])) {
 				$this->{'_' . $key} = $this->_config[$key];
 				continue;
 			}
 			$class = $this->_config[$key];
-			$config = ['view' => $this] + $this->_config;
+			$config = array('view' => $this) + $this->_config;
 			$this->{'_' . $key} = Libraries::instance($this->_adapters, $class, $config);
 		}
 	}
@@ -297,15 +294,15 @@ class View extends \lithium\core\Object {
 	 *         first, then rendering a layout (using the default configuration of the `'all'`
 	 *         process).
 	 */
-	public function render($process, array $data = [], array $options = []) {
-		$defaults = [
+	public function render($process, array $data = array(), array $options = array()) {
+		$defaults = array(
 			'type' => 'html',
 			'layout' => null,
 			'template' => null,
-			'context' => [],
-			'paths' => [],
-			'data' => []
-		];
+			'context' => array(),
+			'paths' => array(),
+			'data' => array()
+		);
 		$options += $defaults;
 
 		$data += $options['data'];
@@ -380,21 +377,22 @@ class View extends \lithium\core\Object {
 	 * @return string
 	 * @filter
 	 */
-	protected function _step(array $step, array $params, array &$data, array &$options = []) {
-		$step += ['path' => null, 'capture' => null];
+	protected function _step(array $step, array $params, array &$data, array &$options = array()) {
+		$step += array('path' => null, 'capture' => null);
 		$_renderer = $this->_renderer;
 		$_loader = $this->_loader;
 		$filters = $this->outputFilters;
-		$params = compact('step', 'params', 'options') + [
+		$params = compact('step', 'params', 'options') + array(
 			'data' => $data + $filters,
 			'loader' => $_loader,
 			'renderer' => $_renderer
-		];
+		);
 
-		$result = Filters::run($this, __FUNCTION__, $params, function($params) {
+		$filter = function($self, $params) {
 			$template = $params['loader']->template($params['step']['path'], $params['params']);
 			return $params['renderer']->render($template, $params['data'], $params['options']);
-		});
+		};
+		$result = $this->_filter(__METHOD__, $params, $filter);
 
 		if (is_array($step['capture'])) {
 			switch (key($step['capture'])) {
@@ -420,7 +418,7 @@ class View extends \lithium\core\Object {
 	 *         represents the parameters for each step.
 	 */
 	protected function _process($process, &$params) {
-		$defaults = ['conditions' => null, 'multi' => false];
+		$defaults = array('conditions' => null, 'multi' => false);
 
 		if (!is_array($process)) {
 			if (!isset($this->_processes[$process])) {
@@ -431,7 +429,7 @@ class View extends \lithium\core\Object {
 		if (is_string(key($process))) {
 			return $this->_convertSteps($process, $params, $defaults);
 		}
-		$result = [];
+		$result = array();
 
 		foreach ($process as $step) {
 			if (is_array($step)) {
@@ -461,7 +459,7 @@ class View extends \lithium\core\Object {
 	protected function _convertSteps(array $command, array &$params, $defaults) {
 		if (count($command) === 1) {
 			$params['template'] = current($command);
-			return [['path' => key($command)] + $defaults];
+			return array(array('path' => key($command)) + $defaults);
 		}
 		return $command;
 	}

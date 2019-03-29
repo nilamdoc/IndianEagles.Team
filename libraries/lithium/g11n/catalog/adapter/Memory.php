@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\g11n\catalog\adapter;
@@ -22,7 +21,7 @@ class Memory extends \lithium\g11n\catalog\Adapter {
 	 *
 	 * @var array
 	 */
-	protected $_data = [];
+	protected $_data = array();
 
 	/**
 	 * Reads data.
@@ -53,7 +52,7 @@ class Memory extends \lithium\g11n\catalog\Adapter {
 		$scope = $scope ?: 'default';
 
 		if (!isset($this->_data[$scope][$category][$locale])) {
-			$this->_data[$scope][$category][$locale] = [];
+			$this->_data[$scope][$category][$locale] = array();
 		}
 		foreach ($data as $item) {
 			$this->_data[$scope][$category][$locale] = $this->_merge(

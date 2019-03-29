@@ -1,10 +1,9 @@
 <?php
 /**
- * li₃: the most RAD framework for PHP (http://li3.me)
+ * Lithium: the most rad php framework
  *
- * Copyright 2016, Union of RAD. All rights reserved. This source
- * code is distributed under the terms of the BSD 3-Clause License.
- * The full license text can be found in the LICENSE.txt file.
+ * @copyright     Copyright 2013, Union of RAD (http://union-of-rad.org)
+ * @license       http://opensource.org/licenses/bsd-license.php The BSD License
  */
 
 namespace lithium\tests\cases\core;
@@ -23,9 +22,9 @@ class EnvironmentTest extends \lithium\test\Unit {
 	 * selected.
 	 */
 	public function testSetAndGetCurrentEnvironment() {
-		Environment::set('production',  ['foo' => 'bar']);
-		Environment::set('staging',     ['foo' => 'baz']);
-		Environment::set('development', ['foo' => 'dib']);
+		Environment::set('production',  array('foo' => 'bar'));
+		Environment::set('staging',     array('foo' => 'baz'));
+		Environment::set('development', array('foo' => 'dib'));
 
 		Environment::set('development');
 
@@ -33,7 +32,7 @@ class EnvironmentTest extends \lithium\test\Unit {
 		$this->assertTrue(Environment::is('development'));
 		$this->assertNull(Environment::get('doesNotExist'));
 
-		$expected = ['foo' => 'dib'];
+		$expected = array('foo' => 'dib');
 		$config = Environment::get('development');
 		$this->assertEqual($expected, $config);
 
@@ -46,16 +45,16 @@ class EnvironmentTest extends \lithium\test\Unit {
 	 * Tests that a set of configuration keys can be assigned to multiple environments.
 	 */
 	public function testSetMultipleEnvironments() {
-		foreach (['foo', 'bar', 'baz'] as $key) {
+		foreach (array('foo', 'bar', 'baz') as $key) {
 			$this->assertNull(Environment::get($key));
 		}
 
-		Environment::set(['foo', 'bar', 'baz'], [
-			'key' => ['subkey' => 'value']
-		]);
+		Environment::set(array('foo', 'bar', 'baz'), array(
+			'key' => array('subkey' => 'value')
+		));
 
-		foreach (['foo', 'bar', 'baz'] as $key) {
-			$this->assertEqual(['key' => ['subkey' => 'value']], Environment::get($key));
+		foreach (array('foo', 'bar', 'baz') as $key) {
+			$this->assertEqual(array('key' => array('subkey' => 'value')), Environment::get($key));
 		}
 	}
 
@@ -63,7 +62,7 @@ class EnvironmentTest extends \lithium\test\Unit {
 	 * Tests creating a custom environment, and verifies that settings are properly retrieved.
 	 */
 	public function testCreateNonStandardEnvironment() {
-		Environment::set('custom', ['host' => 'server.local']);
+		Environment::set('custom', array('host' => 'server.local'));
 		Environment::set('custom');
 
 		$host = Environment::get('host');
@@ -71,7 +70,7 @@ class EnvironmentTest extends \lithium\test\Unit {
 		$this->assertEqual($expected, $host);
 
 		$custom = Environment::get('custom');
-		$expected = ['host' => 'server.local'];
+		$expected = array('host' => 'server.local');
 		$this->assertEqual($expected, $custom);
 	}
 
@@ -79,13 +78,13 @@ class EnvironmentTest extends \lithium\test\Unit {
 	 * Tests modifying environment configuration.
 	 */
 	public function testModifyEnvironmentConfig() {
-		Environment::set('test', ['foo' => 'bar']);
-		$expected = ['foo' => 'bar'];
+		Environment::set('test', array('foo' => 'bar'));
+		$expected = array('foo' => 'bar');
 		$this->assertEqual($expected, Environment::get('test'));
 
-		$expected = ['foo' => 'bar', 'baz' => 'qux'];
-		Environment::set('test', ['baz' => 'qux']);
-		$settings = Environment::get('test'); // returns ['foo' => 'bar', 'baz' => 'qux']
+		$expected = array('foo' => 'bar', 'baz' => 'qux');
+		Environment::set('test', array('baz' => 'qux'));
+		$settings = Environment::get('test'); // returns array('foo' => 'bar', 'baz' => 'qux')
 		$this->assertEqual($expected, Environment::get('test'));
 	}
 
@@ -93,24 +92,24 @@ class EnvironmentTest extends \lithium\test\Unit {
 	 * Tests auto-detecting environment settings through a series of mock request classes.
 	 */
 	public function testEnvironmentDetection() {
-		Environment::set(new MockRequest(['SERVER_ADDR' => '::1']));
+		Environment::set(new MockRequest(array('SERVER_ADDR' => '::1')));
 		$this->assertTrue(Environment::is('development'));
 
-		$request = new MockRequest(['SERVER_ADDR' => '1.1.1.1', 'HTTP_HOST' => 'test.local']);
+		$request = new MockRequest(array('SERVER_ADDR' => '1.1.1.1', 'HTTP_HOST' => 'test.local'));
 		Environment::set($request);
 		$this->assertTrue(Environment::is('test'));
 
-		$request = new MockRequest(['SERVER_ADDR' => '1.1.1.1', 'HTTP_HOST' => 'www.com']);
+		$request = new MockRequest(array('SERVER_ADDR' => '1.1.1.1', 'HTTP_HOST' => 'www.com'));
 		Environment::set($request);
 		$isProduction = Environment::is('production');
 		$this->assertTrue($isProduction);
 
-		$request = new MockRequest(['SERVER_ADDR' => '::1']);
+		$request = new MockRequest(array('SERVER_ADDR' => '::1'));
 		$request->url = '/test/myTest';
 		Environment::set($request);
 		$this->assertTrue(Environment::is('test'));
 
-		$request = new MockRequest(['SERVER_ADDR' => '::1']);
+		$request = new MockRequest(array('SERVER_ADDR' => '::1'));
 		$request->url = '/test';
 		Environment::set($request);
 		$this->assertTrue(Environment::is('test'));
@@ -125,12 +124,12 @@ class EnvironmentTest extends \lithium\test\Unit {
 		Environment::set($request);
 		$this->assertTrue(Environment::is('test'));
 
-		$request = new MockRequest(['PLATFORM' => 'CLI']);
+		$request = new MockRequest(array('PLATFORM' => 'CLI'));
 		Environment::set($request);
 		$this->assertTrue(Environment::is('development'));
 
 		$request = new MockRequest();
-		$request->params = ['env' => 'production'];
+		$request->params = array('env' => 'production');
 		Environment::set($request);
 		$this->assertTrue(Environment::is('production'));
 	}
@@ -140,26 +139,26 @@ class EnvironmentTest extends \lithium\test\Unit {
 	 * regular expression.
 	 */
 	public function testDetectionWithArrayMap() {
-		Environment::is([
+		Environment::is(array(
 			'development' => '/^local|^\.console/',
-			'test' => ['test1.myapp.com', 'test2.myapp.com'],
-			'staging' => ['staging.myapp.com']
-		]);
+			'test' => array('test1.myapp.com', 'test2.myapp.com'),
+			'staging' => array('staging.myapp.com')
+		));
 
-		Environment::set(new MockRequest(['http:host' => 'localhost']));
+		Environment::set(new MockRequest(array('http:host' => 'localhost')));
 		$this->assertTrue(Environment::is('development'));
 
-		Environment::set(new MockRequest(['http:host' => 'test1.myapp.com']));
+		Environment::set(new MockRequest(array('http:host' => 'test1.myapp.com')));
 		$this->assertTrue(Environment::is('test'));
 
-		Environment::set(new MockRequest(['http:host' => 'test3.myapp.com']));
+		Environment::set(new MockRequest(array('http:host' => 'test3.myapp.com')));
 		$this->assertTrue(Environment::is('production'));
 
-		Environment::set(new MockRequest(['http:host' => 'localhost:3030']));
+		Environment::set(new MockRequest(array('http:host' => 'localhost:3030')));
 		$this->assertTrue(Environment::is('development'));
 
 		$request = new MockRequest();
-		$request->params = ['env' => 'whatever'];
+		$request->params = array('env' => 'whatever');
 		Environment::set($request);
 		$this->assertTrue(Environment::is('whatever'));
 	}
@@ -167,8 +166,8 @@ class EnvironmentTest extends \lithium\test\Unit {
 	/**
 	 * Tests resetting the `Environment` class to its default state.
 	 */
-	public function testResetAll() {
-		Environment::set('test', ['foo' => 'bar']);
+	public function testReset() {
+		Environment::set('test', array('foo' => 'bar'));
 		Environment::set('test');
 		$this->assertEqual('test', Environment::get());
 		$this->assertEqual('bar', Environment::get('foo'));
@@ -176,22 +175,6 @@ class EnvironmentTest extends \lithium\test\Unit {
 		Environment::reset();
 		$this->assertEqual('', Environment::get());
 		$this->assertNull(Environment::get('foo'));
-	}
-
-	public function testResetASpecificEnv() {
-		Environment::set('test', ['foo' => 'bar']);
-		Environment::set('development', ['hello' => 'world']);
-
-		Environment::set('test');
-		$this->assertEqual('test', Environment::get());
-		$this->assertEqual('bar', Environment::get('foo'));
-
-		Environment::reset('test');
-		$this->assertEqual('test', Environment::get());
-		$this->assertNull(Environment::get('foo'));
-
-		Environment::set('development');
-		$this->assertEqual('world', Environment::get('hello'));
 	}
 
 	/**
@@ -208,29 +191,29 @@ class EnvironmentTest extends \lithium\test\Unit {
 			return 'production';
 		});
 
-		$request = new MockRequest(['HTTP_HOST' => 'localhost']);
+		$request = new MockRequest(array('HTTP_HOST' => 'localhost'));
 		Environment::set($request);
 		$this->assertTrue(Environment::is('development'));
 
-		$request = new MockRequest(['HTTP_HOST' => 'lappy.local']);
+		$request = new MockRequest(array('HTTP_HOST' => 'lappy.local'));
 		Environment::set($request);
 		$this->assertTrue(Environment::is('production'));
 
-		$request = new MockRequest(['HTTP_HOST' => 'staging.server']);
+		$request = new MockRequest(array('HTTP_HOST' => 'staging.server'));
 		Environment::set($request);
 		$this->assertTrue(Environment::is('test'));
 
-		$request = new MockRequest(['HTTP_HOST' => 'test.local']);
+		$request = new MockRequest(array('HTTP_HOST' => 'test.local'));
 		Environment::set($request);
 		$this->assertTrue(Environment::is('production'));
 	}
 
 	public function testDotPath() {
-		$data = [
-			'foo' => ['bar' => ['baz' => 123]],
-			'some' => ['path' => true],
+		$data = array(
+			'foo' => array('bar' => array('baz' => 123)),
+			'some' => array('path' => true),
 			'string' => 'lorem ipsum'
-		];
+		);
 		Environment::set('dotPathIndex', $data);
 
 		$this->assertEqual(123, Environment::get('dotPathIndex.foo.bar.baz'));
@@ -245,9 +228,9 @@ class EnvironmentTest extends \lithium\test\Unit {
 	 */
 	public function testReadWriteWithDefaultEnvironment() {
 		Environment::set('development');
-		Environment::set(true, ['foo' => 'bar']);
+		Environment::set(true, array('foo' => 'bar'));
 
-		$this->assertEqual(['foo' => 'bar'], Environment::get('development'));
+		$this->assertEqual(array('foo' => 'bar'), Environment::get('development'));
 		$this->assertEqual(Environment::get(true), Environment::get('development'));
 
 		Environment::set('production');
